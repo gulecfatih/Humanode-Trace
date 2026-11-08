@@ -1,0 +1,96 @@
+@import '@mantine/core/styles.css';
+
+:root {
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+body {
+  background-color: #0b0f17;
+  color: #f0f6fc;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.font-mono, td.font-mono, .mantine-Table-td.font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: rgba(22, 27, 34, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.glass-panel-subtle {
+  background: rgba(13, 17, 23, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Table row micro-interactions */
+.mantine-Table-tr {
+  transition: background-color 0.15s ease;
+}
+
+.mantine-Table-tr:hover {
+  background-color: rgba(56, 189, 248, 0.05) !important;
+}
+
+/* Tabular number column alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+.nowrap-amount {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: baseline !important;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #21262d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+
+/* Global Sticky Headers for All Grids / Tables */
+div:has(> .mantine-Table-table) {
+  overflow: visible !important;
+}
+
+.mantine-Table-thead {
+  position: sticky;
+  top: 52px;
+  z-index: 25;
+  background-color: #161b22;
+}
+
+.mantine-Table-th {
+  position: sticky !important;
+  top: 52px !important;
+  z-index: 25 !important;
+  background-color: #161b22 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 -1px 0 #30363d;
+}
+
+/* Inside Modals and ScrollAreas, pin sticky header to top: 0 of container */
+.mantine-Modal-body .mantine-Table-thead,
+.mantine-Modal-body .mantine-Table-th,
+.mantine-ScrollArea-viewport .mantine-Table-thead,
+.mantine-ScrollArea-viewport .mantine-Table-th {
+  top: 0 !important;
+}

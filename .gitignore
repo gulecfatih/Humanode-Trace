@@ -1,0 +1,75 @@
+# -------------------------------------------------------------
+# HUMANODE TRACKER - .gitignore
+# -------------------------------------------------------------
+
+# Databases & Snapshots (Hosted via GitHub Releases)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+*.zip
+*.tar.gz
+*.7z
+humanode_tracker_snapshot.zip
+
+# Node & Next.js
+node_modules/
+.next/
+out/
+build/
+.npm/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# .NET / C# Build Artifacts
+backend/bin/
+backend/obj/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & Editor Settings
+.agents/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs & Audit Dumps
+*.log
+audit_results.json
+scratch/
+test-results/
+
+# Local Development, Internal Notes & Tests (Excluded from GitHub)
+test/
+src/
+public/
+PROJECT.md
+TEST_INFRA.md
+TEST_READY.md
+check_vesting.js
+start.bat
+scripts/migrate_*
+scripts/test_*
+scripts/dump_*
+scripts/verify_*
+scripts/backfill_*

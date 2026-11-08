@@ -1,0 +1,11 @@
+@backend_HostAddress = http://localhost:3000
+
+GET {{backend_HostAddress}}/api/stats/overview
+Accept: application/json
+
+###
+
+GET {{backend_HostAddress}}/api/validators
+Accept: application/json
+
+###

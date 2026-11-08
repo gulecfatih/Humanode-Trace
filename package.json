@@ -1,0 +1,33 @@
+{
+  "name": "humanode-tracker",
+  "version": "1.0.0",
+  "description": "Humanode Network Fee & Transaction Tracker",
+  "scripts": {
+    "start": "dotnet run --project backend",
+    "start:dotnet": "dotnet run --project backend",
+    "dev": "next dev",
+    "build": "next build",
+    "start:next": "next start"
+  },
+  "keywords": [
+    "humanode",
+    "indexer",
+    "blockchain",
+    "fees",
+    "transactions"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@mantine/core": "^9.7.4",
+    "@mantine/hooks": "^9.7.4",
+    "@tabler/icons-react": "^3.50.0",
+    "next": "^16.4.3",
+    "postcss": "^8.5.32",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
