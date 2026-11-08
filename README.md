@@ -220,6 +220,7 @@ Humanode-Trace/
 ├── database_schema.sql        # Full DDL schema and language seed statements
 ├── next.config.mjs            # Next.js static export configuration
 ├── package.json               # Frontend dependencies & build scripts
+├── LICENSE                    # Official MIT License terms
 └── .gitignore                 # GitHub-compliant production ignore rules
 ```
 
@@ -227,4 +228,4 @@ Humanode-Trace/
 
 ## 📄 License
 
-Distributed under the **MIT License**. Developed with ❤️ for the Humanode Community.
+Distributed under the **MIT License**. Developed for the Humanode Community.
