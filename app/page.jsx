@@ -4,6 +4,7 @@ import { AppShell, Container, Box, Affix, Transition, ActionIcon, Tooltip } from
 import { useWindowScroll } from '@mantine/hooks';
 import { IconArrowUp } from '@tabler/icons-react';
 import { LanguageProvider, useLanguage } from '../components/LanguageContext';
+import { ModuleLayout } from '../components/ModuleLayout';
 import AppHeader from '../components/AppHeader';
 import SidebarNav from '../components/SidebarNav';
 import CommandPaletteModal from '../components/CommandPaletteModal';
@@ -168,7 +169,8 @@ function HomeContent() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Container fluid p={0}>
+        <ModuleLayout activeTab={activeTab}>
+          <Container fluid p={0}>
           {activeTab === 'overview' && (
             <OverviewTab
               onSelectAddress={(addr) => setPeekAddress(addr)}
@@ -305,6 +307,7 @@ function HomeContent() {
             />
           )}
         </Container>
+        </ModuleLayout>
       </AppShell.Main>
 
       {/* Floating Scroll-to-Top Button */}

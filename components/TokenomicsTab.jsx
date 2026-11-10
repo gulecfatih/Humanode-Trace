@@ -33,6 +33,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatUSD, formatTimestamp, timeAgo, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AmountDisplay from './ui/AmountDisplay';
 import AddressBadge from './ui/AddressBadge';
@@ -44,8 +45,9 @@ export default function TokenomicsTab({
   onOpenLedger,
   onOpenTrail,
 }) {
-  const { lang, t } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = t('whales_enUs');
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -143,28 +145,26 @@ export default function TokenomicsTab({
             <Group gap="xs" mb={4}>
               <IconChartPie size={24} color="#38bdf8" />
               <Title order={2} size="h3" c="white">
-                {lang === 'tr' ? 'Token Ekonomisi & 400M Arz Dağılımı' : 'Tokenomics & 400M Supply Architecture'}
+                {t('tokenomics_tokenomics400mSupplyArchitecture')}
               </Title>
               <Badge color="cyan" variant="light" size="sm">
                 Proof-of-Humanity
               </Badge>
               <Badge color="teal" variant="light" size="sm">
-                {lang === 'tr' ? 'Doğrulanmış Resmi Veri' : 'Verified On-Chain Data'}
+                {t('tokenomics_verifiedOnChainData')}
               </Badge>
             </Group>
             <Text size="xs" c="dimmed" maw={820}>
-              {lang === 'tr'
-                ? 'Humanode ağının 400.000.000 HMND sabit toplam arz yapısı, resmi dolaşımdaki likit miktar, kilitli vakıf rezervleri, hak edilmeyi bekleyen airdrop havuzu ve yakılan işlem ücretleri.'
-                : 'Humanode 400,000,000 HMND fixed total supply breakdown, verified circulating supply, vesting locks, token claim reserves, burned gas metrics, and equality metrics.'}
+              {t('tokenomics_humanode400000000')}
             </Text>
             <Text size="11px" c="teal" mt={4} fw={500}>
-              ✓ {lang === 'tr' ? 'Resmi Kaynak: Humanode Native Supply API (supply-api.mainnet.stages.humanode.io) & CoinGecko / CMC' : 'Official Source: Humanode Native Supply API (supply-api.mainnet.stages.humanode.io) & CoinGecko'}
+              ✓ {t('tokenomics_officialSourceHumanodeNative')}
             </Text>
           </Box>
 
           <Group gap="xs">
             <Badge color="teal" size="md" variant="light">
-              {lang === 'tr' ? 'Maksimum Arz: 400.000.000 HMND' : 'Max Supply: 400,000,000 HMND'}
+              {t('tokenomics_maxSupply400000')}
             </Badge>
           </Group>
         </Group>
@@ -172,39 +172,39 @@ export default function TokenomicsTab({
         {/* 4 Ana KPI Kartı */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mt="md">
           <KpiStatCard
-            title={lang === 'tr' ? 'Dolaşımdaki Likit Arz' : 'Circulating Supply'}
+            title={t('tokenomics_circulatingSupply')}
             value={`~${circulating.toLocaleString(locStr, { maximumFractionDigits: 0 })}`}
             unit="HMND"
             color="teal"
             icon={IconCoins}
-            subtext={`%${pctCirculating} ${lang === 'tr' ? 'toplam arza oranı' : 'of total issuance'}`}
+            subtext={`%${pctCirculating} ${t('tokenomics_ofTotalIssuance')}`}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Kilitli & Vesting Rezervi' : 'Locked & Vesting Reserve'}
+            title={t('tokenomics_lockedVestingReserve')}
             value={`~${lockedVesting.toLocaleString(locStr, { maximumFractionDigits: 0 })}`}
             unit="HMND"
             color="indigo"
             icon={IconLock}
-            subtext={`%${pctLocked} ${lang === 'tr' ? 'vakıf & tohum kilitleri' : 'foundation & seed schedules'}`}
+            subtext={`%${pctLocked} ${t('tokenomics_foundationSeedSchedules')}`}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Airdrop / Claim Rezervi' : 'Airdrop Claims Reserve'}
+            title={t('tokenomics_airdropClaimsReserve')}
             value={claimable.toLocaleString(locStr, { maximumFractionDigits: 0 })}
             unit="HMND"
             color="violet"
             icon={IconGift}
-            subtext={lang === 'tr' ? 'pallet tokenClaims talep bekleyen' : 'unclaimed on tokenClaims pallet'}
+            subtext={t('tokenomics_unclaimedOnTokenclaimsPallet')}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Toplam Yakılan Gas (Fee)' : 'Total Burned Gas Fees'}
+            title={t('totalBurnedGas')}
             value={burnedTotal.toLocaleString(locStr, { maximumFractionDigits: 0 })}
             unit="HMND"
             color="orange"
             icon={IconFlame}
-            subtext={lang === 'tr' ? 'EVM & Substrate işlemlerinde yok edildi' : 'burned permanently from supply'}
+            subtext={t('tokenomics_burnedPermanentlyFromSupply')}
           />
         </SimpleGrid>
       </Paper>
@@ -213,37 +213,37 @@ export default function TokenomicsTab({
       <Paper p="md" bg="rgba(0,0,0,0.2)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" mb="xs">
           <Text size="sm" fw={700} c="white">
-            {lang === 'tr' ? '400.000.000 HMND Makro Dağılım Spektrumu' : '400,000,000 HMND Macro Distribution Spectrum'}
+            {t('tokenomics_400000000Hmnd')}
           </Text>
           <Text size="xs" c="dimmed">
-            {lang === 'tr' ? 'Toplam: %100' : 'Total: 100%'}
+            {t('tokenomics_total100')}
           </Text>
         </Group>
 
         <Progress.Root size="xl" radius="sm">
-          <Tooltip label={`${lang === 'tr' ? 'Dolaşımdaki Arz' : 'Circulating'}: %${pctCirculating} (~${(circulating / 1e6).toFixed(1)}M HMND)`}>
+          <Tooltip label={`${t('tokenomics_circulatingSupply_2')}: %${pctCirculating} (~${(circulating / 1e6).toFixed(1)}M HMND)`}>
             <Progress.Section value={Number(pctCirculating)} color="teal">
               <Progress.Label>%{pctCirculating}</Progress.Label>
             </Progress.Section>
           </Tooltip>
 
-          <Tooltip label={`${lang === 'tr' ? 'Kilitli Rezerv' : 'Locked'}: %${pctLocked} (~${(lockedVesting / 1e6).toFixed(1)}M HMND)`}>
+          <Tooltip label={`${t('tokenomics_locked')}: %${pctLocked} (~${(lockedVesting / 1e6).toFixed(1)}M HMND)`}>
             <Progress.Section value={Number(pctLocked)} color="indigo">
               <Progress.Label>%{pctLocked}</Progress.Label>
             </Progress.Section>
           </Tooltip>
 
-          <Tooltip label={`${lang === 'tr' ? 'Airdrop Rezervi' : 'Airdrop'}: %${pctClaimable} (~${(claimable / 1e6).toFixed(1)}M HMND)`}>
+          <Tooltip label={`${t('tokenomics_airdrop')}: %${pctClaimable} (~${(claimable / 1e6).toFixed(1)}M HMND)`}>
             <Progress.Section value={Number(pctClaimable)} color="violet">
               <Progress.Label>%{pctClaimable}</Progress.Label>
             </Progress.Section>
           </Tooltip>
 
-          <Tooltip label={`${lang === 'tr' ? 'FeesPot Havuzu' : 'FeesPot'}: %${pctFeesPot} (~${(feesPot / 1e3).toFixed(0)}K HMND)`}>
+          <Tooltip label={`${t('validators_feespotPool')}: %${pctFeesPot} (~${(feesPot / 1e3).toFixed(0)}K HMND)`}>
             <Progress.Section value={Math.max(0.8, Number(pctFeesPot))} color="yellow" />
           </Tooltip>
 
-          <Tooltip label={`${lang === 'tr' ? 'Yakılan Gas' : 'Burned'}: %${pctBurned} (~${(burnedTotal / 1e3).toFixed(0)}K HMND)`}>
+          <Tooltip label={`${t('tokenomics_burnedGas')}: %${pctBurned} (~${(burnedTotal / 1e3).toFixed(0)}K HMND)`}>
             <Progress.Section value={Math.max(0.5, Number(pctBurned))} color="orange" />
           </Tooltip>
         </Progress.Root>
@@ -253,31 +253,31 @@ export default function TokenomicsTab({
           <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#14b8a6' }} />
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'Dolaşımdaki Arz' : 'Circulating Supply'} (%{pctCirculating})
+              {t('tokenomics_circulatingSupply_2')} (%{pctCirculating})
             </Text>
           </Group>
           <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#6366f1' }} />
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'Kilitli & Vesting' : 'Locked & Vesting'} (%{pctLocked})
+              {t('tokenomics_lockedVesting')} (%{pctLocked})
             </Text>
           </Group>
           <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#8b5cf6' }} />
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'Airdrop Havuzu' : 'Airdrop Claims'} (%{pctClaimable})
+              {t('tokenomics_airdropClaims')} (%{pctClaimable})
             </Text>
           </Group>
           <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#eab308' }} />
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'FeesPot Rezervi' : 'FeesPot Reserve'} (%{pctFeesPot})
+              {t('tokenomics_feespotReserve')} (%{pctFeesPot})
             </Text>
           </Group>
           <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#f97316' }} />
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'Yakılan Gas' : 'Burned Gas'} (%{pctBurned})
+              {t('tokenomics_burnedGas')} (%{pctBurned})
             </Text>
           </Group>
         </Group>
@@ -303,16 +303,14 @@ export default function TokenomicsTab({
               <div>
                 <Group gap={8}>
                   <Badge color="pink" variant="light" size="sm">
-                    🔓 {lang === 'tr' ? 'On-Chain Kayıtlar' : 'On-Chain Ledger'}
+                    🔓 {t('tokenomics_onChainLedger')}
                   </Badge>
                   <Title order={5}>
-                    {lang === 'tr' ? 'Tarihsel Kilit Açılım Takvimi, Bloklar ve İşlemler' : 'Historical Unlock Schedule, Blocks & Transactions'}
+                    {t('tokenomics_historicalUnlockScheduleBlocks')}
                   </Title>
                 </Group>
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr'
-                    ? 'Açılan kilitlerin kesin blok numaraları, işlem hashleri, hak sahibi adresler ve açılan HMND miktarları'
-                    : 'Exact unlock block numbers, transaction hashes, recipient wallets, and HMND amounts released'}
+                  {t('tokenomics_exactUnlockBlockNumbers')}
                 </Text>
               </div>
 
@@ -320,7 +318,7 @@ export default function TokenomicsTab({
                 <form onSubmit={handleSearchSubmit} style={{ flex: 1 }}>
                   <TextInput
                     size="xs"
-                    placeholder={lang === 'tr' ? 'Cüzdan, tx veya blok ara...' : 'Search wallet, tx or block...'}
+                    placeholder={t('tokenomics_searchWalletTxOr')}
                     leftSection={<IconSearch size={14} />}
                     rightSection={
                       unlocksSearch && (
@@ -364,12 +362,12 @@ export default function TokenomicsTab({
                 }}
               >
                 <Table.Tr>
-                  <Table.Th style={{ width: 140 }}>{lang === 'tr' ? 'Tarih' : 'Date'}</Table.Th>
-                  <Table.Th style={{ width: 100 }}>{lang === 'tr' ? 'Blok #' : 'Block #'}</Table.Th>
-                  <Table.Th style={{ width: 150 }}>{lang === 'tr' ? 'İşlem Hash' : 'Tx Hash'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Hak Sahibi Cüzdan' : 'Beneficiary Wallet'}</Table.Th>
-                  <Table.Th style={{ width: 130 }}>{lang === 'tr' ? 'Metot' : 'Method'}</Table.Th>
-                  <Table.Th style={{ textAlign: 'right' }}>{lang === 'tr' ? 'Açılan Miktar' : 'Unlocked Amount'}</Table.Th>
+                  <Table.Th style={{ width: 140 }}>{t('whales_timestamp')}</Table.Th>
+                  <Table.Th style={{ width: 100 }}>{t('colBlock')}</Table.Th>
+                  <Table.Th style={{ width: 150 }}>{t('tokenomics_txHash')}</Table.Th>
+                  <Table.Th>{t('unlocks_beneficiaryWallet')}</Table.Th>
+                  <Table.Th style={{ width: 130 }}>{t('tokenomics_method')}</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>{t('tokenomics_unlockedAmount')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -385,7 +383,7 @@ export default function TokenomicsTab({
                   <Table.Tr>
                     <Table.Td colSpan={6} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Kilit açılım işlemi bulunamadı.' : 'No unlock transactions found.'}
+                        {t('tokenomics_noUnlockTransactionsFound')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -455,9 +453,7 @@ export default function TokenomicsTab({
           {unlocksTotalPages > 1 && (
             <Group justify="space-between" align="center" mt="xs">
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? `Sayfa ${unlocksPage} / ${unlocksTotalPages} (Toplam ${unlocksTotalCount.toLocaleString(locStr)} kilit açılımı)`
-                  : `Page ${unlocksPage} of ${unlocksTotalPages} (${unlocksTotalCount.toLocaleString(locStr)} total)`}
+                {t('paginationSummary', { page: unlocksPage, totalPages: unlocksTotalPages, total: unlocksTotalCount.toLocaleString(locStr) })}
               </Text>
               <Pagination
                 size="sm"
@@ -479,19 +475,17 @@ export default function TokenomicsTab({
           <Group gap={8} mb="sm">
             <IconUsers size={20} color="#38bdf8" />
             <Text size="sm" fw={700} c="white">
-              {lang === 'tr' ? 'Cüzdan Bakiyeleri ve Servet Kademeleri' : 'Wallet Wealth Distribution Tiers'}
+              {t('tokenomics_walletWealthDistributionTiers')}
             </Text>
           </Group>
           <Text size="xs" c="dimmed" mb="md">
-            {lang === 'tr'
-              ? 'Ağdaki hesapların bakiye büyüklüklerine göre sınıflandırılması ve ekosistemdeki varlık ağırlıkları.'
-              : 'Categorization of network holders by balance size and ecosystem weight.'}
+            {t('tokenomics_categorizationOfNetworkHolders')}
           </Text>
 
           <Stack gap="xs">
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #ef4444' }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🐋 {lang === 'tr' ? 'Balina (>100.000 HMND)' : 'Whale (>100K HMND)'}</Text>
+                <Text size="xs" fw={700} c="white">🐋 {t('tokenomics_whale100kHmnd')}</Text>
                 <Badge size="xs" color="red" variant="light">Borsalar & Kasalar</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -501,7 +495,7 @@ export default function TokenomicsTab({
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b' }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🦈 {lang === 'tr' ? 'Köpekbalığı (10.000 - 100.000 HMND)' : 'Shark (10K - 100K HMND)'}</Text>
+                <Text size="xs" fw={700} c="white">🦈 {t('tokenomics_shark10k100kHmnd')}</Text>
                 <Badge size="xs" color="yellow" variant="light">Düğüm Sahipleri</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -511,7 +505,7 @@ export default function TokenomicsTab({
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #14b8a6' }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🐬 {lang === 'tr' ? 'Yunus (1.000 - 10.000 HMND)' : 'Dolphin (1K - 10K HMND)'}</Text>
+                <Text size="xs" fw={700} c="white">🐬 {t('tokenomics_dolphin1k10kHmnd')}</Text>
                 <Badge size="xs" color="teal" variant="light">DeFi Katılımcıları</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -521,7 +515,7 @@ export default function TokenomicsTab({
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #06b6d4' }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🦐 {lang === 'tr' ? 'Karides & Balık (<1.000 HMND)' : 'Shrimp & Fish (<1K HMND)'}</Text>
+                <Text size="xs" fw={700} c="white">🦐 {t('tokenomics_shrimpFish1kHmnd')}</Text>
                 <Badge size="xs" color="cyan" variant="light">Topluluk</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -536,61 +530,56 @@ export default function TokenomicsTab({
           <Group gap={8} mb="sm">
             <IconScale size={20} color="#14b8a6" />
             <Text size="sm" fw={700} c="white">
-              {lang === 'tr' ? 'Biyometrik Eşitlik Endeksi (Proof-of-Humanity)' : 'Proof-of-Humanity Decentralization Index'}
+              {t('tokenomics_proofOfHumanityDecentralization')}
             </Text>
           </Group>
           <Text size="xs" c="dimmed" mb="md">
-            {lang === 'tr'
-              ? 'Geleneksel PoW veya PoS blokzincirlerinde servet yoğunlaşması madencilik veya stake gücünü tekeline alırken, Humanode’da durum tamamen farklıdır:'
-              : 'Unlike PoS where capital buys validator power, Humanode enforces strict biological decentralization:'}
+            {t('tokenomics_unlikePosWhereCapital')}
           </Text>
 
           <Stack gap="sm">
             <Paper p="sm" bg="rgba(20, 184, 166, 0.08)" style={{ border: '1px solid rgba(20, 184, 166, 0.2)' }}>
               <Group justify="space-between" mb={4}>
                 <Text size="xs" fw={700} c="teal">
-                  {lang === 'tr' ? 'Validatör Güç Eşitliği' : 'Validator Voting Equality'}
+                  {t('tokenomics_validatorVotingEquality')}
                 </Text>
                 <Badge color="teal" size="sm" variant="light">
                   %100 Tam Eşitlik
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                {lang === 'tr'
-                  ? 'İster 1 HMND ister 10.000.000 HMND sahibi olun; her insan yalnızca 1 geçerli bioauth kaydına ve ağda 1 eşit blok üretim hakkına sahiptir. Servet, blok üretim şansını artıramaz.'
-                  : 'Regardless of holding 1 or 10,000,000 HMND, each human commands exactly 1 node and 1 vote. Capital cannot purchase extra authoring slots.'}
+                {t('tokenomics_regardlessOfHolding1')}
               </Text>
             </Paper>
 
             <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
               <Group justify="space-between" mb={4}>
                 <Text size="xs" fw={700} c="white">
-                  {lang === 'tr' ? 'Sybil Saldırısı İmkânsızlığı' : 'Sybil Resistance'}
+                  {t('tokenomics_sybilResistance')}
                 </Text>
                 <Badge color="cyan" size="sm" variant="light">
                   3D Canlılık Testi
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                {lang === 'tr'
-                  ? 'Yapay zeka veya sahte kimliklerle birden fazla düğüm açmak kriptografik ve nöral yüz tanıma algoritmalarıyla sıfıra indirgenmiştir.'
-                  : 'Neural 3D liveness detection prevents artificial or duplicate node operations.'}
+                {t('tokenomics_neural3dLivenessDetection')}
               </Text>
             </Paper>
 
             <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
               <Group justify="space-between" mb={4}>
                 <Text size="xs" fw={700} c="white">
-                  {lang === 'tr' ? 'Adil Ödül Dağıtımı (FeesPot)' : 'Fair Rewards (FeesPot)'}
+                  {t('tokenomics_fairRewardsFeespot')}
                 </Text>
                 <Badge color="yellow" size="sm" variant="light">
                   Eşit Paylaşım
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                {lang === 'tr'
-                  ? `Havuzdaki ~${Math.round(feesPot / 1000)}K HMND (${feesPot.toLocaleString(locStr, { maximumFractionDigits: 0 })} HMND) tüm aktif insan düğümlerine eşit paylaştırılarak servet makası dengelenir.`
-                  : `Current pool reserve of ~${Math.round(feesPot / 1000)}K HMND (${feesPot.toLocaleString(locStr, { maximumFractionDigits: 0 })} HMND) is distributed strictly equally across all live verified human nodes.`}
+                {t('tokenomicsPoolEqual', {
+                  k: Math.round(feesPot / 1000),
+                  amount: feesPot.toLocaleString(locStr, { maximumFractionDigits: 0 })
+                })}
               </Text>
             </Paper>
           </Stack>

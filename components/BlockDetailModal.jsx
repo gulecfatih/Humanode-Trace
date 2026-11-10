@@ -21,6 +21,7 @@ import {
 import { IconCube, IconCheck, IconCopy, IconEye, IconArrowRight, IconActivity } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 
 export default function BlockDetailModal({
   opened,
@@ -29,7 +30,8 @@ export default function BlockDetailModal({
   onOpenTx,
   onSelectAddress,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [loading, setLoading] = useState(false);
   const [blockData, setBlockData] = useState(null);
 
@@ -72,7 +74,7 @@ export default function BlockDetailModal({
       });
   }, [opened, blockNumber]);
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
   const cleanNum = blockNumber ? parseInt(String(blockNumber).replace('#', ''), 10) : '';
 
   return (
@@ -83,11 +85,11 @@ export default function BlockDetailModal({
         <Group gap={8}>
           <IconCube size={22} color="#38bdf8" />
           <Title order={4}>
-            {lang === 'tr' ? `Blok #${cleanNum} Detayları` : `Block #${cleanNum} Details`}
+            {t('blockDetailsTitle', { number: cleanNum })}
           </Title>
           <CopyButton value={String(cleanNum)} timeout={1500}>
             {({ copied, copy }) => (
-              <Tooltip label={copied ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (lang === 'tr' ? 'Blok No Kopyala' : 'Copy Block #')}>
+              <Tooltip label={copied ? (t('copied')) : (t('overview_copyBlock'))}>
                 <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
                   {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
                 </ActionIcon>
@@ -127,7 +129,7 @@ export default function BlockDetailModal({
                 ⚡ {t('colTxCount')}
               </Text>
               <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
-                {blockData.tx_count || blockData.transactions?.length || 0} {lang === 'tr' ? 'İşlem' : 'Transactions'}
+                {blockData.tx_count || blockData.transactions?.length || 0} {t('unlocks_txs_3')}
               </Text>
               <Group gap={4} mt={3}>
                 <Badge size="xs" color="cyan" variant="light">
@@ -158,14 +160,14 @@ export default function BlockDetailModal({
             <Group justify="space-between" mb="xs" align="center">
               <Group gap={6} align="center">
                 <Text size="sm" fw={700} c="white">
-                  {lang === 'tr' ? 'Bu Bloktaki Tüm İşlemler' : 'All Transactions in This Block'}
+                  {t('overview_allTransactionsInThis')}
                 </Text>
                 <Badge size="sm" color="cyan" variant="light" className="font-mono">
-                  {blockData.transactions?.length || 0} {lang === 'tr' ? 'Kayıt' : 'Records'}
+                  {blockData.transactions?.length || 0} {t('overview_records')}
                 </Badge>
               </Group>
               <Text size="xs" c="dimmed">
-                {lang === 'tr' ? 'Detay için işleme tıklayınız' : 'Click transaction to view details'}
+                {t('overview_clickTransactionToView')}
               </Text>
             </Group>
 
@@ -175,10 +177,10 @@ export default function BlockDetailModal({
                   <Table.Tr>
                     <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
                     <Table.Th style={{ width: 130, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
-                    <Table.Th style={{ minWidth: 220, whiteSpace: 'nowrap' }}>{lang === 'tr' ? 'Gönderen ➔ Alıcı' : 'From ➔ To'}</Table.Th>
+                    <Table.Th style={{ minWidth: 220, whiteSpace: 'nowrap' }}>{t('overview_fromTo')}</Table.Th>
                     <Table.Th style={{ width: 120, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
                     <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colFee')}</Table.Th>
-                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{lang === 'tr' ? 'Detay & Swap' : 'Details & Swaps'}</Table.Th>
+                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
                     <Table.Th style={{ width: 70, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
@@ -233,14 +235,14 @@ export default function BlockDetailModal({
                                 </Text>
                               </Tooltip>
                               <Text size="xs" c="dimmed">➔</Text>
-                              <Tooltip label={toAddr || (lang === 'tr' ? 'Sistem / Kontrat' : 'System / Contract')} withArrow position="top">
+                              <Tooltip label={toAddr || (t('overview_systemContract'))} withArrow position="top">
                                 <Text
                                   size="xs"
                                   style={{ cursor: 'pointer', textDecoration: toAddr ? 'underline' : 'none' }}
                                   c={toAddr ? 'teal' : 'dimmed'}
                                   onClick={() => toAddr && onSelectAddress?.(toAddr)}
                                 >
-                                  {toAddr ? shortAddr(toAddr, 6, 4) : (lang === 'tr' ? '(Kontrat / Sistem)' : '(Contract / System)')}
+                                  {toAddr ? shortAddr(toAddr, 6, 4) : (t('overview_contractSystem'))}
                                 </Text>
                               </Tooltip>
                             </Group>
@@ -257,7 +259,7 @@ export default function BlockDetailModal({
                           <Table.Td style={{ whiteSpace: 'nowrap' }}>
                             {tx.tokenTransfers && tx.tokenTransfers.length > 0 ? (
                               <Badge size="xs" color="indigo" variant="light">
-                                🔄 {tx.tokenTransfers.length} {lang === 'tr' ? 'Token Transferi' : 'Token Transfer'}
+                                🔄 {tx.tokenTransfers.length} {t('overview_tokenTransfer')}
                               </Badge>
                             ) : tx.details ? (
                               <Text size="xs" c="dimmed" lineClamp={1}>
@@ -269,7 +271,7 @@ export default function BlockDetailModal({
                           </Table.Td>
 
                           <Table.Td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                            <Tooltip label={lang === 'tr' ? 'İşlem Detayını Aç' : 'View Transaction Details'} withArrow position="top">
+                            <Tooltip label={t('overview_viewTransactionDetails')} withArrow position="top">
                               <ActionIcon
                                 size="sm"
                                 variant="light"
@@ -290,7 +292,7 @@ export default function BlockDetailModal({
                     <Table.Tr>
                       <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '30px' }}>
                         <Text size="sm" c="dimmed">
-                          {lang === 'tr' ? 'Bu blokta kayıtlı işlem bulunamadı.' : 'No transactions recorded in this block.'}
+                          {t('block_noTransactionsRecordedIn')}
                         </Text>
                       </Table.Td>
                     </Table.Tr>

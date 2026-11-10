@@ -55,6 +55,7 @@ import {
   shortAddr,
 } from './formatters';
 import { useLanguage, LanguageSwitcher } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AmountDisplay from './ui/AmountDisplay';
 import AddressBadge from './ui/AddressBadge';
@@ -67,7 +68,8 @@ export default function OverviewTab({
   onOpenBlock,
   onOpenTx,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [stats, setStats] = useState(null);
   const [progressData, setProgressData] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -407,7 +409,7 @@ export default function OverviewTab({
   const displayVolumeHmnd = rangeStats?.total_all_volume ?? rangeStats?.totalVolumeHmnd ?? ((stats?.evm?.total_volume_hmnd || 0) + (stats?.substrate?.total_volume_hmnd || 0)) ?? 0;
   const avgFeePerBlock = totalCount > 0 ? (displayFeesHmnd / totalCount) : 0;
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
 
   return (
     <Stack gap="md">
@@ -680,7 +682,7 @@ export default function OverviewTab({
               </Group>
 
               <Text size="xs" c="dimmed">
-                {startDate ? startDate.replace('T', ' ') : '2022-11-15 (Genesis)'} ➔ {endDate ? endDate.replace('T', ' ') : (lang === 'tr' ? 'Şimdiye Kadar' : 'Present')}
+                {startDate ? startDate.replace('T', ' ') : '2022-11-15 (Genesis)'} ➔ {endDate ? endDate.replace('T', ' ') : (t('overview_present'))}
               </Text>
             </Group>
 
@@ -710,7 +712,7 @@ export default function OverviewTab({
                 <Box my={3}>
                   <AmountDisplay
                     value={totalCount.toLocaleString(loc)}
-                    unit={lang === 'tr' ? 'BLOK' : 'BLOCKS'}
+                    unit={t('overview_blocks')}
                     color="#38bdf8"
                     size="md"
                   />
@@ -724,7 +726,7 @@ export default function OverviewTab({
                 <Box my={3}>
                   <AmountDisplay
                     value={displayTxCount.toLocaleString(loc)}
-                    unit={lang === 'tr' ? 'İŞLEM' : 'TXS'}
+                    unit={t('overview_txs_3')}
                     color="#10b981"
                     size="md"
                   />
@@ -793,10 +795,10 @@ export default function OverviewTab({
                     value={chartDayScope}
                     onChange={setChartDayScope}
                     data={[
-                      { value: '30d', label: lang === 'tr' ? 'Son 30 Gün' : 'Last 30 Days' },
-                      { value: '90d', label: lang === 'tr' ? 'Son 90 Gün' : 'Last 90 Days' },
-                      { value: '1y', label: lang === 'tr' ? 'Son 1 Yıl' : 'Last 1 Year' },
-                      { value: 'all', label: lang === 'tr' ? 'Tümü (1100+ Gün)' : 'All Time' },
+                      { value: '30d', label: t('preset30d') },
+                      { value: '90d', label: t('overview_last90Days') },
+                      { value: '1y', label: t('overview_last1Year') },
+                      { value: 'all', label: t('overview_allTime') },
                     ]}
                     color="teal"
                   />
@@ -857,7 +859,7 @@ export default function OverviewTab({
                       : 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
 
                     const periodLabel = bar.period || bar.day || idx;
-                    const tipContent = `${periodLabel} (${lang === 'tr' ? 'Dönem' : 'Period'}):\n🔥 ${t('metricFee')}: ${formatFee(feeVal, true, lang)} (≈ $${feeUsdVal.toLocaleString(loc, { maximumFractionDigits: 2 })})\n⚡ ${t('metricCount')}: ${txVal.toLocaleString(loc)}\n💰 ${t('metricVol')}: ${formatHMND(volVal, { locale: lang })}\n\n👉 ${lang === 'tr' ? 'Bu dönemin bloklarını süzmek için tıkla!' : 'Click to filter blocks of this period!'}`;
+                    const tipContent = `${periodLabel} (${t('overview_period')}):\n🔥 ${t('metricFee')}: ${formatFee(feeVal, true, lang)} (≈ $${feeUsdVal.toLocaleString(loc, { maximumFractionDigits: 2 })})\n⚡ ${t('metricCount')}: ${txVal.toLocaleString(loc)}\n💰 ${t('metricVol')}: ${formatHMND(volVal, { locale: lang })}\n\n👉 ${t('overview_clickToFilterBlocks')}`;
 
                     const totalBars = displayChartData.length;
                     let showLabel = false;
@@ -988,7 +990,7 @@ export default function OverviewTab({
                     : t('txsTableTitle')}
                 </Title>
                 <Badge variant="light" color="cyan" size="sm" className="font-mono">
-                  {totalCount.toLocaleString(loc)} {viewMode === 'block' ? (lang === 'tr' ? 'Blok' : 'Blocks') : (lang === 'tr' ? 'İşlem' : 'Txs')}
+                  {totalCount.toLocaleString(loc)} {viewMode === 'block' ? (t('overview_blocks_2')) : (t('unlocks_txs_3'))}
                 </Badge>
               </Group>
 
@@ -1091,7 +1093,7 @@ export default function OverviewTab({
                           <Table.Td>
                             <Group gap={6}>
                               <Badge size="xs" color="indigo" variant="filled">
-                                {txCount} {lang === 'tr' ? 'İŞLEM' : 'TXS'}
+                                {txCount} {t('overview_txs_3')}
                               </Badge>
                               {evmCount > 0 && (
                                 <Badge size="xs" color="cyan" variant="outline">
@@ -1155,7 +1157,7 @@ export default function OverviewTab({
                     <Table.Tr>
                       <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
                         <Text size="sm" c="dimmed">
-                          {loading ? (lang === 'tr' ? 'Belirlenen tarihteki bloklar taranıyor...' : 'Scanning blocks for selected criteria...') : (lang === 'tr' ? 'Seçilen kriterlere ve tarihe uygun blok kaydı bulunamadı.' : 'No block records found for the selected criteria.')}
+                          {loading ? (t('overview_scanningBlocksForSelected')) : (t('overview_noBlockRecordsFound'))}
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -1280,7 +1282,7 @@ export default function OverviewTab({
                     <Table.Tr>
                       <Table.Td colSpan={8} style={{ textAlign: 'center', padding: '40px' }}>
                         <Text size="sm" c="dimmed">
-                          {loading ? (lang === 'tr' ? 'İşlemler yükleniyor...' : 'Loading transactions...') : (lang === 'tr' ? 'Kriterlere uygun tekil işlem bulunamadı.' : 'No transactions found for the selected criteria.')}
+                          {loading ? (t('overview_loadingTransactions')) : (t('overview_noTransactionsFoundFor'))}
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -1310,7 +1312,7 @@ export default function OverviewTab({
             <Title order={4}>{t('blockModalTitle', { block: selectedBlockModal?.block_number })}</Title>
             <CopyButton value={String(selectedBlockModal?.block_number || '')} timeout={1500}>
               {({ copied, copy }) => (
-                <Tooltip label={copied ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (lang === 'tr' ? 'Blok No Kopyala' : 'Copy Block #')}>
+                <Tooltip label={copied ? (t('copied')) : (t('overview_copyBlock'))}>
                   <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
                     {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
                   </ActionIcon>
@@ -1346,7 +1348,7 @@ export default function OverviewTab({
                   ⚡ {t('colTxCount')}
                 </Text>
                 <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
-                  {selectedBlockModal.total_tx_count || selectedBlockModal.transactions?.length || 0} {lang === 'tr' ? 'İşlem' : 'Transactions'}
+                  {selectedBlockModal.total_tx_count || selectedBlockModal.transactions?.length || 0} {t('unlocks_txs_3')}
                 </Text>
                 <Group gap={4} mt={3}>
                   <Badge size="xs" color="cyan" variant="light">
@@ -1377,14 +1379,14 @@ export default function OverviewTab({
               <Group justify="space-between" mb="xs" align="center">
                 <Group gap={6} align="center">
                   <Text size="sm" fw={700} c="white">
-                    {lang === 'tr' ? 'Bu Bloktaki Tüm İşlemler' : 'All Transactions in This Block'}
+                    {t('overview_allTransactionsInThis')}
                   </Text>
                   <Badge size="sm" color="cyan" variant="light" className="font-mono">
-                    {selectedBlockModal.transactions?.length || 0} {lang === 'tr' ? 'Kayıt' : 'Records'}
+                    {selectedBlockModal.transactions?.length || 0} {t('overview_records')}
                   </Badge>
                 </Group>
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr' ? 'Detay için işleme tıklayınız' : 'Click transaction to view details'}
+                  {t('overview_clickTransactionToView')}
                 </Text>
               </Group>
 
@@ -1394,10 +1396,10 @@ export default function OverviewTab({
                     <Table.Tr>
                       <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
                       <Table.Th style={{ width: 130, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
-                      <Table.Th style={{ minWidth: 220, whiteSpace: 'nowrap' }}>{lang === 'tr' ? 'Gönderen ➔ Alıcı' : 'From ➔ To'}</Table.Th>
+                      <Table.Th style={{ minWidth: 220, whiteSpace: 'nowrap' }}>{t('overview_fromTo')}</Table.Th>
                       <Table.Th style={{ width: 120, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
                       <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colFee')}</Table.Th>
-                      <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{lang === 'tr' ? 'Detay & Swap' : 'Details & Swaps'}</Table.Th>
+                      <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
                       <Table.Th style={{ width: 70, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
@@ -1451,14 +1453,14 @@ export default function OverviewTab({
                                 </Text>
                               </Tooltip>
                               <Text size="xs" c="dimmed">➔</Text>
-                              <Tooltip label={toAddr || (lang === 'tr' ? 'Sistem / Kontrat' : 'System / Contract')} withArrow position="top">
+                              <Tooltip label={toAddr || (t('overview_systemContract'))} withArrow position="top">
                                 <Text
                                   size="xs"
                                   style={{ cursor: 'pointer', textDecoration: toAddr ? 'underline' : 'none' }}
                                   c={toAddr ? 'teal' : 'dimmed'}
                                   onClick={() => toAddr && onSelectAddress(toAddr)}
                                 >
-                                  {toAddr ? shortAddr(toAddr, 6, 4) : (lang === 'tr' ? '(Kontrat / Sistem)' : '(Contract / System)')}
+                                  {toAddr ? shortAddr(toAddr, 6, 4) : (t('overview_contractSystem'))}
                                 </Text>
                               </Tooltip>
                             </Group>
@@ -1475,7 +1477,7 @@ export default function OverviewTab({
                           <Table.Td style={{ whiteSpace: 'nowrap' }}>
                             {tx.tokenTransfers && tx.tokenTransfers.length > 0 ? (
                               <Badge size="xs" color="indigo" variant="light">
-                                🔄 {tx.tokenTransfers.length} {lang === 'tr' ? 'Token Transferi' : 'Token Transfer'}
+                                🔄 {tx.tokenTransfers.length} {t('overview_tokenTransfer')}
                               </Badge>
                             ) : tx.details ? (
                               <Text size="xs" c="dimmed" lineClamp={1}>
@@ -1487,7 +1489,7 @@ export default function OverviewTab({
                           </Table.Td>
 
                           <Table.Td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                            <Tooltip label={lang === 'tr' ? 'İşlem Detayını Aç' : 'View Transaction Details'} withArrow position="top">
+                            <Tooltip label={t('overview_viewTransactionDetails')} withArrow position="top">
                               <ActionIcon
                                 size="sm"
                                 variant="light"
@@ -1605,7 +1607,7 @@ export default function OverviewTab({
                   <Text size="xs" c="dimmed">{t('toLabel')}</Text>
                   <Group gap={4}>
                     <Text size="xs" className="font-mono" c="teal" style={{ wordBreak: 'break-all' }}>
-                      {selectedTxModal.to_address || selectedTxModal.target || (lang === 'tr' ? '(Sözleşme Oluşturma / Sistem)' : '(Contract Creation / System)')}
+                      {selectedTxModal.to_address || selectedTxModal.target || (t('overview_contractCreationSystem'))}
                     </Text>
                     {(selectedTxModal.to_address || selectedTxModal.target) && (
                       <CopyButton value={selectedTxModal.to_address || selectedTxModal.target}>
@@ -1662,7 +1664,7 @@ export default function OverviewTab({
                     <IconSparkles size={16} color="#38bdf8" />
                     <Title order={6} c="cyan">{t('tokenTransfersTitle')}</Title>
                   </Group>
-                  <Badge color="cyan" size="xs">{selectedTxModal.tokenTransfers.length} {lang === 'tr' ? 'Transfer' : 'Transfers'}</Badge>
+                  <Badge color="cyan" size="xs">{selectedTxModal.tokenTransfers.length} {t('tokenColTransfers')}</Badge>
                 </Group>
 
                 <Box style={{ overflowX: 'auto' }}>

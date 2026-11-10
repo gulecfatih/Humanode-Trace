@@ -37,6 +37,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
 
@@ -179,8 +180,9 @@ function computePositions(nodes, links, mode = 'hierarchical', width = 900, heig
 }
 
 export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenLedger }) {
-  const { t, lang } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = t('whales_enUs');
 
   const [address, setAddress] = useState(
     initialAddress || 'hmqTykgNBa9Jd18j3XggkvSW99L2sgdEbCP4cwxbQtGTJswWs'
@@ -308,14 +310,10 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
             <IconGitFork size={22} color="#a855f7" />
             <div>
               <Title order={4} c="white">
-                {lang === 'tr'
-                  ? 'Görsel Para İzi Ağı & Çok Kademeli Fon Akışı (Multi-Hop Flow)'
-                  : 'Interactive Money Trail & Multi-Hop Flow'}
+                {t('moneytrail_interactiveMoneyTrailMulti')}
               </Title>
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? 'Sadeleştirilmiş sıralı fon transfer şeması, köprü geçişleri ve davranışsal kümeleme analizi'
-                  : 'Streamlined hierarchical fund flow map, cross-layer bridge tracing and behavioral clustering'}
+                {t('moneytrail_streamlinedHierarchicalFundFlow')}
               </Text>
             </div>
           </Group>
@@ -328,9 +326,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
           <Group justify="space-between" align="center" gap="sm" wrap="wrap">
             <TextInput
               placeholder={
-                lang === 'tr'
-                  ? 'İzlenecek cüzdan adresi girin (0x... veya hm...)'
-                  : 'Enter wallet address to trace (0x... or hm...)'
+                t('moneytrail_enterWalletAddressTo')
               }
               leftSection={<IconSearch size={16} />}
               value={address}
@@ -339,9 +335,9 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
             />
             <Select
               data={[
-                { value: '1', label: lang === 'tr' ? '1. Kademe (Doğrudan)' : '1 Hop (Direct)' },
-                { value: '2', label: lang === 'tr' ? '2. Kademe (Derin)' : '2 Hops (Deep)' },
-                { value: '3', label: lang === 'tr' ? '3. Kademe (Geniş Ağ)' : '3 Hops (Wide Network)' },
+                { value: '1', label: t('moneytrail_1HopDirect') },
+                { value: '2', label: t('moneytrail_2HopsDeep') },
+                { value: '3', label: t('moneytrail_3HopsWideNetwork') },
               ]}
               value={depth}
               onChange={(val) => {
@@ -356,7 +352,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
               loading={loading}
               leftSection={<IconGitFork size={16} />}
             >
-              {lang === 'tr' ? 'Ağı Haritala' : 'Map Network'}
+              {t('moneytrail_mapNetwork')}
             </Button>
           </Group>
         </form>
@@ -406,7 +402,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         : 'red'
                     }
                   >
-                    {lang === 'tr' ? 'Risk:' : 'Risk:'} %{clusterData.riskScore} ({clusterData.riskLevel})
+                    {t('moneytrail_risk')} %{clusterData.riskScore} ({clusterData.riskLevel})
                   </Badge>
                 </Group>
                 <Text size="xs" c="dimmed" mt={2}>
@@ -423,7 +419,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                 leftSection={<IconEye size={14} />}
                 onClick={() => onSelectAddress(clusterData.address)}
               >
-                {lang === 'tr' ? 'Profil' : 'Profile'}
+                {t('moneytrail_profile_2')}
               </Button>
               <Button
                 size="xs"
@@ -432,7 +428,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                 leftSection={<IconBook size={14} />}
                 onClick={() => onOpenLedger(clusterData.address)}
               >
-                {lang === 'tr' ? 'Hesap Defteri' : 'Ledger'}
+                {t('validators_walletLedger')}
               </Button>
             </Group>
           </Group>
@@ -441,9 +437,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
           {clusterData.associatedClusterWallets?.length > 0 && (
             <Box mt="md" pt="sm" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <Text size="xs" fw={700} c="cyan" mb={6}>
-                {lang === 'tr'
-                  ? 'KÜME İLİŞKİLİ CÜZDANLAR & YAKINLIK SKORLARI (Ortak İşlem Heuristiği):'
-                  : 'ASSOCIATED CLUSTER WALLETS & AFFINITY:'}
+                {t('moneytrail_associatedClusterWalletsAffinity')}
               </Text>
               <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="xs">
                 {clusterData.associatedClusterWallets.map((w, idx) => (
@@ -463,14 +457,14 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         {w.role}
                       </Text>
                       <Badge size="xs" color="violet">
-                        %{w.affinityPercentage} {lang === 'tr' ? 'Uyum' : 'Affinity'}
+                        %{w.affinityPercentage} {t('moneytrail_affinity')}
                       </Badge>
                     </Group>
                     <Text size="11px" className="font-mono" c="cyan">
                       {w.shortAddress}
                     </Text>
                     <Text size="10px" c="dimmed">
-                      {w.commonTxsCount} {lang === 'tr' ? 'ortak akış' : 'shared flows'}
+                      {w.commonTxsCount} {t('moneytrail_sharedFlows')}
                     </Text>
                   </Paper>
                 ))}
@@ -499,8 +493,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                 value={viewMode}
                 onChange={setViewMode}
                 data={[
-                  { label: lang === 'tr' ? '📊 Sıralı Akış Şeması' : '📊 Flow Diagram', value: 'diagram' },
-                  { label: lang === 'tr' ? '📋 Adım Adım Tablo' : '📋 Step Table', value: 'table' },
+                  { label: t('moneytrail_flowDiagram'), value: 'diagram' },
+                  { label: t('moneytrail_stepTable'), value: 'table' },
                 ]}
                 color="violet"
               />
@@ -512,8 +506,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     value={layoutMode}
                     onChange={handleLayoutChange}
                     data={[
-                      { label: lang === 'tr' ? '🌱 Soldan Sağa Sıralı' : '🌱 Left-to-Right', value: 'hierarchical' },
-                      { label: lang === 'tr' ? '🎯 Halka (Katmanlı)' : '🎯 Concentric Radial', value: 'radial' },
+                      { label: t('moneytrail_leftToRight'), value: 'hierarchical' },
+                      { label: t('moneytrail_concentricRadial'), value: 'radial' },
                     ]}
                     color="cyan"
                   />
@@ -523,8 +517,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     value={labelFilter}
                     onChange={setLabelFilter}
                     data={[
-                      { label: lang === 'tr' ? 'Tüm Miktarlar' : 'All Amounts', value: 'all' },
-                      { label: lang === 'tr' ? 'Sade (>1M HMND)' : 'Major Only', value: 'major' },
+                      { label: t('moneytrail_allAmounts'), value: 'all' },
+                      { label: t('moneytrail_majorOnly'), value: 'major' },
                     ]}
                     color="teal"
                   />
@@ -534,10 +528,10 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
 
             <Group gap="xs">
               <Badge color="violet" variant="filled" size="sm">
-                {trailData.totalNodes} {lang === 'tr' ? 'Düğüm' : 'Nodes'}
+                {trailData.totalNodes} {t('validators_nodes')}
               </Badge>
               <Badge color="cyan" variant="filled" size="sm">
-                {filteredLinks.length} {lang === 'tr' ? 'Akış' : 'Flows'}
+                {filteredLinks.length} {t('moneytrail_flows')}
               </Badge>
               {viewMode === 'diagram' && (
                 <Button
@@ -547,7 +541,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                   leftSection={<IconRefresh size={12} />}
                   onClick={() => handleLayoutChange(layoutMode)}
                 >
-                  {lang === 'tr' ? 'Yerleşimi Sıfırla' : 'Reset Layout'}
+                  {t('moneytrail_resetLayout')}
                 </Button>
               )}
             </Group>
@@ -606,13 +600,13 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     <line x1="620" y1="36" x2="620" y2="495" stroke="rgba(255,255,255,0.05)" strokeDasharray="4 4" />
 
                     <text x="95" y="24" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="bold" letterSpacing="0.8">
-                      {lang === 'tr' ? 'KÖK CÜZDAN (ROOT)' : 'ROOT WALLET'}
+                      {t('moneytrail_rootWallet')}
                     </text>
                     <text x="445" y="24" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="bold" letterSpacing="0.8">
-                      {lang === 'tr' ? '1. KADEME (DOĞRUDAN ALICILAR)' : 'HOP 1 (DIRECT)'}
+                      {t('moneytrail_hop1Direct')}
                     </text>
                     <text x="770" y="24" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold" letterSpacing="0.8">
-                      {lang === 'tr' ? '2. KADEME (İKİNCİL ALICILAR)' : 'HOP 2 (SECONDARY)'}
+                      {t('moneytrail_hop2Secondary')}
                     </text>
                   </g>
                 )}
@@ -828,14 +822,14 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
               <Table striped highlightOnHover verticalSpacing="xs">
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>{lang === 'tr' ? 'Seviye' : 'Hop'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'Kaynak Cüzdan' : 'Source Wallet'}</Table.Th>
-                    <Table.Th style={{ textAlign: 'center' }}>{lang === 'tr' ? 'Yön' : 'Direction'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'Hedef Cüzdan' : 'Target Wallet'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'Transfer Tutarı' : 'Transferred Amount'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'İşlem Sayısı' : 'Tx Count'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'Tür' : 'Type'}</Table.Th>
-                    <Table.Th>{lang === 'tr' ? 'Eylem' : 'Actions'}</Table.Th>
+                    <Table.Th>{t('moneytrail_hop')}</Table.Th>
+                    <Table.Th>{t('moneytrail_sourceWallet')}</Table.Th>
+                    <Table.Th style={{ textAlign: 'center' }}>{t('moneytrail_direction')}</Table.Th>
+                    <Table.Th>{t('moneytrail_targetWallet')}</Table.Th>
+                    <Table.Th>{t('colAmount')}</Table.Th>
+                    <Table.Th>{t('dirColTxCount')}</Table.Th>
+                    <Table.Th>{t('moneytrail_type')}</Table.Th>
+                    <Table.Th>{t('moneytrail_actions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -850,8 +844,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         <Table.Td>
                           <Badge size="xs" color={isHop1 ? 'cyan' : 'violet'} variant="light">
                             {isHop1
-                              ? (lang === 'tr' ? '1. Kademe' : 'Hop 1')
-                              : (lang === 'tr' ? '2. Kademe' : 'Hop 2')}
+                              ? (t('moneytrail_hop1'))
+                              : (t('moneytrail_hop2'))}
                           </Badge>
                         </Table.Td>
 
@@ -899,8 +893,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         <Table.Td>
                           <Badge size="xs" color={isBridge ? 'pink' : 'blue'} variant="light">
                             {isBridge
-                              ? (lang === 'tr' ? '🌉 Katman Köprüsü' : '🌉 Cross-Layer Bridge')
-                              : (lang === 'tr' ? '⚡ Normal Transfer' : '⚡ Direct Transfer')}
+                              ? (t('moneytrail_crossLayerBridge'))
+                              : (t('moneytrail_directTransfer'))}
                           </Badge>
                         </Table.Td>
 
@@ -912,7 +906,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                               color="cyan"
                               onClick={() => onSelectAddress(link.target)}
                             >
-                              {lang === 'tr' ? 'Önizle' : 'Preview'}
+                              {t('preview')}
                             </Button>
                             <Button
                               size="compact-xs"
@@ -920,7 +914,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                               color="violet"
                               onClick={() => fetchTrailAndCluster(link.target, depth)}
                             >
-                              {lang === 'tr' ? 'Bu Cüzdana Odaklan' : 'Trace'}
+                              {t('moneytrail_trace')}
                             </Button>
                           </Group>
                         </Table.Td>
@@ -947,14 +941,12 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                 <div>
                   <Group gap="xs" align="center">
                     <Badge color={selectedNode.isRoot ? 'violet' : 'cyan'}>
-                      {selectedNode.isRoot ? (lang === 'tr' ? 'KÖK CÜZDAN' : 'ROOT') : `${selectedNode.depth || 1}. KADEME`}
+                      {selectedNode.isRoot ? (t('moneytrail_root')) : `${selectedNode.depth || 1}. KADEME`}
                     </Badge>
                     <AddressBadge address={selectedNode.address} network={selectedNode.layer} showNetwork={true} />
                   </Group>
                   <Text size="xs" c="dimmed" mt={3}>
-                    {lang === 'tr'
-                      ? 'Bu cüzdan ağ üzerinde seçildi. Detaylı hareketlerini görmek veya bu cüzdanı kök yaparak devam etmek için butonları kullanın.'
-                      : 'Selected node in the trace network. Trace outward or inspect ledger statement.'}
+                    {t('moneytrail_selectedNodeInThe')}
                   </Text>
                 </div>
 
@@ -965,7 +957,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     leftSection={<IconGitFork size={14} />}
                     onClick={() => fetchTrailAndCluster(selectedNode.address, depth)}
                   >
-                    {lang === 'tr' ? 'Bu Cüzdanı Kök Yap ve İzle' : 'Re-Root & Trace'}
+                    {t('moneytrail_reRootTrace')}
                   </Button>
                   <Button
                     size="xs"
@@ -974,7 +966,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     leftSection={<IconBook size={14} />}
                     onClick={() => onOpenLedger(selectedNode.address)}
                   >
-                    {lang === 'tr' ? 'Hesap Defteri' : 'Ledger'}
+                    {t('validators_walletLedger')}
                   </Button>
                   <Button
                     size="xs"
@@ -982,7 +974,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     leftSection={<IconEye size={14} />}
                     onClick={() => onSelectAddress(selectedNode.address)}
                   >
-                    {lang === 'tr' ? 'Profil' : 'Profile'}
+                    {t('moneytrail_profile_2')}
                   </Button>
                 </Group>
               </Group>
@@ -997,7 +989,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
           {/* Nodes Table */}
           <Paper p="sm" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
             <Title order={5} c="white" mb="xs">
-              {lang === 'tr' ? 'Tespit Edilen Düğümler' : 'Discovered Nodes'}
+              {t('moneytrail_discoveredNodes')}
             </Title>
             <Stack gap={6}>
               {trailData.nodes?.map((node) => (
@@ -1014,7 +1006,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     <div>
                       <Group gap={6} wrap="nowrap">
                         <Badge size="xs" color={node.isRoot ? 'violet' : node.layer === 'EVM' ? 'cyan' : 'green'}>
-                          {node.isRoot ? (lang === 'tr' ? 'KÖK' : 'ROOT') : node.layer}
+                          {node.isRoot ? (t('moneytrail_root_2')) : node.layer}
                         </Badge>
                         <AddressBadge address={node.address} network={node.layer} showNetwork={false} />
                       </Group>
@@ -1027,7 +1019,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         color="cyan"
                         onClick={() => onSelectAddress(node.address)}
                       >
-                        {lang === 'tr' ? 'Önizle' : 'Preview'}
+                        {t('preview')}
                       </Button>
                       <Button
                         size="compact-xs"
@@ -1035,7 +1027,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         color="green"
                         onClick={() => onOpenLedger(node.address)}
                       >
-                        {lang === 'tr' ? 'Defter' : 'Ledger'}
+                        {t('moneytrail_ledger_3')}
                       </Button>
                       <Button
                         size="compact-xs"
@@ -1043,7 +1035,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                         color="violet"
                         onClick={() => fetchTrailAndCluster(node.address, depth)}
                       >
-                        {lang === 'tr' ? 'Odaklan' : 'Focus'}
+                        {t('moneytrail_focus')}
                       </Button>
                     </Group>
                   </Group>
@@ -1055,7 +1047,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
           {/* Links Table */}
           <Paper p="sm" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
             <Title order={5} c="white" mb="xs">
-              {lang === 'tr' ? 'Para Akış Yolları (Büyükten Küçüğe)' : 'Transfer Routes (Ranked)'}
+              {t('moneytrail_transferRoutesRanked')}
             </Title>
             <Stack gap={6}>
               {[...filteredLinks]
@@ -1082,12 +1074,12 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                           </Text>
                           {link.type === 'bridge' && (
                             <Badge size="xs" color="pink">
-                              🌉 {lang === 'tr' ? 'KÖPRÜ' : 'BRIDGE'}
+                              🌉 {t('moneytrail_bridge')}
                             </Badge>
                           )}
                         </Group>
                         <Text size="10px" c="dimmed">
-                          {link.txCount} {lang === 'tr' ? 'transfer işleminde aktarıldı' : 'transfers recorded'}
+                          {link.txCount} {t('moneytrail_transfersRecorded')}
                         </Text>
                       </div>
                       <AmountDisplay

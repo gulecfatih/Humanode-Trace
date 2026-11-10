@@ -30,6 +30,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 
 export default function TransactionDetailModal({
   opened,
@@ -39,7 +40,8 @@ export default function TransactionDetailModal({
   onSelectAddress,
   onOpenLedger,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [loading, setLoading] = useState(false);
   const [txData, setTxData] = useState(null);
 
@@ -83,7 +85,7 @@ export default function TransactionDetailModal({
       });
   }, [opened, txHash]);
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
 
   return (
     <Modal
@@ -93,7 +95,7 @@ export default function TransactionDetailModal({
         <Group gap={8}>
           <IconActivity size={22} color="#38bdf8" />
           <Title order={4}>
-            {lang === 'tr' ? 'Ayrıntılı İşlem Bilgisi' : 'Detailed Transaction Information'}
+            {t('tx_detailedTransactionInformation')}
           </Title>
         </Group>
       }
@@ -159,7 +161,7 @@ export default function TransactionDetailModal({
                       onClose();
                       onOpenBlock?.(txData.block_number);
                     }}
-                    title={lang === 'tr' ? 'Bloğun tüm işlemlerini incelemek için tıkla' : 'Click to inspect block'}
+                    title={t('tx_clickToInspectBlock')}
                   >
                     #{txData.block_number?.toLocaleString(loc)}
                   </Text>
@@ -173,7 +175,7 @@ export default function TransactionDetailModal({
                       onOpenBlock?.(txData.block_number);
                     }}
                   >
-                    {lang === 'tr' ? 'Bloğu Görüntüle' : 'View Block'}
+                    {t('tx_viewBlock')}
                   </Button>
                 </Group>
               </Box>
@@ -186,7 +188,7 @@ export default function TransactionDetailModal({
               </Box>
 
               <Box>
-                <Text size="xs" c="dimmed">{lang === 'tr' ? 'Gönderen (Giden / Signer)' : 'Sender (From / Signer)'}</Text>
+                <Text size="xs" c="dimmed">{t('tx_senderFromSigner')}</Text>
                 <Group gap={4} wrap="nowrap">
                   <Text
                     size="xs"
@@ -209,7 +211,7 @@ export default function TransactionDetailModal({
               </Box>
 
               <Box>
-                <Text size="xs" c="dimmed">{lang === 'tr' ? 'Hedef / Alıcı (Gelen / To)' : 'Target / Recipient (To)'}</Text>
+                <Text size="xs" c="dimmed">{t('tx_targetRecipientTo')}</Text>
                 <Group gap={4} wrap="nowrap">
                   <Text
                     size="xs"
@@ -222,7 +224,7 @@ export default function TransactionDetailModal({
                     }}
                     onClick={() => (txData.to_address || txData.target) && onSelectAddress?.(txData.to_address || txData.target)}
                   >
-                    {txData.to_address || txData.target ? shortAddr(txData.to_address || txData.target, 8, 6) : (lang === 'tr' ? '(Sözleşme / Precompile / Sistem)' : '(Contract / System)')}
+                    {txData.to_address || txData.target ? shortAddr(txData.to_address || txData.target, 8, 6) : (t('tx_contractSystem'))}
                   </Text>
                   {(txData.to_address || txData.target) && (
                     <CopyButton value={txData.to_address || txData.target}>
@@ -280,7 +282,7 @@ export default function TransactionDetailModal({
                     {txData.pallet}:{txData.method}
                   </Badge>
                   <Title order={6} style={{ color: '#38bdf8' }}>
-                    {lang === 'tr' ? 'Çağrı Açıklaması & Ayrıntılı Kayıt' : 'Call Details & Detailed Log'}
+                    {t('tx_callDetailsDetailedLog')}
                   </Title>
                 </Group>
               </Group>
@@ -308,11 +310,11 @@ export default function TransactionDetailModal({
                 <Group gap={6}>
                   <IconCoins size={18} color="#38bdf8" />
                   <Title order={6} style={{ color: '#38bdf8' }}>
-                    {lang === 'tr' ? 'İç Token Transferleri & DEX Takasları' : 'Internal Token Transfers & Swaps'}
+                    {t('tx_internalTokenTransfersSwaps')}
                   </Title>
                 </Group>
                 <Badge color="cyan" size="xs">
-                  {txData.tokenTransfers.length} {lang === 'tr' ? 'Transfer' : 'Transfers'}
+                  {txData.tokenTransfers.length} {t('tokenColTransfers')}
                 </Badge>
               </Group>
 
@@ -320,10 +322,10 @@ export default function TransactionDetailModal({
                 <Table striped highlightOnHover verticalSpacing="xs">
                   <Table.Thead>
                     <Table.Tr>
-                      <Table.Th>{lang === 'tr' ? 'Token' : 'Token'}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Miktar' : 'Amount'}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Gönderen (From)' : 'From'}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Alıcı (To)' : 'To'}</Table.Th>
+                      <Table.Th>{t('tx_token')}</Table.Th>
+                      <Table.Th>{t('tx_amount')}</Table.Th>
+                      <Table.Th>{t('tx_from')}</Table.Th>
+                      <Table.Th>{t('tx_to')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -377,7 +379,7 @@ export default function TransactionDetailModal({
                 onOpenBlock?.(txData.block_number);
               }}
             >
-              {lang === 'tr' ? `Bu Bloğu İncele (#${txData.block_number})` : `Inspect Block (#${txData.block_number})`}
+              {t('inspectBlockNum', { number: txData?.block_number })}
             </Button>
 
             <Group gap="xs">
@@ -392,7 +394,7 @@ export default function TransactionDetailModal({
                     onOpenLedger?.(txData.from_address || txData.signer);
                   }}
                 >
-                  {lang === 'tr' ? 'Gönderen Defteri' : 'Sender Ledger'}
+                  {t('tx_senderLedger')}
                 </Button>
               )}
             </Group>

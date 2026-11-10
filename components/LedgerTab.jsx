@@ -44,6 +44,7 @@ import {
   shortAddr,
 } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
@@ -56,7 +57,8 @@ export default function LedgerTab({
   onOpenBlock,
   onOpenTx,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [address, setAddress] = useState(initialAddress || '');
   const [searchInput, setSearchInput] = useState(initialAddress || '');
   const [data, setData] = useState(null);
@@ -170,7 +172,7 @@ export default function LedgerTab({
                 {(data?.validatorStats?.blocksAuthored > 0 || data?.isValidator) && (
                   <Group gap={6} mt="xs">
                     <Badge color="cyan" variant="outline" size="sm">
-                      🧬 {lang === 'tr' ? 'Aktif Doğrulayıcı' : 'Active Validator'} • {data.validatorStats?.blocksAuthored || 0} {lang === 'tr' ? 'Blok Üretti' : 'Blocks Authored'} • {lang === 'tr' ? 'Son Aktif' : 'Last Active'}: {timeAgo(data.validatorStats?.lastActiveTs, lang)}
+                      🧬 {t('ledger_activeValidator')} • {data.validatorStats?.blocksAuthored || 0} {t('ledger_blocksAuthored')} • {t('valColLastActive')}: {timeAgo(data.validatorStats?.lastActiveTs, lang)}
                     </Badge>
                   </Group>
                 )}
@@ -216,15 +218,13 @@ export default function LedgerTab({
               <Group justify="space-between" align="center">
                 <div>
                   <Group gap="xs">
-                    <Text fw={700} c="violet">🔗 {lang === 'tr' ? 'Doğrulanmış Çift Katmanlı Kimlik (Dual-Identity)' : 'Verified Dual-Layer Identity'}</Text>
+                    <Text fw={700} c="violet">🔗 {t('ledger_verifiedDualLayerIdentity')}</Text>
                     <Badge color="violet" size="sm">
-                      {data.crossLayer.linkedAddresses?.[0]?.swapCount} {lang === 'tr' ? 'Köprü Takası' : 'Bridge Swaps'}
+                      {data.crossLayer.linkedAddresses?.[0]?.swapCount} {t('peek_bridgeSwaps')}
                     </Badge>
                   </Group>
                   <Text size="xs" c="dimmed" mt={4}>
-                    {lang === 'tr'
-                      ? 'Bu cüzdan nativeToEvmSwap köprüsüyle diğer katmandaki kimliğe matematiksel olarak bağlıdır: '
-                      : 'This address is linked to the following identity via the nativeToEvmSwap bridge: '}
+                    {t('ledger_thisAddressIsLinked')}
                     <strong className="font-mono" style={{ color: '#c4b5fd' }}>
                       {data.crossLayer.linkedAddresses?.[0]?.linkedAddress}
                     </strong>
@@ -239,7 +239,7 @@ export default function LedgerTab({
                     fetchLedger(linked, 1);
                   }}
                 >
-                  {lang === 'tr' ? 'Bağlı Defteri Aç ↗' : 'Open Linked Ledger ↗'}
+                  {t('ledger_openLinkedLedger')}
                 </Button>
               </Group>
             </Paper>
@@ -254,7 +254,7 @@ export default function LedgerTab({
               color="teal"
               icon={IconCoins}
               usdValue={formatUSD(sum.netBalanceCurrentUsd, lang)}
-              subtext={`${lang === 'tr' ? 'Giriş' : 'Inflow'} %${inPercent} • ${lang === 'tr' ? 'Çıkış' : 'Outflow'} %${outPercent}`}
+              subtext={`${t('ledger_inflow')} %${inPercent} • ${t('ledger_outflow')} %${outPercent}`}
             />
 
             <KpiStatCard
@@ -264,7 +264,7 @@ export default function LedgerTab({
               sign="+"
               color="cyan"
               icon={IconArrowDownLeft}
-              subtext={`${sum.totalInCount || 0} ${lang === 'tr' ? 'transferde geldi' : 'incoming transfers'}`}
+              subtext={`${sum.totalInCount || 0} ${t('ledger_incomingTransfers')}`}
             />
 
             <KpiStatCard
@@ -274,7 +274,7 @@ export default function LedgerTab({
               sign="-"
               color="orange"
               icon={IconArrowUpRight}
-              subtext={`${sum.totalOutCount || 0} ${lang === 'tr' ? 'transferde çıktı' : 'outgoing transfers'}`}
+              subtext={`${sum.totalOutCount || 0} ${t('ledger_outgoingTransfers')}`}
             />
 
             <KpiStatCard
@@ -283,7 +283,7 @@ export default function LedgerTab({
               unit="HMND"
               color="yellow"
               icon={IconCoins}
-              subtext={lang === 'tr' ? 'Yakılan Ağ Masrafı' : 'Burned Network Gas'}
+              subtext={t('ledger_burnedNetworkGas')}
             />
           </SimpleGrid>
 
@@ -295,10 +295,10 @@ export default function LedgerTab({
                   {t('ledgerTabStatement')} ({data.ledger?.pagination?.totalCount || 0})
                 </Tabs.Tab>
                 <Tabs.Tab value="sources" leftSection={<IconArrowDownLeft size={14} />}>
-                  {lang === 'tr' ? 'Fon Kaynakları' : 'Inflow Sources'} ({data.sources?.items?.length || 0})
+                  {t('ledger_inflowSources')} ({data.sources?.items?.length || 0})
                 </Tabs.Tab>
                 <Tabs.Tab value="destinations" leftSection={<IconArrowUpRight size={14} />}>
-                  {lang === 'tr' ? 'Fon Hedefleri' : 'Outflow Destinations'} ({data.destinations?.items?.length || 0})
+                  {t('ledger_outflowDestinations')} ({data.destinations?.items?.length || 0})
                 </Tabs.Tab>
                 <Tabs.Tab value="tokens" leftSection={<IconCoins size={14} />}>
                   {t('ledgerTabTokens')} ({data.tokens?.length || 0})
@@ -312,11 +312,11 @@ export default function LedgerTab({
                     <Table.Thead>
                       <Table.Tr>
                         <Table.Th>{t('colBlock')}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Yön' : 'Direction'}</Table.Th>
+                        <Table.Th>{t('moneytrail_direction')}</Table.Th>
                         <Table.Th>{t('colLayerPallet')}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Karşı Taraf' : 'Counterparty'}</Table.Th>
+                        <Table.Th>{t('ledger_counterparty')}</Table.Th>
                         <Table.Th>{t('colAmount')}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Tarihsel Değer (USD)' : 'Historical Value (USD)'}</Table.Th>
+                        <Table.Th>{t('ledger_historicalValueUsd')}</Table.Th>
                         <Table.Th>{t('colFee')}</Table.Th>
                         <Table.Th>{t('colActions')}</Table.Th>
                       </Table.Tr>
@@ -386,7 +386,7 @@ export default function LedgerTab({
                                 leftSection={<IconCube size={12} />}
                                 onClick={() => onOpenBlock?.(item.block_number)}
                               >
-                                {lang === 'tr' ? 'Blok' : 'Block'}
+                                {t('overview_blocks_2')}
                               </Button>
                               {item.hash && (
                                 <Button
@@ -396,7 +396,7 @@ export default function LedgerTab({
                                   leftSection={<IconActivity size={12} />}
                                   onClick={() => onOpenTx?.(item.hash)}
                                 >
-                                  {lang === 'tr' ? 'İşlem' : 'Tx'}
+                                  {t('unlocks_txs_3')}
                                 </Button>
                               )}
                             </Group>
@@ -425,9 +425,9 @@ export default function LedgerTab({
                 <Table striped highlightOnHover verticalSpacing="xs">
                   <Table.Thead>
                     <Table.Tr>
-                      <Table.Th>{lang === 'tr' ? 'Gönderen Cüzdan' : 'Sender Wallet'}</Table.Th>
+                      <Table.Th>{t('ledger_senderWallet')}</Table.Th>
                       <Table.Th>{t('dirColTxCount')}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Toplam Gelen HMND' : 'Total Incoming HMND'}</Table.Th>
+                      <Table.Th>{t('ledger_totalIncomingHmnd')}</Table.Th>
                       <Table.Th>{t('inspect')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
@@ -443,7 +443,7 @@ export default function LedgerTab({
                         </Table.Td>
                         <Table.Td>
                           <Button size="xs" variant="light" color="cyan" onClick={() => onSelectAddress(s.counterparty)}>
-                            {lang === 'tr' ? 'Önizle' : 'Preview'}
+                            {t('preview')}
                           </Button>
                         </Table.Td>
                       </Table.Tr>
@@ -457,9 +457,9 @@ export default function LedgerTab({
                 <Table striped highlightOnHover verticalSpacing="xs">
                   <Table.Thead>
                     <Table.Tr>
-                      <Table.Th>{lang === 'tr' ? 'Alıcı Cüzdan' : 'Recipient Wallet'}</Table.Th>
+                      <Table.Th>{t('ledger_recipientWallet')}</Table.Th>
                       <Table.Th>{t('dirColTxCount')}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Toplam Giden HMND' : 'Total Outgoing HMND'}</Table.Th>
+                      <Table.Th>{t('ledger_totalOutgoingHmnd')}</Table.Th>
                       <Table.Th>{t('inspect')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
@@ -475,7 +475,7 @@ export default function LedgerTab({
                         </Table.Td>
                         <Table.Td>
                           <Button size="xs" variant="light" color="cyan" onClick={() => onSelectAddress(d.counterparty)}>
-                            {lang === 'tr' ? 'Önizle' : 'Preview'}
+                            {t('preview')}
                           </Button>
                         </Table.Td>
                       </Table.Tr>
@@ -500,7 +500,7 @@ export default function LedgerTab({
                     <Group gap="md" align="center" wrap="wrap">
                       <div>
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {lang === 'tr' ? 'Cüzdan Bilgisi & Portföy Sahibi' : 'Wallet Info & Portfolio Owner'}
+                          {t('ledger_walletInfoPortfolioOwner')}
                         </Text>
                         <Group gap="xs" mt={3} align="center">
                           <AddressBadge address={data.address} network={data.addressType} showNetwork={true} />
@@ -510,7 +510,7 @@ export default function LedgerTab({
                       {data?.crossLayer?.hasLink && data.crossLayer.linkedAddresses?.[0] && (
                         <Box style={{ borderLeft: '1px solid rgba(255, 255, 255, 0.1)', paddingLeft: 12 }}>
                           <Text size="xs" c="violet" tt="uppercase" fw={700}>
-                            🔗 {lang === 'tr' ? 'Bağlı Çift Katman Kimliği (Dual-Identity)' : 'Linked Dual-Identity'}
+                            🔗 {t('ledger_linkedDualIdentity')}
                           </Text>
                           <Group gap="xs" mt={3} align="center">
                             <AddressBadge
@@ -526,7 +526,7 @@ export default function LedgerTab({
                     <Group gap="lg" align="center">
                       <Box style={{ textAlign: 'right' }}>
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {lang === 'tr' ? 'Toplam Portföy Değeri' : 'Total Portfolio USD'}
+                          {t('ledger_totalPortfolioUsd')}
                         </Text>
                         <Text size="lg" fw={800} c="teal" className="font-mono">
                           {formatUSD(data.summary?.totalPortfolioUsd ?? (data.summary?.netBalanceCurrentUsd || 0), lang)}
@@ -534,10 +534,10 @@ export default function LedgerTab({
                       </Box>
                       <Box style={{ textAlign: 'right' }}>
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {lang === 'tr' ? 'Kayıtlı Varlık Sayısı' : 'Total Asset Types'}
+                          {t('ledger_totalAssetTypes')}
                         </Text>
                         <Badge size="lg" color="cyan" variant="light">
-                          {data.tokens?.length || 0} {lang === 'tr' ? 'Varlık' : 'Assets'}
+                          {data.tokens?.length || 0} {t('tokens_assets')}
                         </Badge>
                       </Box>
                     </Group>
@@ -548,14 +548,14 @@ export default function LedgerTab({
                   <Table striped highlightOnHover verticalSpacing="sm">
                     <Table.Thead>
                       <Table.Tr>
-                        <Table.Th>{lang === 'tr' ? 'Varlık / Sembol' : 'Asset / Symbol'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Token / Coin Adı' : 'Token / Coin Name'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Varlık Türü' : 'Asset Type'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Cüzdandaki Miktar (Bakiye)' : 'Wallet Balance / Amount'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Tahmini Değer ($)' : 'Estimated Value ($)'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Toplam Giriş / Çıkış' : 'Total Inflow / Outflow'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Sözleşme / Katman Bilgisi' : 'Contract / Layer Info'}</Table.Th>
-                        <Table.Th>{lang === 'tr' ? 'Transfer Adedi' : 'Transfer Count'}</Table.Th>
+                        <Table.Th>{t('ledger_assetSymbol')}</Table.Th>
+                        <Table.Th>{t('ledger_tokenCoinName')}</Table.Th>
+                        <Table.Th>{t('ledger_assetType')}</Table.Th>
+                        <Table.Th>{t('ledger_walletBalanceAmount')}</Table.Th>
+                        <Table.Th>{t('ledger_estimatedValue')}</Table.Th>
+                        <Table.Th>{t('ledger_totalInflowOutflow')}</Table.Th>
+                        <Table.Th>{t('ledger_contractLayerInfo')}</Table.Th>
+                        <Table.Th>{t('ledger_transferCount')}</Table.Th>
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>
@@ -603,8 +603,8 @@ export default function LedgerTab({
                                   </Text>
                                   <Text size="xs" c="dimmed">
                                     {isNative
-                                      ? (lang === 'tr' ? 'Humanode L1 Yerel Kripto Para' : 'Humanode L1 Native Crypto')
-                                      : (lang === 'tr' ? `ERC-20 Standart (${tk.decimals || 18} Decimals)` : `ERC-20 Standard (${tk.decimals || 18} Decimals)`)}
+                                      ? (t('ledger_humanodeL1NativeCrypto'))
+                                      : (t('erc20Decimals', { decimals: tk.decimals || 18 }))}
                                   </Text>
                                 </div>
                               </Table.Td>
@@ -616,14 +616,14 @@ export default function LedgerTab({
                                   color={isNative ? 'teal' : tk.isLinked ? 'violet' : 'cyan'}
                                 >
                                   {isNative
-                                    ? (lang === 'tr' ? '⚡ Yerel Coin (L1)' : '⚡ Native Coin (L1)')
-                                    : (lang === 'tr' ? '📜 ERC-20 Sözleşmesi' : '📜 ERC-20 Token')}
+                                    ? (t('ledger_nativeCoinL1'))
+                                    : (t('ledger_erc20Token'))}
                                 </Badge>
                               </Table.Td>
 
                               <Table.Td>
                                 <AmountDisplay
-                                  value={Number(balance).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US', {
+                                  value={Number(balance).toLocaleString(t('whales_enUs'), {
                                     minimumFractionDigits: Number(balance) % 1 === 0 ? 0 : 2,
                                     maximumFractionDigits: 4,
                                   })}
@@ -654,13 +654,13 @@ export default function LedgerTab({
 
                               <Table.Td>
                                 <Group gap={6} wrap="nowrap">
-                                  <Tooltip label={lang === 'tr' ? 'Toplam Gelen' : 'Total Inflow'}>
+                                  <Tooltip label={t('ledger_totalInflow')}>
                                     <Text size="xs" c="cyan" className="font-mono">
                                       +{formatCompact(tk.totalIn || 0, lang)}
                                     </Text>
                                   </Tooltip>
                                   <Text size="xs" c="dimmed">/</Text>
-                                  <Tooltip label={lang === 'tr' ? 'Toplam Giden' : 'Total Outflow'}>
+                                  <Tooltip label={t('ledger_totalOutflow')}>
                                     <Text size="xs" c="orange" className="font-mono">
                                       -{formatCompact(tk.totalOut || 0, lang)}
                                     </Text>
@@ -672,7 +672,7 @@ export default function LedgerTab({
                                 {isNative ? (
                                   <Group gap={6} wrap="nowrap">
                                     <Badge size="xs" variant="outline" color="teal">
-                                      {lang === 'tr' ? 'Yerel L1 Katmanı' : 'Native L1 Layer'}
+                                      {t('ledger_nativeL1Layer')}
                                     </Badge>
                                     <AddressBadge
                                       address={tk.walletAddress || data.address}
@@ -689,7 +689,7 @@ export default function LedgerTab({
                                     />
                                     {tk.isLinked && (
                                       <Badge size="xs" color="violet" variant="light">
-                                        {lang === 'tr' ? 'Köprü Eşleşmeli' : 'Bridge Linked'}
+                                        {t('ledger_bridgeLinked')}
                                       </Badge>
                                     )}
                                   </Group>
@@ -700,7 +700,7 @@ export default function LedgerTab({
 
                               <Table.Td className="font-mono">
                                 <Badge size="sm" variant="default">
-                                  {Number(tk.txCount ?? tk.transfer_count ?? 0).toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-US')} {lang === 'tr' ? 'tx' : 'tx'}
+                                  {Number(tk.txCount ?? tk.transfer_count ?? 0).toLocaleString(t('whales_enUs'))} {t('ledger_tx_2')}
                                 </Badge>
                               </Table.Td>
                             </Table.Tr>
@@ -709,9 +709,7 @@ export default function LedgerTab({
                       ) : (
                         <Table.Tr>
                           <Table.Td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
-                            {lang === 'tr'
-                              ? 'Bu adrese ait token veya kripto varlık kaydı bulunamadı.'
-                              : 'No token or crypto asset records found for this address.'}
+                            {t('ledger_noTokenOrCrypto')}
                           </Table.Td>
                         </Table.Tr>
                       )}

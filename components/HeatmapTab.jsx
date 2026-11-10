@@ -4,9 +4,11 @@ import { Paper, Title, Text, Group, Box, SimpleGrid, Tooltip, Button } from '@ma
 import { IconFlame } from '@tabler/icons-react';
 import { formatHMND, formatUSD, formatFee } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 
 export default function HeatmapTab({ onSelectDate }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [year, setYear] = useState('2026');
   const [heatmapData, setHeatmapData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ export default function HeatmapTab({ onSelectDate }) {
   }, [days]);
 
   const yearsList = heatmapData?.years || ['2026', '2025', '2024', '2023', '2022'];
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Paper p="md">
@@ -81,13 +83,13 @@ export default function HeatmapTab({ onSelectDate }) {
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm" mb="md">
           <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ borderLeft: '3px solid #f97316' }}>
             <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
-              {lang === 'tr' ? `Toplam İşlem (${year})` : `Total Transactions (${year})`}
+              {t('totalTxsYear', { year })}
             </Text>
             <Text size="lg" fw={800} c="orange" className="font-mono">
               {heatmapData.totalTx?.toLocaleString(locStr) || 0}
             </Text>
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? 'Yıl boyunca gerçekleşen işlemler' : 'Transactions throughout the year'}
+              {t('heatmap_transactionsThroughoutTheYear')}
             </Text>
           </Paper>
 
@@ -103,25 +105,25 @@ export default function HeatmapTab({ onSelectDate }) {
 
           <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ borderLeft: '3px solid #06b6d4' }}>
             <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
-              {lang === 'tr' ? 'Zirve Gas Günü (Peak Gas)' : 'Peak Gas Day'}
+              {t('heatmap_peakGasDay')}
             </Text>
             <Text size="lg" fw={800} c="cyan" className="font-mono">
               {heatmapData.peakGasDay?.date || heatmapData.peakDay?.date || '-'}
             </Text>
             <Text size="xs" c="dimmed">
-              {heatmapData.peakGasDay?.fee ? `${formatFee(heatmapData.peakGasDay.fee, true, lang)} (${(heatmapData.peakGasDay.count || 0).toLocaleString(locStr)} ${lang === 'tr' ? 'işlem' : 'txs'})` : (heatmapData.peakDay?.count ? `${heatmapData.peakDay.count.toLocaleString(locStr)} ${lang === 'tr' ? 'işlem' : 'txs'}` : '-')}
+              {heatmapData.peakGasDay?.fee ? `${formatFee(heatmapData.peakGasDay.fee, true, lang)} (${(heatmapData.peakGasDay.count || 0).toLocaleString(locStr)} ${t('heatmap_txs_2')})` : (heatmapData.peakDay?.count ? `${heatmapData.peakDay.count.toLocaleString(locStr)} ${t('heatmap_txs_2')}` : '-')}
             </Text>
           </Paper>
 
           <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ borderLeft: '3px solid #10b981' }}>
             <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
-              {lang === 'tr' ? 'Kayıtlı Gün Sayısı' : 'Active Days Count'}
+              {t('heatmap_activeDaysCount')}
             </Text>
             <Text size="lg" fw={800} c="green" className="font-mono">
-              {days.length || 0} {lang === 'tr' ? 'Gün' : 'Days'}
+              {days.length || 0} {t('heatmap_days')}
             </Text>
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? `${year} yılında aktif geçen günler` : `Days with activity in ${year}`}
+              {t('daysWithActivityInYear', { year })}
             </Text>
           </Paper>
         </SimpleGrid>
@@ -130,10 +132,10 @@ export default function HeatmapTab({ onSelectDate }) {
       <Paper p="md" bg="rgba(0,0,0,0.35)" style={{ borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" mb="xs">
           <Text size="xs" fw={700} c="dimmed">
-            {lang === 'tr' ? `${year} Yılı Aktivite Haritası (${days.length} gün dizildi)` : `${year} Activity Map (${days.length} days indexed)`}
+            {t('yearActivityMap', { year })}
           </Text>
           <Text size="xs" c="dimmed">
-            {lang === 'tr' ? '💡 Bir güne tıklayarak o günkü blokları ve yakılan gas masrafını inceleyebilirsiniz' : '💡 Click on any day to filter its blocks and burned gas fees'}
+            {t('heatmap_clickOnAnyDay')}
           </Text>
         </Group>
 
@@ -155,9 +157,11 @@ export default function HeatmapTab({ onSelectDate }) {
                 bg = '#0e4429';
               }
 
-              const tip = lang === 'tr'
-                ? `${dateStr}:\n🔥 ${formatFee(fees, true, lang)} yakılan gas\n⚡ ${count.toLocaleString(locStr)} işlem\n\n👉 Bu günün bloklarını açmak için tıkla`
-                : `${dateStr}:\n🔥 ${formatFee(fees, true, lang)} burned gas\n⚡ ${count.toLocaleString(locStr)} txs\n\n👉 Click to view blocks of this day`;
+              const tip = t('heatmapTooltip', {
+                date: dateStr,
+                fee: formatFee(fees, true, lang),
+                count: count.toLocaleString(locStr)
+              });
 
               return (
                 <Tooltip key={dateStr} label={tip} withArrow position="top" multiline>
@@ -180,19 +184,19 @@ export default function HeatmapTab({ onSelectDate }) {
             })
           ) : (
             <Text size="sm" c="dimmed" style={{ width: '100%', textAlign: 'center', padding: '40px' }}>
-              {loading ? (lang === 'tr' ? 'Isı haritası verileri yükleniyor...' : 'Loading heatmap data...') : (lang === 'tr' ? `${year} yılı için ısı haritası kaydı bulunamadı.` : `No records found for ${year}.`)}
+              {loading ? (t('heatmap_loadingHeatmapData')) : (t('noHeatmapYear', { year }))}
             </Text>
           )}
         </Box>
 
         <Group justify="flex-end" align="center" gap="xs" mt="md">
-          <Text size="xs" c="dimmed">{lang === 'tr' ? 'Az Gas Ücreti' : 'Low Gas Fee'}</Text>
+          <Text size="xs" c="dimmed">{t('heatmap_lowGasFee')}</Text>
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: 'rgba(255,255,255,0.05)' }} title="0 HMND" />
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#0e4429' }} title={`≤ ${feeThresholds.q1.toFixed(1)} HMND`} />
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#006d32' }} title={`≤ ${feeThresholds.q2.toFixed(1)} HMND`} />
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#26a641' }} title={`≤ ${feeThresholds.q3.toFixed(1)} HMND`} />
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#39d353' }} title={`> ${feeThresholds.q3.toFixed(1)} HMND (Zirve)`} />
-          <Text size="xs" c="dimmed">{lang === 'tr' ? 'Çok Gas Ücreti' : 'High Gas Fee'}</Text>
+          <Text size="xs" c="dimmed">{t('heatmap_highGasFee')}</Text>
         </Group>
       </Paper>
     </Paper>

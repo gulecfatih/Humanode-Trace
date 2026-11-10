@@ -27,12 +27,14 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function EqualityAndSimTab() {
-  const { lang, t } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = t('whales_enUs');
 
   // Equality Metrics State
   const [equalityData, setEqualityData] = useState(null);
@@ -67,36 +69,36 @@ export default function EqualityAndSimTab() {
 
     return [
       {
-        label: lang === 'tr' ? 'En Üst %0.1' : 'Top 0.1%',
-        range: `~${Math.max(1, Math.round(totalHolders * 0.001))} ${lang === 'tr' ? 'Cüzdan' : 'Wallets'}`,
+        label: t('sim_top01'),
+        range: `~${Math.max(1, Math.round(totalHolders * 0.001))} ${t('whales_wallets')}`,
         percentage: wd.top01PercentShare || 0,
         totalHmnd: (totalWealth * (wd.top01PercentShare || 0)) / 100,
         color: 'red',
       },
       {
-        label: lang === 'tr' ? 'En Üst %1' : 'Top 1%',
-        range: `~${Math.round(totalHolders * 0.01)} ${lang === 'tr' ? 'Cüzdan' : 'Wallets'}`,
+        label: t('sim_top1'),
+        range: `~${Math.round(totalHolders * 0.01)} ${t('whales_wallets')}`,
         percentage: wd.top1PercentShare || 0,
         totalHmnd: (totalWealth * (wd.top1PercentShare || 0)) / 100,
         color: 'orange',
       },
       {
-        label: lang === 'tr' ? 'En Üst %5' : 'Top 5%',
-        range: `~${Math.round(totalHolders * 0.05)} ${lang === 'tr' ? 'Cüzdan' : 'Wallets'}`,
+        label: t('sim_top5'),
+        range: `~${Math.round(totalHolders * 0.05)} ${t('whales_wallets')}`,
         percentage: wd.top5PercentShare || 0,
         totalHmnd: (totalWealth * (wd.top5PercentShare || 0)) / 100,
         color: 'yellow',
       },
       {
-        label: lang === 'tr' ? 'En Üst %10' : 'Top 10%',
-        range: `~${Math.round(totalHolders * 0.1)} ${lang === 'tr' ? 'Cüzdan' : 'Wallets'}`,
+        label: t('sim_top10'),
+        range: `~${Math.round(totalHolders * 0.1)} ${t('whales_wallets')}`,
         percentage: wd.top10PercentShare || 0,
         totalHmnd: (totalWealth * (wd.top10PercentShare || 0)) / 100,
         color: 'cyan',
       },
       {
-        label: lang === 'tr' ? 'Kalan %90' : 'Bottom 90%',
-        range: `~${Math.round(totalHolders * 0.9)} ${lang === 'tr' ? 'Cüzdan' : 'Wallets'}`,
+        label: t('sim_bottom90'),
+        range: `~${Math.round(totalHolders * 0.9)} ${t('whales_wallets')}`,
         percentage: wd.bottom90PercentShare || 0,
         totalHmnd: (totalWealth * (wd.bottom90PercentShare || 0)) / 100,
         color: 'blue',
@@ -124,9 +126,7 @@ export default function EqualityAndSimTab() {
         <Stack align="center" gap="sm">
           <Loader color="cyan" size="lg" />
           <Text size="sm" c="dimmed">
-            {lang === 'tr'
-              ? '15.800+ cüzdanın bakiye dağılımı ve Gini katsayısı hesaplanıyor...'
-              : 'Calculating wealth distribution and Gini coefficient across 15,800+ wallets...'}
+            {t('sim_calculatingWealthDistributionAnd')}
           </Text>
         </Stack>
       </Center>
@@ -151,14 +151,10 @@ export default function EqualityAndSimTab() {
             </ThemeIcon>
             <div>
               <Title order={3} fw={700} c="white">
-                {lang === 'tr'
-                  ? 'Biyometrik Adalet & Dağılım Endeksi'
-                  : 'Biometric Equality & Distribution Index'}
+                {t('sim_biometricEqualityDistributionIndex')}
               </Title>
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? 'Humanode Proof-of-Humanity (1 İnsan = 1 Düğüm = 1 Oy) adalet endeksi, Gini katsayısı ve servet dağılımı'
-                  : 'Humanode Proof-of-Humanity equality index, Gini coefficient, and wealth distribution'}
+                {t('sim_humanodeProofOfHumanity')}
               </Text>
             </div>
           </Group>
@@ -171,49 +167,47 @@ export default function EqualityAndSimTab() {
       {/* KPI Cards */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
         <KpiStatCard
-          title={lang === 'tr' ? 'Gini Katsayısı (Servet)' : 'Gini Coefficient'}
+          title={t('sim_giniCoefficient')}
           value={equalityData?.giniCoefficient?.toFixed(2) || '0.84'}
           unit="/ 1.00"
           color="cyan"
           icon={IconScale}
           badge={equalityData?.giniRating || 'Konsantrasyon'}
           badgeColor="yellow"
-          subtext={equalityData?.giniDescription || (lang === 'tr' ? 'On-chain servet eşitlik katsayısı' : 'Wealth distribution measure')}
+          subtext={equalityData?.giniDescription || (t('sim_wealthDistributionMeasure'))}
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? 'Nakamoto Katsayısı (%51)' : 'Nakamoto (%51)'}
+          title={t('sim_nakamoto51')}
           value={equalityData?.nakamoto51Coefficient || 25}
-          unit={lang === 'tr' ? 'İnsan' : 'Humans'}
+          unit={t('sim_humans')}
           color="teal"
           icon={IconShieldLock}
           badge="Proof-of-Humanity"
           badgeColor="teal"
           subtext={
-            lang === 'tr'
-              ? 'Konsensüsü bozmak için 25 bağımsız biyometrik insanın onayı gerekir.'
-              : 'Requires 25 biological individuals to collude in consensus.'
+            t('sim_requires25BiologicalIndividuals')
           }
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? 'Toplam Bakiye Sahibi' : 'Total Token Holders'}
+          title={t('sim_totalTokenHolders')}
           value={equalityData?.totalHoldersCount?.toLocaleString(locStr) || '15,822'}
-          unit={lang === 'tr' ? 'Cüzdan' : 'Wallets'}
+          unit={t('whales_wallets')}
           color="violet"
           icon={IconUsers}
-          subtext={`${lang === 'tr' ? 'İzlenen Servet:' : 'Tracked Wealth:'} ${formatHMND(equalityData?.totalTrackedWealthHmnd || 0, { locale: lang })}`}
+          subtext={`${t('sim_trackedWealth')} ${formatHMND(equalityData?.totalTrackedWealthHmnd || 0, { locale: lang })}`}
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? 'Aktif Validatör (Düğüm)' : 'Active Validators'}
+          title={t('sim_activeValidators')}
           value={equalityData?.activeValidatorsCount || 48}
-          unit={lang === 'tr' ? 'Düğüm' : 'Nodes'}
+          unit={t('validators_nodes')}
           color="blue"
           icon={IconDna}
           badge="1 HUMAN = 1 VOTE"
           badgeColor="blue"
-          subtext={`${lang === 'tr' ? '%33.4 Sansür Eşiği: ' : '33.4% Censorship: '} ${equalityData?.nakamoto33Coefficient || 17} ${lang === 'tr' ? 'Düğüm' : 'Nodes'}`}
+          subtext={`${t('sim_334Censorship')} ${equalityData?.nakamoto33Coefficient || 17} ${t('validators_nodes')}`}
         />
       </SimpleGrid>
 
@@ -229,15 +223,15 @@ export default function EqualityAndSimTab() {
             <Group gap="xs">
               <IconScale size={18} color="#38bdf8" />
               <Text fw={700} size="sm" c="white">
-                {lang === 'tr' ? 'Lorenz Eğrisi (Servet Eşitliği)' : 'Lorenz Curve (Wealth Equality)'}
+                {t('sim_lorenzCurveWealthEquality')}
               </Text>
             </Group>
             <Group gap="xs">
               <Badge size="xs" color="gray" variant="outline">
-                --- {lang === 'tr' ? 'Mutlak Eşitlik (45°)' : 'Perfect Equality (45°)'}
+                --- {t('sim_perfectEquality45')}
               </Badge>
               <Badge size="xs" color="cyan" variant="filled">
-                — {lang === 'tr' ? 'Humanode Gerçek Eğri' : 'Actual Humanode Curve'}
+                — {t('sim_actualHumanodeCurve')}
               </Badge>
             </Group>
           </Group>
@@ -303,7 +297,7 @@ export default function EqualityAndSimTab() {
 
               {/* Axis Labels */}
               <text x="200" y="278" fill="#64748b" fontSize="10" textAnchor="middle">
-                {lang === 'tr' ? 'Kümülatif Cüzdan Yüzdesi (0% → 100%)' : 'Cumulative % of Wallets (0% → 100%)'}
+                {t('sim_cumulativeOfWallets0')}
               </text>
               <text
                 x="-150"
@@ -313,7 +307,7 @@ export default function EqualityAndSimTab() {
                 textAnchor="middle"
                 transform="rotate(-90)"
               >
-                {lang === 'tr' ? 'Kümülatif Servet Yüzdesi (%)' : 'Cumulative % of Wealth (%)'}
+                {t('sim_cumulativeOfWealth')}
               </text>
             </svg>
           </Box>
@@ -329,7 +323,7 @@ export default function EqualityAndSimTab() {
             <Group gap="xs">
               <IconCoins size={18} color="#eab308" />
               <Text fw={700} size="sm" c="white">
-                {lang === 'tr' ? 'Servet Yoğunlaşma Dilimleri' : 'Wealth Concentration Brackets'}
+                {t('sim_wealthConcentrationBrackets')}
               </Text>
             </Group>
             <Badge size="xs" color="yellow" variant="light">
@@ -340,10 +334,10 @@ export default function EqualityAndSimTab() {
           <Table verticalSpacing="xs" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Dilim' : 'Tier'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Cüzdan Sayısı' : 'Holders'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Toplam HMND' : 'Total HMND'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Pay' : 'Share'}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_tier')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_holders')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_totalHmnd')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_share')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

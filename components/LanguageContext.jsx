@@ -123,7 +123,7 @@ export function useLanguage() {
 }
 
 export function LanguageSwitcher({ size = 'xs' }) {
-  const { lang, languages, setLang } = useLanguage();
+  const { lang, languages, setLang, t } = useLanguage();
   const currentLang = languages.find((l) => l.code === lang) || languages[0] || DEFAULT_LANGUAGES[0];
 
   return (
@@ -157,7 +157,7 @@ export function LanguageSwitcher({ size = 'xs' }) {
         }}
       >
         <Menu.Label style={{ color: '#94a3b8', fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em' }}>
-          {lang === 'tr' ? 'DİL SEÇİN (SQL)' : 'SELECT LANGUAGE (SQL)'}
+          {t('selectLanguage')}
         </Menu.Label>
         {languages.map((item) => {
           const isSelected = item.code === lang;

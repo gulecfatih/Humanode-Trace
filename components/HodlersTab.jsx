@@ -33,6 +33,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatUSD, formatTimestamp, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
@@ -42,7 +43,8 @@ export default function HodlersTab({
   onOpenLedger,
   onOpenTrail,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [network, setNetwork] = useState('all');
@@ -95,7 +97,7 @@ export default function HodlersTab({
     setTimeout(fetchHodlers, 0);
   };
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Stack gap="md">
@@ -105,18 +107,14 @@ export default function HodlersTab({
           <div>
             <Group gap={8}>
               <Badge color="teal" variant="light" size="md">
-                👥 {lang === 'tr' ? 'Arz & Varlık Dağılımı' : 'Supply & Asset Distribution'}
+                👥 {t('hodlers_supplyAssetDistribution')}
               </Badge>
               <Title order={4}>
-                {lang === 'tr'
-                  ? 'Cüzdan Sahipleri & Çift Ağ Hodler Dağılım Masası'
-                  : 'Wallet Hodlers & Dual-Network Distribution Hub'}
+                {t('hodlers_walletHodlersDualNetwork')}
               </Title>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              {lang === 'tr'
-                ? 'Humanode yerel Substrate (hm...) ve akıllı sözleşme EVM (0x...) ağlarındaki en zengin cüzdan bakiyeleri, dolaşımdaki pay oranları ve çapraz kimlikler'
-                : 'Top wallet balances, circulating supply shares and cross-layer identities across Substrate (hm...) and EVM (0x...) networks'}
+              {t('hodlers_topWalletBalancesCirculating')}
             </Text>
           </div>
         </Group>
@@ -125,11 +123,11 @@ export default function HodlersTab({
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm" mt="sm">
           {/* Toplam Bakiye ve Cüzdanlar */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Toplam İzlenen Bakiye' : 'Total Tracked Balance'}
+            title={t('hodlers_totalTrackedBalance')}
             value={formatHMND(kpis?.total_balance_hmnd || 0, { locale: lang, showScale: false })}
             color="teal"
             icon={IconCoins}
-            subtext={`${kpis?.total_holders || 0} ${lang === 'tr' ? 'doğrulanmış cüzdanda' : 'verified wallets'}`}
+            subtext={`${kpis?.total_holders || 0} ${t('hodlers_verifiedWallets')}`}
           />
 
           {/* Substrate Ağı */}
@@ -145,10 +143,10 @@ export default function HodlersTab({
             </Text>
             <Group justify="space-between" mt={4}>
               <Text size="xs" c="dimmed">
-                {kpis?.substrate_holders || 0} {lang === 'tr' ? 'cüzdan' : 'wallets'}
+                {kpis?.substrate_holders || 0} {t('hodlers_wallets_3')}
               </Text>
               <Badge color="teal" variant="light" size="xs">
-                %{kpis?.substrate_share_percent || 0} {lang === 'tr' ? 'pay' : 'share'}
+                %{kpis?.substrate_share_percent || 0} {t('hodlers_share_2')}
               </Badge>
             </Group>
           </Card>
@@ -166,21 +164,21 @@ export default function HodlersTab({
             </Text>
             <Group justify="space-between" mt={4}>
               <Text size="xs" c="dimmed">
-                {kpis?.evm_holders || 0} {lang === 'tr' ? 'cüzdan' : 'wallets'}
+                {kpis?.evm_holders || 0} {t('hodlers_wallets_3')}
               </Text>
               <Badge color="cyan" variant="light" size="xs">
-                %{kpis?.evm_share_percent || 0} {lang === 'tr' ? 'pay' : 'share'}
+                %{kpis?.evm_share_percent || 0} {t('hodlers_share_2')}
               </Badge>
             </Group>
           </Card>
 
           {/* En Büyük Hodler Payı */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Lider Cüzdan (#1) Payı' : 'Top #1 Holder Share'}
+            title={t('hodlers_top1HolderShare')}
             value={`%${kpis?.top_holder_share || 0}`}
             color="yellow"
             icon={IconUsers}
-            subtext={lang === 'tr' ? 'Dolaşımdaki likit arzdaki ağırlık' : 'Circulating supply concentration'}
+            subtext={t('hodlers_circulatingSupplyConcentration')}
           />
         </SimpleGrid>
       </Paper>
@@ -211,7 +209,7 @@ export default function HodlersTab({
                     setPage(1);
                   }}
                   data={[
-                    { value: 'all', label: lang === 'tr' ? '📊 Tümü' : 'All' },
+                    { value: 'all', label: t('hodlers_all') },
                     { value: 'substrate', label: '⚡ Substrate (hm...)' },
                     { value: 'evm', label: '🌐 EVM (0x...)' },
                     { value: 'cross_layer', label: '🔗 Çift Katman Eşleşmeli' },
@@ -221,7 +219,7 @@ export default function HodlersTab({
                   }}
                 />
                 <Badge variant="light" color="teal" size="sm">
-                  {totalCount.toLocaleString(locStr)} {lang === 'tr' ? 'cüzdan' : 'wallets'}
+                  {totalCount.toLocaleString(locStr)} {t('hodlers_wallets_3')}
                 </Badge>
               </Group>
 
@@ -229,7 +227,7 @@ export default function HodlersTab({
                 <form onSubmit={handleSearchSubmit} style={{ flex: 1 }}>
                   <TextInput
                     size="xs"
-                    placeholder={lang === 'tr' ? 'Cüzdan adresi veya etiket ara...' : 'Search wallet or label...'}
+                    placeholder={t('hodlers_searchWalletOrLabel')}
                     leftSection={<IconSearch size={14} />}
                     rightSection={
                       searchQuery && (
@@ -274,12 +272,12 @@ export default function HodlersTab({
               >
                 <Table.Tr>
                   <Table.Th style={{ width: 60, textAlign: 'center' }}>#</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Cüzdan Adresi & Kimlik' : 'Wallet Address & ID'}</Table.Th>
-                  <Table.Th style={{ width: 120 }}>{lang === 'tr' ? 'Ağ Katmanı' : 'Network'}</Table.Th>
-                  <Table.Th style={{ textAlign: 'right', width: 180 }}>{lang === 'tr' ? 'Bakiye (HMND)' : 'Balance (HMND)'}</Table.Th>
-                  <Table.Th style={{ width: 150 }}>{lang === 'tr' ? 'Dolaşımdaki Pay' : 'Circulating Share'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Çift Katman Karşılığı' : 'Cross-Layer Counterpart'}</Table.Th>
-                  <Table.Th style={{ width: 90, textAlign: 'center' }}>{lang === 'tr' ? 'Eylemler' : 'Actions'}</Table.Th>
+                  <Table.Th>{t('hodlers_walletAddressId')}</Table.Th>
+                  <Table.Th style={{ width: 120 }}>{t('hodlers_network')}</Table.Th>
+                  <Table.Th style={{ textAlign: 'right', width: 180 }}>{t('hodlers_balanceHmnd')}</Table.Th>
+                  <Table.Th style={{ width: 150 }}>{t('hodlers_circulatingShare')}</Table.Th>
+                  <Table.Th>{t('hodlers_crossLayerCounterpart')}</Table.Th>
+                  <Table.Th style={{ width: 90, textAlign: 'center' }}>{t('colActions')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -295,7 +293,7 @@ export default function HodlersTab({
                   <Table.Tr>
                     <Table.Td colSpan={7} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Kriterlere uygun cüzdan bulunamadı.' : 'No wallets found matching criteria.'}
+                        {t('hodlers_noWalletsFoundMatching')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -373,7 +371,7 @@ export default function HodlersTab({
                         <Table.Td style={{ textAlign: 'center' }}>
                           <Group gap={4} justify="center" wrap="nowrap">
                             {onOpenLedger && (
-                              <Tooltip label={lang === 'tr' ? 'Hesap Defteri' : 'Wallet Ledger'} withArrow>
+                              <Tooltip label={t('validators_walletLedger')} withArrow>
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
@@ -385,7 +383,7 @@ export default function HodlersTab({
                               </Tooltip>
                             )}
                             {onOpenTrail && (
-                              <Tooltip label={lang === 'tr' ? 'Para İzi' : 'Money Trail'} withArrow>
+                              <Tooltip label={t('unlocks_moneyTrail')} withArrow>
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
@@ -410,9 +408,7 @@ export default function HodlersTab({
           {totalPages > 1 && (
             <Group justify="space-between" align="center" mt="sm">
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? `Sayfa ${page} / ${totalPages} (Toplam ${totalCount.toLocaleString(locStr)} cüzdan)`
-                  : `Page ${page} of ${totalPages} (${totalCount.toLocaleString(locStr)} wallets)`}
+                {t('paginationSummary', { page: page, totalPages: totalPages, total: totalCount.toLocaleString(locStr) })}
               </Text>
               <Pagination
                 size="sm"

@@ -42,6 +42,7 @@ import {
 } from '@tabler/icons-react';
 import { formatTimestamp, timeAgo, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 
@@ -52,7 +53,8 @@ export default function BiomapperTab({
   onOpenBlock,
   onOpenTx,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [networkType, setNetworkType] = useState('all');
@@ -124,7 +126,7 @@ export default function BiomapperTab({
     });
   };
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
   const kpis = data?.kpis;
   const chains = data?.chains || [];
   const bioauthFeed = data?.bioauthFeed?.items || [];
@@ -138,18 +140,14 @@ export default function BiomapperTab({
           <div>
             <Group gap={8}>
               <Badge color="cyan" variant="light" size="md">
-                🛡️ {lang === 'tr' ? 'Kriptobiyometrik Sybil Direnci' : 'Cryptobiometric Sybil Resistance'}
+                🛡️ {t('biomapper_cryptobiometricSybilResistance')}
               </Badge>
               <Title order={4}>
-                {lang === 'tr'
-                  ? 'Biomapper & 20+ Blokzinciri Akıllı Sözleşmeleri Masası'
-                  : 'Biomapper & 20+ Multi-Chain Smart Contracts Hub'}
+                {t('biomapper_biomapper20MultiChain')}
               </Title>
             </Group>
             <Text size="xs" c="dimmed" mt={4} maw={880}>
-              {lang === 'tr'
-                ? "Humanode'un Confidential Virtual Machine (CVM) enklavı üzerinde sıfır bilgi gizliliğiyle işlenen biyometrik doğrulamaları, kullanıcının gerçek biyometrik verisini hiçbir ağa ifşa etmeden 25+ blokzincirinde '1 İnsan = 1 Cüzdan' tekilliğini garanti eder."
-                : "Humanode's Confidential Virtual Machine (CVM) privacy-preserving cryptobiometric verification bridges '1 Human = 1 Address' Sybil-resistance across 25+ EVM and L2 blockchains without exposing biometric data."}
+              {t('biomapper_humanodeSConfidentialVirtual')}
             </Text>
           </div>
         </Group>
@@ -161,17 +159,15 @@ export default function BiomapperTab({
               <IconCpu size={22} color="#38bdf8" />
               <div>
                 <Text size="sm" fw={700} c="#f0f6fc">
-                  🧬 {lang === 'tr' ? 'Aktif Biomapper Jenerasyonu: Generation #4 (Head: 4)' : 'Active Biomapper Generation: Generation #4 (Head: 4)'}
+                  🧬 {t('biomapper_activeBiomapperGenerationGeneration')}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr'
-                    ? 'CVM sunucu anahtarları ve akıllı sözleşme işaretçileri periyodik olarak yenilenerek biyometrik şifreleme ve Sybil koruması güncel tutulur.'
-                    : 'Confidential Virtual Machine keys and generation pointers are updated periodically to maintain dynamic privacy and forward secrecy.'}
+                  {t('biomapper_confidentialVirtualMachineKeys')}
                 </Text>
               </div>
             </Group>
             <Badge color="cyan" variant="light" size="md">
-              {lang === 'tr' ? 'C2 Protokolü Canlı' : 'C2 Protocol Active'}
+              {t('biomapper_c2ProtocolActive')}
             </Badge>
           </Group>
         </Card>
@@ -179,39 +175,39 @@ export default function BiomapperTab({
         {/* 4 KPI KARTI */}
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm">
           <KpiStatCard
-            title={lang === 'tr' ? 'Entegre Blokzincirler' : 'Integrated Blockchains'}
+            title={t('biomapper_integratedBlockchains')}
             value={`${kpis?.total_supported_chains || 26}+`}
-            unit={lang === 'tr' ? 'Ağ' : 'Chains'}
+            unit={t('biomapper_chains')}
             color="cyan"
             icon={IconNetwork}
-            subtext={lang === 'tr' ? 'Ethereum, Arbitrum, Base, Sonic...' : 'EVM, L2 Rollups, zkEVMs'}
+            subtext={t('biomapper_evmL2RollupsZkevms')}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'On-Chain Biyometrik Onay' : 'Bioauth Extrinsics'}
+            title={t('biomapper_bioauthExtrinsics')}
             value={`${kpis?.total_bioauth_operations?.toLocaleString(locStr) || 127006}`}
-            unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+            unit={t('unlocks_txs_3')}
             color="teal"
             icon={IconFingerprint}
             subtext="pallet bioauth:authenticate"
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Aktif İnsan Validatörler' : 'Verified Human Nodes'}
+            title={t('biomapper_verifiedHumanNodes')}
             value={`${kpis?.active_human_validators || 50}`}
-            unit={lang === 'tr' ? 'İnsan' : 'Humans'}
+            unit={t('sim_humans')}
             color="blue"
             icon={IconUsers}
-            subtext={lang === 'tr' ? '%100 Eşit Blok Üretim Gücü' : 'Strict 1-Human-1-Vote'}
+            subtext={t('biomapper_strict1Human1')}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Çapraz Katman Kimlikleri' : 'Cross-Layer Identities'}
+            title={t('biomapper_crossLayerIdentities')}
             value={`${kpis?.cross_layer_matched_wallets || 45}`}
-            unit={lang === 'tr' ? 'Cüzdan' : 'Wallets'}
+            unit={t('whales_wallets')}
             color="violet"
             icon={IconShieldCheck}
-            subtext={lang === 'tr' ? 'hm... ⇄ 0x... kimlik eşleşmesi' : 'Verified dual-layer mappings'}
+            subtext={t('biomapper_verifiedDualLayerMappings')}
           />
         </SimpleGrid>
       </Paper>
@@ -220,13 +216,13 @@ export default function BiomapperTab({
       <Tabs defaultValue="registry" color="cyan" variant="outline">
         <Tabs.List mb="sm">
           <Tabs.Tab value="registry" leftSection={<IconNetwork size={15} />}>
-            🌐 {lang === 'tr' ? '20+ Ağ Sözleşme Kayıt Defteri' : '20+ Multi-Chain Contract Registry'} ({chains.length})
+            🌐 {t('biomapper_20MultiChainContract')} ({chains.length})
           </Tabs.Tab>
           <Tabs.Tab value="feed" leftSection={<IconActivity size={15} />}>
-            🧬 {lang === 'tr' ? 'Canlı Biyometrik Doğrulama Akışı' : 'Live Bioauth Activity Feed'} ({kpis?.total_bioauth_operations?.toLocaleString(locStr) || '127K+'})
+            🧬 {t('biomapper_liveBioauthActivityFeed')} ({kpis?.total_bioauth_operations?.toLocaleString(locStr) || '127K+'})
           </Tabs.Tab>
           <Tabs.Tab value="sdk" leftSection={<IconCode size={15} />}>
-            💻 {lang === 'tr' ? 'Geliştirici SDK & Simülatör' : 'Developer SDK & Simulator'}
+            💻 {t('biomapper_developerSdkSimulator')}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -256,7 +252,7 @@ export default function BiomapperTab({
                       setPage(1);
                     }}
                     data={[
-                      { value: 'all', label: lang === 'tr' ? '📊 Tümü' : 'All' },
+                      { value: 'all', label: t('hodlers_all') },
                       { value: 'l1', label: '⚡ Layer 1' },
                       { value: 'l2', label: '🚀 Layer 2 (Rollup)' },
                       { value: 'zkevm', label: '🛡️ ZK-Rollups' },
@@ -271,7 +267,7 @@ export default function BiomapperTab({
                     <form onSubmit={handleSearchSubmit} style={{ flex: 1 }}>
                       <TextInput
                         size="xs"
-                        placeholder={lang === 'tr' ? 'Ağ, sözleşme veya Chain ID ara...' : 'Search chain, contract or ID...'}
+                        placeholder={t('biomapper_searchChainContractOr')}
                         leftSection={<IconSearch size={14} />}
                         rightSection={
                           searchQuery && (
@@ -301,12 +297,12 @@ export default function BiomapperTab({
                     }}
                   >
                     <Table.Tr>
-                      <Table.Th style={{ minWidth: 280 }}>{lang === 'tr' ? 'Ağ & Ekosistem' : 'Blockchain & Network'}</Table.Th>
-                      <Table.Th style={{ minWidth: 160 }}>{lang === 'tr' ? 'Ağ Tipi' : 'Network Type'}</Table.Th>
+                      <Table.Th style={{ minWidth: 280 }}>{t('biomapper_networkEcosystem_2')}</Table.Th>
+                      <Table.Th style={{ minWidth: 160 }}>{t('biomapper_networkType')}</Table.Th>
                       <Table.Th style={{ width: 90 }}>Chain ID</Table.Th>
-                      <Table.Th style={{ minWidth: 240 }}>{lang === 'tr' ? 'BridgedBiomapper Sözleşme Adresi' : 'Bridged Contract Address'}</Table.Th>
-                      <Table.Th style={{ minWidth: 160 }}>{lang === 'tr' ? 'Jenerasyon' : 'Generations'}</Table.Th>
-                      <Table.Th style={{ minWidth: 130, textAlign: 'center' }}>{lang === 'tr' ? 'Gezginde İncele' : 'Explorer'}</Table.Th>
+                      <Table.Th style={{ minWidth: 240 }}>{t('biomapper_bridgedContractAddress')}</Table.Th>
+                      <Table.Th style={{ minWidth: 160 }}>{t('biomapper_generations')}</Table.Th>
+                      <Table.Th style={{ minWidth: 130, textAlign: 'center' }}>{t('biomapper_explorer')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -385,7 +381,7 @@ export default function BiomapperTab({
                           <Table.Td style={{ textAlign: 'center' }}>
                             {isHumanode ? (
                               <Badge size="xs" color="cyan" variant="light">
-                                {lang === 'tr' ? 'Ana Ağ' : 'Root'}
+                                {t('biomapper_root')}
                               </Badge>
                             ) : (
                               <Button
@@ -419,15 +415,13 @@ export default function BiomapperTab({
             <Stack gap="sm">
               <Group justify="space-between" align="center" wrap="wrap" gap="sm">
                 <div>
-                  <Title order={5}>🧬 {lang === 'tr' ? 'Humanode Yerel Biyometrik Doğrulama Kayıtları' : 'Humanode Native Bioauth Ledger'}</Title>
+                  <Title order={5}>🧬 {t('biomapper_humanodeNativeBioauthLedger')}</Title>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr'
-                      ? 'Humanode blokzincirinde pallet_bioauth modülü üzerinden gerçekleşen gerçek zamanlı insan doğrulamaları'
-                      : 'Real-time on-chain authentications verified via pallet_bioauth on the Humanode Substrate layer'}
+                    {t('biomapper_realTimeOnChain')}
                   </Text>
                 </div>
                 <Badge color="teal" variant="light">
-                  {bioauthPagination?.totalCount?.toLocaleString(locStr)} {lang === 'tr' ? 'toplam doğrulama' : 'total authentications'}
+                  {bioauthPagination?.totalCount?.toLocaleString(locStr)} {t('biomapper_totalAuthentications')}
                 </Badge>
               </Group>
 
@@ -443,7 +437,7 @@ export default function BiomapperTab({
                 <Group justify="space-between" align="center" wrap="wrap" gap="sm">
                   <Group gap="xs" align="center">
                     <Text size="xs" fw={700} c="cyan">
-                      🌐 {lang === 'tr' ? 'Ağ & Ekosistem Seçimi:' : 'Network & Ecosystem:'}
+                      🌐 {t('biomapper_networkEcosystem')}
                     </Text>
                     <Select
                       size="xs"
@@ -453,7 +447,7 @@ export default function BiomapperTab({
                         setPage(1);
                       }}
                       data={[
-                        { value: 'all', label: lang === 'tr' ? '🌐 Tüm Ağlar & Ekosistemler (26+ Entegre Ağ)' : '🌐 All Networks & Ecosystems' },
+                        { value: 'all', label: t('biomapper_allNetworksEcosystems') },
                         { value: 'humanode_native', label: '🧬 Humanode Root L1 (Ana Ağ Otoritesi & Yerel CVM)' },
                         { value: 'cross_layer', label: '🛡️ Çapraz Katman Eşleşmesi (hm... ⇄ 0x... EVM)' },
                         ...chains.filter(c => c.id !== 'humanode_native').map(c => ({
@@ -474,9 +468,9 @@ export default function BiomapperTab({
 
                   <Text size="xs" c="dimmed">
                     {feedNetwork === 'all'
-                      ? (lang === 'tr' ? 'Tüm ağlara CVM şifreli Sybil koruması sağlanır' : 'Universal CVM-attested Sybil defense')
+                      ? (t('biomapper_universalCvmAttestedSybil'))
                       : feedNetwork === 'cross_layer'
-                      ? (lang === 'tr' ? 'Sadece EVM adresi eşleşmiş biyometrik kimlikler' : 'Dual-layer mapped identities only')
+                      ? (t('biomapper_dualLayerMappedIdentities'))
                       : `${chains.find(c => c.id === feedNetwork)?.name || feedNetwork} hedef köprü doğrulamaları`}
                   </Text>
                 </Group>
@@ -486,13 +480,13 @@ export default function BiomapperTab({
                 <Table highlightOnHover verticalSpacing="xs">
                   <Table.Thead>
                     <Table.Tr>
-                      <Table.Th style={{ width: 120 }}>{lang === 'tr' ? 'Zaman' : 'Time'}</Table.Th>
-                      <Table.Th style={{ width: 95 }}>{lang === 'tr' ? 'Blok #' : 'Block #'}</Table.Th>
-                      <Table.Th style={{ minWidth: 240 }}>{lang === 'tr' ? 'Ağ & Ekosistem' : 'Network & Ecosystem'}</Table.Th>
-                      <Table.Th style={{ width: 140 }}>{lang === 'tr' ? 'İşlem Hash' : 'Extrinsic Hash'}</Table.Th>
-                      <Table.Th style={{ width: 140 }}>{lang === 'tr' ? 'Metot' : 'Pallet Method'}</Table.Th>
-                      <Table.Th>{lang === 'tr' ? 'Açıklama / Doğrulama' : 'Verification Details'}</Table.Th>
-                      <Table.Th style={{ width: 90, textAlign: 'center' }}>{lang === 'tr' ? 'Durum' : 'Status'}</Table.Th>
+                      <Table.Th style={{ width: 120 }}>{t('unlocks_time')}</Table.Th>
+                      <Table.Th style={{ width: 95 }}>{t('colBlock')}</Table.Th>
+                      <Table.Th style={{ minWidth: 240 }}>{t('biomapper_networkEcosystem_2')}</Table.Th>
+                      <Table.Th style={{ width: 140 }}>{t('tokenomics_txHash')}</Table.Th>
+                      <Table.Th style={{ width: 140 }}>{t('tokenomics_method')}</Table.Th>
+                      <Table.Th>{t('biomapper_verificationDetails')}</Table.Th>
+                      <Table.Th style={{ width: 90, textAlign: 'center' }}>{t('valColStatus')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -508,7 +502,7 @@ export default function BiomapperTab({
                       <Table.Tr>
                         <Table.Td colSpan={7} align="center" py="xl">
                           <Text size="sm" c="dimmed">
-                            {lang === 'tr' ? 'Biyometrik doğrulama işlemi bulunamadı.' : 'No bioauth extrinsics found.'}
+                            {t('biomapper_noBioauthExtrinsicsFound')}
                           </Text>
                         </Table.Td>
                       </Table.Tr>
@@ -590,7 +584,7 @@ export default function BiomapperTab({
                                       label: { overflow: 'visible', textOverflow: 'clip', whiteSpace: 'nowrap' }
                                     }}
                                   >
-                                    {lang === 'tr' ? 'CVM Otoritesi' : 'CVM Enclave'}
+                                    {t('biomapper_cvmEnclave')}
                                   </Badge>
                                 )}
                               </Group>
@@ -618,13 +612,13 @@ export default function BiomapperTab({
 
                             <Table.Td>
                               <Text size="xs" c="#f0f6fc">
-                                {row.details || (lang === 'tr' ? 'Biyometrik İnsan Doğrulaması (Proof-of-Humanity)' : 'Biometric Proof-of-Humanity')}
+                                {row.details || (t('biomapper_biometricProofOfHumanity'))}
                               </Text>
                             </Table.Td>
 
                             <Table.Td style={{ textAlign: 'center' }}>
                               <Badge size="xs" color="teal" variant="light">
-                                {lang === 'tr' ? 'Başarılı' : 'Success'}
+                                {t('biomapper_success')}
                               </Badge>
                             </Table.Td>
                           </Table.Tr>
@@ -639,9 +633,7 @@ export default function BiomapperTab({
               {bioauthPagination?.totalPages > 1 && (
                 <Group justify="space-between" align="center" mt="xs">
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr'
-                      ? `Sayfa ${bioauthPagination.page} / ${bioauthPagination.totalPages} (Toplam ${bioauthPagination.totalCount.toLocaleString(locStr)} işlem)`
-                      : `Page ${bioauthPagination.page} of ${bioauthPagination.totalPages} (${bioauthPagination.totalCount.toLocaleString(locStr)} total)`}
+                    {t('paginationSummary', { page: bioauthPagination.page, totalPages: bioauthPagination.totalPages, total: bioauthPagination.totalCount.toLocaleString(locStr) })}
                   </Text>
                   <Pagination
                     size="sm"
@@ -701,21 +693,17 @@ interface IBridgedBiomapperRead {
               </Code>
 
               <Text size="xs" c="dimmed" mt="xs">
-                {lang === 'tr'
-                  ? 'Arbitrum, Base, Sonic, Polygon vb. ağlardaki akıllı sözleşmelerinizde dApp veya airdrop kurgularınızı Sybil saldırılarına karşı korumak için yukarıdaki sözleşmeyi çağırın.'
-                  : 'Call this interface on any supported EVM chain to prevent Sybil attacks and verify unique human status.'}
+                {t('biomapper_callThisInterfaceOn')}
               </Text>
             </Paper>
 
             {/* Etkileşimli Benzersizlik Kontrol Simülatörü */}
             <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
               <Text size="sm" fw={700} c="white" mb={4}>
-                🧪 {lang === 'tr' ? 'Biomapper Adres Benzersizlik Simülatörü' : 'Biomapper Uniqueness Simulator'}
+                🧪 {t('biomapper_biomapperUniquenessSimulator')}
               </Text>
               <Text size="xs" c="dimmed" mb="md">
-                {lang === 'tr'
-                  ? 'Herhangi bir EVM cüzdan adresinin (0x...) mevcut jenerasyonda doğrulanmış tekil bir insana ait olup olmadığını test edin.'
-                  : 'Simulate checking if an EVM address is mapped to a verified unique human in the current generation.'}
+                {t('biomapper_simulateCheckingIfAn')}
               </Text>
 
               <Stack gap="xs">
@@ -726,7 +714,7 @@ interface IBridgedBiomapperRead {
                   size="xs"
                 />
                 <Button size="xs" variant="filled" color="cyan" onClick={handleRunSimulator}>
-                  {lang === 'tr' ? 'Doğruluğu Sorgula' : 'Query Uniqueness'}
+                  {t('biomapper_queryUniqueness')}
                 </Button>
 
                 {simResult && (

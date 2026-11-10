@@ -32,12 +32,14 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function DexDepthTab() {
-  const { lang, t } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = t('whales_enUs');
 
   // Pool State
   const [pools, setPools] = useState([]);
@@ -137,14 +139,10 @@ export default function DexDepthTab() {
             </ThemeIcon>
             <div>
               <Title order={3} fw={700} c="white">
-                {lang === 'tr'
-                  ? 'DEX Likidite Derinliği, Slippage & 4-Byte Metot Çözücü'
-                  : 'DEX Liquidity Depth, Slippage & 4-Byte Decoder'}
+                {t('dexdepth_dexLiquidityDepthSlippage')}
               </Title>
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? 'Impossible Finance AMM sabit ürün formülü (x · y = k) rezervleri, fiyat kayması hesaplayıcısı ve EVM calldata çözücü'
-                  : 'Impossible Finance AMM constant-product reserves, slippage impact simulator, and EVM calldata decoder'}
+                {t('dexdepth_impossibleFinanceAmmConstant')}
               </Text>
             </div>
           </Group>
@@ -157,7 +155,7 @@ export default function DexDepthTab() {
       {/* AMM Depth Metrics */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
         <KpiStatCard
-          title={lang === 'tr' ? 'Toplam Kilitli Değer (TVL)' : 'Total Value Locked (TVL)'}
+          title={t('dexdepth_totalValueLockedTvl')}
           value={formatUSD(depthData?.totalTvlUsd || 215340)}
           color="teal"
           icon={IconCoins}
@@ -165,7 +163,7 @@ export default function DexDepthTab() {
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? 'Rezerv Dengesi' : 'Reserve Balances'}
+          title={t('dexdepth_reserveBalances')}
           value={formatHMND(depthData?.reserveToken0 || 2400000, { suffix: false, locale: lang })}
           unit="HMND"
           color="cyan"
@@ -174,7 +172,7 @@ export default function DexDepthTab() {
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? '24 Saatlik Hacim & Ücret' : '24h Volume & Fees'}
+          title={t('dexdepth_24hVolumeFees')}
           value={formatUSD(depthData?.volume24hUsd || 34820)}
           color="violet"
           icon={IconCoins}
@@ -182,7 +180,7 @@ export default function DexDepthTab() {
         />
 
         <KpiStatCard
-          title={lang === 'tr' ? 'Spot AMM Fiyatı' : 'Spot AMM Price'}
+          title={t('dexdepth_spotAmmPrice')}
           value={`$${(depthData?.spotPriceUsd || 0.045).toFixed(4)}`}
           color="yellow"
           icon={IconCoins}
@@ -200,7 +198,7 @@ export default function DexDepthTab() {
             <Group gap="xs">
               <IconTrendingDown size={18} color="#ef4444" />
               <Text fw={700} size="sm" c="white">
-                {lang === 'tr' ? 'Fiyat Kayması (Slippage) Kademeleri' : 'Price Impact Slippage Tiers'}
+                {t('dexdepth_priceImpactSlippageTiers')}
               </Text>
             </Group>
             <Badge size="xs" color="red" variant="light">
@@ -211,10 +209,10 @@ export default function DexDepthTab() {
           <Table verticalSpacing="xs" highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Satış Tutarı' : 'Sell Amount'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Fiyat Etkisi' : 'Price Impact'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Tahmini Çıktı' : 'Est. Output'}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{lang === 'tr' ? 'Efektif Kur' : 'Eff. Price'}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_sellAmount')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_priceImpact')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_estOutput')}</Table.Th>
+                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_effPrice')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -271,7 +269,7 @@ export default function DexDepthTab() {
             <Group gap="xs">
               <IconArrowsExchange size={18} color="#38bdf8" />
               <Text fw={700} size="sm" c="white">
-                {lang === 'tr' ? 'Özel Swap Slippage Hesaplayıcı' : 'Custom Swap Slippage Calculator'}
+                {t('dexdepth_customSwapSlippageCalculator')}
               </Text>
             </Group>
             <Badge size="xs" color="cyan" variant="outline">
@@ -282,7 +280,7 @@ export default function DexDepthTab() {
           <Stack gap="sm" mt="md">
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                {lang === 'tr' ? 'Satılacak HMND Tutarı:' : 'HMND Amount to Sell:'}
+                {t('dexdepth_hmndAmountToSell')}
               </Text>
               <NumberInput
                 value={swapAmount}
@@ -298,7 +296,7 @@ export default function DexDepthTab() {
             <Paper p="sm" radius="sm" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <Group justify="space-between" mb="xs">
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr' ? 'Beklenen USDC Çıktısı:' : 'Expected USDC Output:'}
+                  {t('dexdepth_expectedUsdcOutput')}
                 </Text>
                 <Title order={3} fw={700} c="teal">
                   {formatUSD(customSlippage?.outputUsdc || 0)}
@@ -307,7 +305,7 @@ export default function DexDepthTab() {
 
               <Group justify="space-between" mb="xs">
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr' ? 'Fiyat Etkisi (Kayma):' : 'Price Impact (Slippage):'}
+                  {t('dexdepth_priceImpactSlippage')}
                 </Text>
                 <Badge
                   size="md"
@@ -326,7 +324,7 @@ export default function DexDepthTab() {
 
               <Group justify="space-between">
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr' ? 'Efektif Satış Kuru:' : 'Effective Swap Price:'}
+                  {t('dexdepth_effectiveSwapPrice')}
                 </Text>
                 <Text size="xs" fw={700} c="white">
                   ${(customSlippage?.effectivePrice || 0).toFixed(4)} / HMND
@@ -339,9 +337,7 @@ export default function DexDepthTab() {
               <Group gap="xs" p="xs" style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: 6 }}>
                 <IconAlertTriangle size={16} color="#ef4444" />
                 <Text size="xs" c="red" fw={600}>
-                  {lang === 'tr'
-                    ? 'Yüksek Slippage Uyarısı! Bu hacimde satış havuz fiyatını önemli ölçüde aşağı çeker.'
-                    : 'High Slippage Warning! Selling this volume moves the pool price significantly.'}
+                  {t('dexdepth_highSlippageWarningSelling')}
                 </Text>
               </Group>
             )}
@@ -365,14 +361,10 @@ export default function DexDepthTab() {
             </ThemeIcon>
             <div>
               <Title order={4} fw={700} c="white">
-                {lang === 'tr'
-                  ? 'EVM 4-Byte Metot Çözücü & Fonksiyon İmzası Denetçisi'
-                  : 'EVM 4-Byte Method Decoder & Calldata Inspector'}
+                {t('dexdepth_evm4ByteMethod')}
               </Title>
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? 'Herhangi bir calldata (input verisi) veya 4-byte selector girerek fonksiyonu ve parametrelerini insan tarafından okunabilir formata dönüştürün'
-                  : 'Decode raw transaction input hex or 4-byte selectors into human-readable function signatures and parameters'}
+                {t('dexdepth_decodeRawTransactionInput')}
               </Text>
             </div>
           </Group>
@@ -397,14 +389,14 @@ export default function DexDepthTab() {
               leftSection={<IconSearch size={14} />}
               onClick={() => decodeCalldata(calldataInput)}
             >
-              {lang === 'tr' ? 'Çözümle' : 'Decode'}
+              {t('dexdepth_decode')}
             </Button>
           </Group>
 
           {/* Quick preset buttons */}
           <Group gap="xs">
             <Text size="11px" c="dimmed">
-              {lang === 'tr' ? 'Hızlı Seçiciler:' : 'Quick Selectors:'}
+              {t('dexdepth_quickSelectors')}
             </Text>
             <Badge
               size="xs"

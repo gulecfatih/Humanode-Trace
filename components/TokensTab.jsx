@@ -31,6 +31,7 @@ import {
 } from '@tabler/icons-react';
 import { shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 
@@ -48,7 +49,8 @@ function formatTokenVolume(vol, locStr) {
 }
 
 export default function TokensTab({ onSelectAddress }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -68,7 +70,7 @@ export default function TokensTab({ onSelectAddress }) {
       });
   }, []);
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   // KPI Hesaplamaları
   const totalTokensCount = tokens.length;
@@ -145,28 +147,28 @@ export default function TokensTab({ onSelectAddress }) {
           <KpiStatCard
             title={t('tokensTotalCount')}
             value={totalTokensCount.toLocaleString(locStr)}
-            unit={lang === 'tr' ? 'Varlık' : 'Assets'}
+            unit={t('tokens_assets')}
             color="teal"
             icon={IconCoins}
-            subtext={lang === 'tr' ? 'Ağda transfer edilen ERC-20 sözleşmeleri' : 'Transacted ERC-20 contracts on EVM'}
+            subtext={t('tokens_transactedErc20Contracts')}
           />
 
           <KpiStatCard
             title={t('tokensTotalTransfers')}
             value={totalTransfers.toLocaleString(locStr)}
-            unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+            unit={t('unlocks_txs_3')}
             color="cyan"
             icon={IconTrendingUp}
-            subtext={lang === 'tr' ? 'İndekslenen toplam token transfer adedi' : 'Cumulative indexed token transfer count'}
+            subtext={t('tokens_cumulativeIndexedTokenTransfer')}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'DEX LP Likidite Havuzları' : 'DEX LP Liquidity Pools'}
+            title={t('tokensDexPools')}
             value={dexPoolsCount.toLocaleString(locStr)}
-            unit={lang === 'tr' ? 'Havuz' : 'Pools'}
+            unit={t('tokens_pools')}
             color="violet"
             icon={IconArrowsExchange}
-            subtext={lang === 'tr' ? 'Impossible Finance işlem çiftleri' : 'Impossible Finance liquidity pairs'}
+            subtext={t('tokens_impossibleFinanceLiquidityPairs')}
           />
 
           <KpiStatCard
@@ -175,7 +177,7 @@ export default function TokensTab({ onSelectAddress }) {
             unit="TOKEN"
             color="yellow"
             icon={IconLayersLinked}
-            subtext={topTransferredToken ? `${topTransferredToken.transfer_count?.toLocaleString(locStr)} ${lang === 'tr' ? 'transfer' : 'transfers'}` : ''}
+            subtext={topTransferredToken ? `${topTransferredToken.transfer_count?.toLocaleString(locStr)} ${t('tokens_transfers')}` : ''}
           />
         </SimpleGrid>
       </Paper>
@@ -245,7 +247,7 @@ export default function TokensTab({ onSelectAddress }) {
             <Table.Thead>
               <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <Table.Th style={{ width: '32%', minWidth: 170, padding: '10px 8px' }}>
-                  {t('tokenColAsset') || (lang === 'tr' ? 'Varlık (Token)' : 'Asset (Token)')}
+                  {t('tokenColAsset') || (t('tokenColAsset'))}
                 </Table.Th>
                 <Table.Th style={{ width: '18%', minWidth: 110, whiteSpace: 'nowrap', padding: '10px 8px' }}>
                   {t('tokenColContract')}
@@ -271,7 +273,7 @@ export default function TokensTab({ onSelectAddress }) {
                     <Center>
                       <Loader size="sm" color="cyan" mr="xs" />
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Token ve DEX verileri yükleniyor...' : 'Loading tokens & DEX directory...'}
+                        {t('tokens_loadingTokensDexDirectory')}
                       </Text>
                     </Center>
                   </Table.Td>
@@ -280,7 +282,7 @@ export default function TokensTab({ onSelectAddress }) {
                 filteredTokens.map((tk, idx) => {
                   const sym = tk.symbol || tk.token_symbol || 'TOKEN';
                   const nm = tk.name || tk.token_name || `${sym} Token`;
-                  const cat = tk.category || (sym.startsWith('IF-LP:') ? (lang === 'tr' ? 'DEX LP Havuzu' : 'DEX LP Pool') : 'ERC-20 Token');
+                  const cat = tk.category || (sym.startsWith('IF-LP:') ? (t('tokens_dexLpPool')) : 'ERC-20 Token');
                   const badgeColor = tk.color || 'violet';
                   const vol = Number(tk.total_volume || 0);
 
@@ -334,13 +336,13 @@ export default function TokensTab({ onSelectAddress }) {
                             c="cyan"
                             style={{ cursor: 'pointer', textDecoration: 'underline' }}
                             onClick={() => onSelectAddress && onSelectAddress(tk.token_address)}
-                            title={`${tk.token_address} - ${lang === 'tr' ? 'Cüzdan/Sözleşme önizlemesini aç' : 'Open address quick peek'}`}
+                            title={`${tk.token_address} - ${t('tokens_openAddressQuickPeek')}`}
                           >
                             {shortAddr(tk.token_address, 5, 4)}
                           </Text>
                           <CopyButton value={tk.token_address} timeout={2000}>
                             {({ copied, copy }) => (
-                              <Tooltip label={copied ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (lang === 'tr' ? 'Sözleşme Adresini Kopyala' : 'Copy Contract Address')} withArrow position="top">
+                              <Tooltip label={copied ? (t('copied')) : (t('tokens_copyContractAddress'))} withArrow position="top">
                                 <ActionIcon
                                   size="xs"
                                   color={copied ? 'teal' : 'gray'}
@@ -381,7 +383,7 @@ export default function TokensTab({ onSelectAddress }) {
                           {Number(tk.unique_senders || 0).toLocaleString(locStr)} / {Number(tk.unique_holders || 0).toLocaleString(locStr)}
                         </Text>
                         <Text size="10px" c="dimmed">
-                          {lang === 'tr' ? 'gönderici / alıcı' : 'senders / holders'}
+                          {t('tokens_sendersHolders')}
                         </Text>
                       </Table.Td>
 
@@ -405,7 +407,7 @@ export default function TokensTab({ onSelectAddress }) {
                 <Table.Tr>
                   <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '30px' }}>
                     <Text size="sm" c="dimmed">
-                      {lang === 'tr' ? 'Arama kriterine uygun token bulunamadı.' : 'No tokens found matching the search.'}
+                      {t('tokens_noTokensFoundMatching')}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

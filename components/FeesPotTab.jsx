@@ -31,14 +31,16 @@ import {
 } from '@tabler/icons-react';
 import { shortAddr, formatHMND, formatUSD, formatTimestamp } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AmountDisplay from './ui/AmountDisplay';
 import AddressBadge from './ui/AddressBadge';
 import DirectionBadge from './ui/DirectionBadge';
 
 export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
-  const { lang, t } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = t('whales_enUs');
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -104,23 +106,21 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             <Group gap="xs" mb={4}>
               <IconCoins size={24} color="#14b8a6" />
               <Title order={2} size="h3" c="white">
-                {lang === 'tr' ? 'FeesPot Havuzu & Validatör Ödül Runway’i' : 'FeesPot Rewards Pool & Validator Runway'}
+                {t('feespot_feespotRewardsPoolValidator')}
               </Title>
               <Badge color="teal" variant="light" size="sm">
                 Pallet feesPot (py/humfe)
               </Badge>
             </Group>
             <Text size="xs" c="dimmed" maw={800}>
-              {lang === 'tr'
-                ? 'Humanode ağında toplanan gas ücretlerinin depolandığı resmi havuz adresi, 112 turun tarihsel dağıtım dökümü, kasaya giren transferler ve bir sonraki tur geri sayımı.'
-                : 'Official Humanode fee pool reserve, 112 historical payout batches, treasury inflow transfers, and next epoch reward countdown.'}
+              {t('feespot_officialHumanodeFeePool')}
             </Text>
           </Box>
 
           <Group gap="sm" wrap="wrap" align="center">
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                {lang === 'tr' ? 'Havuz Sözleşmesi:' : 'Pool Address:'}
+                {t('feespot_poolAddress')}
               </Text>
               <AddressBadge
                 address={poolAddress}
@@ -137,7 +137,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
               leftSection={<IconExternalLink size={12} />}
               onClick={() => onSelectAddress && onSelectAddress(poolAddress)}
             >
-              {lang === 'tr' ? 'Cüzdan Defterinde Aç' : 'Open in Ledger'}
+              {t('feespot_openInLedger')}
             </Button>
           </Group>
         </Group>
@@ -146,65 +146,62 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 5 }} spacing="sm" mt="md">
           {/* 1. Güncel Havuz Bakiyesi */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Havuz Rezervi (FeesPot)' : 'Pool Balance (FeesPot)'}
+            title={t('feespot_poolBalanceFeespot')}
             value={data ? Number(data.currentBalance).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '403.719,23'}
             unit="HMND"
             color="teal"
             icon={IconCoins}
-            subtext={lang === 'tr' ? 'Kasada mevcut aktif bakiye' : 'Current unspent treasury reserve'}
-            tooltip={lang === 'tr' ? `Aktif Bakiye: ${data?.currentBalance || 403719.23} HMND` : `Unspent Balance: ${data?.currentBalance || 403719.23} HMND`}
+            subtext={t('feespot_currentUnspentTreasuryReserve')}
+            tooltip={t('activeBalanceTooltip', { amount: data?.currentBalance || '403,719.23' })}
           />
 
           {/* 2. Kasaya Şimdiye Kadar Giren Toplam Para (INFLOW) */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Kasaya Toplam Giriş' : 'Total Treasury Inflow'}
+            title={t('feespot_totalTreasuryInflow')}
             value={data?.totalInflowHmnd ? Number(data.totalInflowHmnd).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '1.094.941,16'}
             sign="+"
             unit="HMND"
             color="teal"
             icon={IconArrowDownLeft}
-            subtext={
-              lang === 'tr'
-                ? `${Number(data?.burnedTotal || 691222).toLocaleString(locStr, { maximumFractionDigits: 0 })} Gas + ${Number(data?.genesisReserveHmnd || 403662).toLocaleString(locStr, { maximumFractionDigits: 0 })} Rezerv`
-                : `${Number(data?.burnedTotal || 691222).toLocaleString(locStr, { maximumFractionDigits: 0 })} Gas + ${Number(data?.genesisReserveHmnd || 403662).toLocaleString(locStr, { maximumFractionDigits: 0 })} Seed`
-            }
+            subtext={t('feesPotGasReserve', {
+              burned: Number(data?.burnedTotal || 691222).toLocaleString(locStr, { maximumFractionDigits: 0 }),
+              reserve: Number(data?.genesisReserveHmnd || 403662).toLocaleString(locStr, { maximumFractionDigits: 0 })
+            })}
             tooltip={
-              lang === 'tr'
-                ? `691.221,93 HMND Gas Komisyonu + 403.661,73 HMND Genesis Rezervi + 57,50 HMND Doğrudan Transfer`
-                : `691,221.93 HMND Gas Fees + 403,661.73 HMND Genesis Reserve + 57.50 HMND Direct Transfers`
+              t('feespot_69122193Hmnd')
             }
           />
 
           {/* 3. Runway Dayanma Süresi */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Tahmini Runway' : 'Runway Estimate'}
+            title={t('feespot_runwayEstimate')}
             value={`~${data?.runwayDays || 113}`}
-            unit={lang === 'tr' ? 'Gün' : 'Days'}
+            unit={t('heatmap_days')}
             color="cyan"
             icon={IconClock}
-            subtext={`~${data?.runwayRounds || 8.1} ${lang === 'tr' ? 'tur kesintisiz dağıtım garantisi' : 'consecutive distribution rounds'}`}
-            tooltip={lang === 'tr' ? 'Mevcut bakiye ve ortalama tur harcamasına göre havuzun dayanacağı gün sayısı' : 'Estimated days until reserve exhaustion based on recent payout rates'}
+            subtext={`~${data?.runwayRounds || 8.1} ${t('feespot_consecutiveDistributionRounds')}`}
+            tooltip={t('feespot_estimatedDaysUntilReserve')}
           />
 
           {/* 4. Son Tur Ödülü */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Son Dağıtım (Tur #112)' : 'Last Batch (#112)'}
+            title={t('feespot_lastBatch112')}
             value={Number(data?.lastBatch?.samplePerValidator || 613.48).toFixed(2)}
             unit="HMND"
             color="yellow"
             icon={IconShieldCheck}
-            subtext={`${data?.lastBatch?.recipientCount || 62} ${lang === 'tr' ? 'validatöre 47.914 HMND' : 'validators received share'}`}
-            tooltip={lang === 'tr' ? 'Son turda doğrulayıcı başına ödenen net ödül miktarı' : 'Per-validator net reward amount distributed in the most recent batch'}
+            subtext={`${data?.lastBatch?.recipientCount || 62} ${t('feespot_validatorsReceivedShare')}`}
+            tooltip={t('feespot_perValidatorNetReward')}
           />
 
           {/* 5. Sonraki Dağıtım Geri Sayımı */}
           <KpiStatCard
-            title={lang === 'tr' ? 'Gelecek Tur Geri Sayımı' : 'Next Batch Countdown'}
+            title={t('feespot_nextBatchCountdown')}
             value={countdownFormatted}
             color="violet"
             icon={IconCalendar}
-            subtext={`~10-14 ${lang === 'tr' ? 'Kasım (~620 HMND/düğüm)' : 'Nov (~620 HMND/node)'}`}
-            tooltip={lang === 'tr' ? 'Tahmini sonraki blok hedefi: 14 günlük periyot tamamlandığında otomatik tetiklenir' : 'Estimated next payout batch block'}
+            subtext={`~10-14 ${t('feespot_nov620HmndNode')}`}
+            tooltip={t('feespot_estimatedNextPayoutBatch')}
           />
         </SimpleGrid>
       </Paper>
@@ -220,21 +217,21 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             data={[
               {
                 value: 'payouts',
-                label: lang === 'tr' ? '💸 Validatör Dağıtım Turları (112 Tur)' : '💸 Payout Batches (112 Batches)',
+                label: t('feespot_payoutBatches112Batches'),
               },
               {
                 value: 'inflows',
-                label: lang === 'tr' ? '📥 Kasaya Giren Transferler & Fon Kaynakları' : '📥 Treasury Inflow & Funding Sources',
+                label: t('feespot_treasuryInflowFundingSources'),
               },
             ]}
           />
           {activeView === 'payouts' ? (
             <Text size="xs" c="dimmed">
-              {lang === 'tr' ? `Sayfa ${page} / ${totalPages} (Toplam ${historyList.length} Tur Kayıtlı)` : `Page ${page} / ${totalPages} (${historyList.length} Total Batches)`}
+              {t('feesPotBatchesPagination', { page, totalPages, total: historyList.length })}
             </Text>
           ) : (
             <Badge color="green" variant="light" size="sm">
-              {lang === 'tr' ? 'Toplam Giriş: ' : 'Total Inflow: '}
+              {t('feespot_totalInflow')}
               +{data ? formatHMND(data.totalInflowHmnd || 1094941.16, { locale: lang }) : '1.094.941 HMND'}
             </Badge>
           )}
@@ -245,22 +242,20 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             {/* Giriş Kaynakları 3'lü Dağılım Kartları */}
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
               <KpiStatCard
-                title={lang === 'tr' ? '1. Ağ İşlem Gas Komisyonları' : '1. Network Gas Transaction Fees'}
+                title={t('feespot_1NetworkGasTransaction')}
                 value={Number(data?.burnedTotal || 691221.93).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 unit="HMND"
                 sign="+"
                 color="teal"
-                badge={lang === 'tr' ? 'Protokol Havuzu' : 'Protocol Pot'}
+                badge={t('feespot_protocolPot')}
                 badgeColor="teal"
                 subtext={
-                  lang === 'tr'
-                    ? 'Ağ genelinde 120.000+ transfer ve çağrıdan toplanan resmi gas ücreti'
-                    : 'Official fee pot collected from 120,000+ network transactions and calls'
+                  t('feespot_officialFeePotCollected')
                 }
               />
 
               <KpiStatCard
-                title={lang === 'tr' ? '2. Genesis & Başlangıç Rezervi' : '2. Genesis & Seed Reserve'}
+                title={t('feespot_2GenesisSeedReserve')}
                 value={Number(data?.genesisReserveHmnd || 403661.73).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 unit="HMND"
                 sign="+"
@@ -268,14 +263,12 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                 badge="Genesis #0"
                 badgeColor="cyan"
                 subtext={
-                  lang === 'tr'
-                    ? 'Blok #0 Genesis başlangıç vesting ve sistem tahsisi rezervi'
-                    : 'Block #0 genesis allocation and initial validator rewards treasury seed'
+                  t('feespot_block0GenesisAllocation')
                 }
               />
 
               <KpiStatCard
-                title={lang === 'tr' ? '3. Doğrudan Cüzdan Transferleri' : '3. Direct Wallet Transfers'}
+                title={t('feespot_3DirectWalletTransfers')}
                 value={Number(data?.directTransfersHmnd || 57.50).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 unit="HMND"
                 sign="+"
@@ -283,9 +276,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                 badge="balances"
                 badgeColor="yellow"
                 subtext={
-                  lang === 'tr'
-                    ? 'Cüzdanlardan doğrudan kasaya gönderilen zincir üstü transferler'
-                    : 'Direct balance transfers sent directly from network wallets to the treasury'
+                  t('feespot_directBalanceTransfersSent')
                 }
               />
             </SimpleGrid>
@@ -296,22 +287,22 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                 <Table.Thead>
                   <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                     <Table.Th style={{ width: '22%', minWidth: 140, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Fon Kaynağı / Gönderen' : 'Funding Source / Sender'}
+                      {t('feespot_fundingSourceSender')}
                     </Table.Th>
                     <Table.Th style={{ width: '18%', minWidth: 110, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Giriş Tipi & Metot' : 'Inflow Type & Method'}
+                      {t('feespot_inflowTypeMethod')}
                     </Table.Th>
                     <Table.Th style={{ width: '15%', minWidth: 95, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Blok #' : 'Block #'}
+                      {t('colBlock')}
                     </Table.Th>
                     <Table.Th style={{ width: '18%', minWidth: 110, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Tarih & Zaman' : 'Timestamp'}
+                      {t('feespot_timestamp_2')}
                     </Table.Th>
                     <Table.Th style={{ width: '15%', minWidth: 110, textAlign: 'right', padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'İçeri Giren Tutar' : 'Inflow Amount'}
+                      {t('feespot_inflowAmount')}
                     </Table.Th>
                     <Table.Th style={{ width: '12%', minWidth: 80, textAlign: 'right', padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Yön' : 'Direction'}
+                      {t('moneytrail_direction')}
                     </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
@@ -406,7 +397,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
                     <Table.Td style={{ padding: '8px 8px' }}>
                       <Text size="xs" c="gray.3">
-                        {lang === 'tr' ? '14 Eki 2022 17:00' : 'Oct 14, 2022'}
+                        {t('feespot_oct142022')}
                       </Text>
                     </Table.Td>
 
@@ -422,7 +413,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
                     <Table.Td style={{ textAlign: 'right', padding: '8px 8px' }}>
                       <Badge size="xs" color="cyan" variant="outline">
-                        {lang === 'tr' ? 'Rezerv' : 'Seed'}
+                        {t('feespot_seed')}
                       </Badge>
                     </Table.Td>
                   </Table.Tr>
@@ -443,13 +434,13 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
                     <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                       <Text size="xs" c="dimmed">
-                        {lang === 'tr' ? 'Tüm Bloklar (#0 → Güncel)' : 'All Blocks (#0 → Now)'}
+                        {t('feespot_allBlocks0Now')}
                       </Text>
                     </Table.Td>
 
                     <Table.Td style={{ padding: '8px 8px' }}>
                       <Text size="xs" c="gray.3">
-                        {lang === 'tr' ? 'Sürekli (Her Blokta)' : 'Continuous (On Block)'}
+                        {t('feespot_continuousOnBlock')}
                       </Text>
                     </Table.Td>
 
@@ -478,22 +469,22 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                 <Table.Thead>
                   <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                     <Table.Th style={{ width: '12%', minWidth: 70, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Tur #' : 'Batch #'}
+                      {t('feespot_batch')}
                     </Table.Th>
                     <Table.Th style={{ width: '18%', minWidth: 110, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Dağıtım Bloğu' : 'Block #'}
+                      {t('feespot_block')}
                     </Table.Th>
                     <Table.Th style={{ width: '22%', minWidth: 130, padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Tarih & Zaman' : 'Timestamp'}
+                      {t('feespot_timestamp_2')}
                     </Table.Th>
                     <Table.Th style={{ width: '18%', minWidth: 110, textAlign: 'center', padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Hak Eden Validatör' : 'Recipients'}
+                      {t('feespot_recipients')}
                     </Table.Th>
                     <Table.Th style={{ width: '18%', minWidth: 110, textAlign: 'right', padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Toplam Dağıtılan' : 'Total Distributed'}
+                      {t('feespot_totalDistributed')}
                     </Table.Th>
                     <Table.Th style={{ width: '12%', minWidth: 80, textAlign: 'right', padding: '10px 8px' }}>
-                      {lang === 'tr' ? 'Düğüm Başına' : 'Per Node'}
+                      {t('feespot_perNode')}
                     </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
@@ -504,7 +495,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                         <Center>
                           <Loader size="sm" color="cyan" mr="xs" />
                           <Text size="sm" c="dimmed">
-                            {lang === 'tr' ? 'FeesPot tarihsel turları yükleniyor...' : 'Loading payout history...'}
+                            {t('feespot_loadingPayoutHistory')}
                           </Text>
                         </Center>
                       </Table.Td>
@@ -529,7 +520,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                               variant={isLatest ? 'filled' : 'light'}
                               color={isLatest ? 'teal' : 'gray'}
                             >
-                              #{batchNum} {isLatest ? (lang === 'tr' ? 'Son' : 'Latest') : ''}
+                              #{batchNum} {isLatest ? (t('feespot_latest')) : ''}
                             </Badge>
                           </Table.Td>
 
@@ -541,7 +532,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                               fw={700}
                               style={{ cursor: 'pointer', textDecoration: 'underline' }}
                               onClick={() => onOpenBlock && onOpenBlock(item.block)}
-                              title={`${item.block} - ${lang === 'tr' ? 'Bloğu incele' : 'Inspect block'}`}
+                              title={`${item.block} - ${t('feespot_inspectBlock')}`}
                             >
                               #{item.block?.toLocaleString(locStr)}
                             </Text>
@@ -557,7 +548,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                           {/* Hak Eden Validatör Sayısı */}
                           <Table.Td style={{ textAlign: 'center', padding: '8px 8px' }}>
                             <Badge variant="dot" color="blue" size="sm">
-                              {item.recipientCount} {lang === 'tr' ? 'Düğüm' : 'Nodes'}
+                              {item.recipientCount} {t('validators_nodes')}
                             </Badge>
                           </Table.Td>
 
@@ -587,7 +578,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     <Table.Tr>
                       <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '30px' }}>
                         <Text size="sm" c="dimmed">
-                          {lang === 'tr' ? 'Dağıtım geçmişi bulunamadı.' : 'No payout records found.'}
+                          {t('feespot_noPayoutRecordsFound')}
                         </Text>
                       </Table.Td>
                     </Table.Tr>

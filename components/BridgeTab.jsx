@@ -38,6 +38,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatUSD, formatTimestamp, timeAgo, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
@@ -49,7 +50,8 @@ export default function BridgeTab({
   onOpenBlock,
   onOpenTx,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [direction, setDirection] = useState('all');
@@ -103,7 +105,7 @@ export default function BridgeTab({
     setTimeout(fetchBridgeData, 0);
   };
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Stack gap="md">
@@ -113,18 +115,14 @@ export default function BridgeTab({
           <div>
             <Group gap={8}>
               <Badge color="cyan" variant="light" size="md">
-                🌉 {lang === 'tr' ? 'Çift Katman Entegrasyonu' : 'Dual-Layer Integration'}
+                🌉 {t('bridge_dualLayerIntegration')}
               </Badge>
               <Title order={4}>
-                {lang === 'tr'
-                  ? 'Substrate ⇄ EVM Çift Katman Yerel Köprü Analitiği'
-                  : 'Substrate ⇄ EVM Dual-Layer Bridge Analytics'}
+                {t('bridge_substrateEvmDualLayer')}
               </Title>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              {lang === 'tr'
-                ? 'Humanode yerel katmanı (Substrate) ile akıllı sözleşme katmanı (EVM) arasındaki anlık token geçişleri ve 0x...0900 precompile transferleri'
-                : 'Real-time cross-layer token swaps and 0x...0900 precompile operations between Substrate native and EVM execution layers'}
+              {t('bridge_realTimeCrossLayer')}
             </Text>
           </div>
         </Group>
@@ -143,7 +141,7 @@ export default function BridgeTab({
               {formatHMND(kpis?.sub_to_evm_volume_hmnd || 0, { locale: lang, showScale: false })}
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              {kpis?.sub_to_evm_count?.toLocaleString(locStr) || 0} {lang === 'tr' ? 'adet köprü extrinsiği' : 'bridge extrinsics'}
+              {kpis?.sub_to_evm_count?.toLocaleString(locStr) || 0} {t('bridge_bridgeExtrinsics')}
             </Text>
           </Card>
 
@@ -159,7 +157,7 @@ export default function BridgeTab({
               {formatHMND(kpis?.evm_to_sub_volume_hmnd || 0, { locale: lang, showScale: false })}
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              {kpis?.evm_to_sub_count?.toLocaleString(locStr) || 0} {lang === 'tr' ? 'adet precompile işlemi' : 'precompile operations'}
+              {kpis?.evm_to_sub_count?.toLocaleString(locStr) || 0} {t('bridge_precompileOperations')}
             </Text>
           </Card>
 
@@ -167,7 +165,7 @@ export default function BridgeTab({
           <Card p="sm" radius="md" style={{ background: 'rgba(46, 160, 67, 0.06)', border: '1px solid rgba(46, 160, 67, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="teal" variant="light" size="xs">
-                📊 {lang === 'tr' ? 'Net Akış Yönü' : 'Net Bridge Flow'}
+                📊 {t('bridge_netBridgeFlow')}
               </Badge>
               <IconArrowsRightLeft size={16} color="#2ea043" />
             </Group>
@@ -183,7 +181,7 @@ export default function BridgeTab({
           <Card p="sm" radius="md" style={{ background: 'rgba(234, 179, 8, 0.06)', border: '1px solid rgba(234, 179, 8, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="yellow" variant="light" size="xs">
-                ⚙️ {lang === 'tr' ? 'Swap Precompile' : 'Precompile Contract'}
+                ⚙️ {t('bridge_precompileContract')}
               </Badge>
               <IconShieldCheck size={16} color="#eab308" />
             </Group>
@@ -191,7 +189,7 @@ export default function BridgeTab({
               0x0000...0900
             </Text>
             <Text size="10px" c="dimmed" mt={2}>
-              {lang === 'tr' ? 'Humanode Resmi Native Swap Motoru' : 'Humanode Native Swap Engine'}
+              {t('bridge_humanodeNativeSwapEngine')}
             </Text>
           </Card>
         </SimpleGrid>
@@ -199,34 +197,34 @@ export default function BridgeTab({
         {/* 4 KPI Kartı */}
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm" mt="sm">
           <KpiStatCard
-            title={lang === 'tr' ? 'Toplam Köprü Hacmi' : 'Total Bridge Volume'}
+            title={t('bridge_totalBridgeVolume')}
             value={formatHMND(kpis?.total_volume_hmnd || 0, { locale: lang, showScale: false })}
             color="cyan"
             icon={IconArrowsExchange}
-            subtext={lang === 'tr' ? 'Her iki yönde aktarılan kümülatif tutar' : 'Cumulative swaps both directions'}
+            subtext={t('bridge_cumulativeSwapsBothDirections')}
           />
           <KpiStatCard
-            title={lang === 'tr' ? 'Toplam Köprü İşlemi' : 'Total Bridge Swaps'}
+            title={t('bridge_totalBridgeSwaps')}
             value={`${kpis?.total_swaps?.toLocaleString(locStr) || 0}`}
-            unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+            unit={t('unlocks_txs_3')}
             color="violet"
             icon={IconActivity}
-            subtext={lang === 'tr' ? 'Tüm doğrulanmış transferler' : 'All verified transactions'}
+            subtext={t('bridge_allVerifiedTransactions')}
           />
           <KpiStatCard
-            title={lang === 'tr' ? 'Eşleşen Cüzdan Çifti' : 'Cross-Layer Wallets'}
+            title={t('bridge_crossLayerWallets')}
             value={`${kpis?.cross_layer_matched_wallets?.toLocaleString(locStr) || 0}`}
-            unit={lang === 'tr' ? 'Cüzdan' : 'Wallets'}
+            unit={t('whales_wallets')}
             color="teal"
             icon={IconGitFork}
-            subtext={lang === 'tr' ? 'hm... ⇄ 0x... kimlik bağı kuranlar' : 'Identified dual-identity addresses'}
+            subtext={t('bridge_identifiedDualIdentityAddresses')}
           />
           <KpiStatCard
-            title={lang === 'tr' ? 'Ortalama Transfer' : 'Avg Swap Size'}
+            title={t('bridge_avgSwapSize')}
             value={kpis?.total_swaps > 0 ? formatHMND(kpis.total_volume_hmnd / kpis.total_swaps, { locale: lang, showScale: false }) : '0 HMND'}
             color="blue"
             icon={IconCube}
-            subtext={lang === 'tr' ? 'İşlem başına köprü ortalaması' : 'Average tokens per swap'}
+            subtext={t('bridge_averageTokensPerSwap')}
           />
         </SimpleGrid>
       </Paper>
@@ -257,7 +255,7 @@ export default function BridgeTab({
                     setPage(1);
                   }}
                   data={[
-                    { value: 'all', label: lang === 'tr' ? '📊 Tümü' : 'All' },
+                    { value: 'all', label: t('hodlers_all') },
                     { value: 'sub_to_evm', label: '⚡ Substrate ➔ EVM' },
                     { value: 'evm_to_sub', label: '🌐 EVM ➔ Substrate' },
                   ]}
@@ -266,7 +264,7 @@ export default function BridgeTab({
                   }}
                 />
                 <Badge variant="light" color="cyan" size="sm">
-                  {totalCount.toLocaleString(locStr)} {lang === 'tr' ? 'kayıt' : 'records'}
+                  {totalCount.toLocaleString(locStr)} {t('bridge_records')}
                 </Badge>
               </Group>
 
@@ -274,7 +272,7 @@ export default function BridgeTab({
                 <form onSubmit={handleSearchSubmit} style={{ flex: 1 }}>
                   <TextInput
                     size="xs"
-                    placeholder={lang === 'tr' ? 'Adres, tx hash veya blok # ara...' : 'Search address, hash or block #...'}
+                    placeholder={t('bridge_searchAddressHashOr')}
                     leftSection={<IconSearch size={14} />}
                     rightSection={
                       searchQuery && (
@@ -318,14 +316,14 @@ export default function BridgeTab({
                 }}
               >
                 <Table.Tr>
-                  <Table.Th style={{ width: 140 }}>{lang === 'tr' ? 'Zaman' : 'Time'}</Table.Th>
-                  <Table.Th style={{ width: 100 }}>{lang === 'tr' ? 'Blok #' : 'Block #'}</Table.Th>
-                  <Table.Th style={{ width: 150 }}>{lang === 'tr' ? 'İşlem Hash' : 'Tx Hash'}</Table.Th>
-                  <Table.Th style={{ width: 160 }}>{lang === 'tr' ? 'Köprü Yönü' : 'Bridge Direction'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Gönderen' : 'Sender'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Alıcı / Hedef' : 'Receiver / Target'}</Table.Th>
-                  <Table.Th style={{ textAlign: 'right' }}>{lang === 'tr' ? 'Tutar (HMND)' : 'Amount'}</Table.Th>
-                  <Table.Th style={{ width: 60, textAlign: 'center' }}>{lang === 'tr' ? 'Detay' : 'Info'}</Table.Th>
+                  <Table.Th style={{ width: 140 }}>{t('unlocks_time')}</Table.Th>
+                  <Table.Th style={{ width: 100 }}>{t('colBlock')}</Table.Th>
+                  <Table.Th style={{ width: 150 }}>{t('tokenomics_txHash')}</Table.Th>
+                  <Table.Th style={{ width: 160 }}>{t('bridge_bridgeDirection')}</Table.Th>
+                  <Table.Th>{t('bridge_sender')}</Table.Th>
+                  <Table.Th>{t('colRecipient')}</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>{t('bridge_amount')}</Table.Th>
+                  <Table.Th style={{ width: 60, textAlign: 'center' }}>{t('unlocks_info')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -341,7 +339,7 @@ export default function BridgeTab({
                   <Table.Tr>
                     <Table.Td colSpan={8} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Kriterlere uygun köprü işlemi bulunamadı.' : 'No bridge transactions found.'}
+                        {t('bridge_noBridgeTransactionsFound')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -439,9 +437,7 @@ export default function BridgeTab({
           {totalPages > 1 && (
             <Group justify="space-between" align="center" mt="sm">
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? `Sayfa ${page} / ${totalPages} (Toplam ${totalCount.toLocaleString(locStr)} işlem)`
-                  : `Page ${page} of ${totalPages} (${totalCount.toLocaleString(locStr)} total)`}
+                {t('paginationSummary', { page: page, totalPages: totalPages, total: totalCount.toLocaleString(locStr) })}
               </Text>
               <Pagination
                 size="sm"
@@ -466,7 +462,7 @@ export default function BridgeTab({
               {selectedTx?.direction === 'sub_to_evm' ? 'Substrate ➔ EVM Köprüsü' : 'EVM ➔ Substrate (Precompile)'}
             </Badge>
             <Text fw={700} size="sm">
-              {lang === 'tr' ? 'Köprü Geçiş Detayları' : 'Bridge Swap Details'}
+              {t('bridge_bridgeSwapDetails')}
             </Text>
           </Group>
         }
@@ -479,7 +475,7 @@ export default function BridgeTab({
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Blok Numarası:' : 'Block Number:'}
+                    {t('unlocks_blockNumber')}
                   </Text>
                   <Text size="sm" fw={700} className="font-mono">
                     #{selectedTx.block_number?.toLocaleString(locStr)}
@@ -487,19 +483,19 @@ export default function BridgeTab({
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Zaman:' : 'Timestamp:'}
+                    {t('unlocks_timestamp')}
                   </Text>
                   <Text size="sm">{formatTimestamp(selectedTx.timestamp, locStr)}</Text>
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Aktarılan Miktar:' : 'Swapped Amount:'}
+                    {t('bridge_swappedAmount')}
                   </Text>
                   <AmountDisplay amount={selectedTx.value_hmnd} size="sm" />
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'İşlem Metodu:' : 'Method:'}
+                    {t('bridge_method')}
                   </Text>
                   <Badge variant="outline" size="xs">
                     {selectedTx.method || 'nativeToEvmSwap'}
@@ -510,7 +506,7 @@ export default function BridgeTab({
 
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                {lang === 'tr' ? 'Gönderen Cüzdan:' : 'Sender Wallet:'}
+                {t('bridge_senderWallet')}
               </Text>
               <AddressBadge
                 address={selectedTx.from_address}
@@ -522,7 +518,7 @@ export default function BridgeTab({
 
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                {lang === 'tr' ? 'Hedef / Alıcı Cüzdan:' : 'Receiver / Target:'}
+                {t('bridge_receiverTarget')}
               </Text>
               <AddressBadge
                 address={selectedTx.to_address}
@@ -546,7 +542,7 @@ export default function BridgeTab({
                     setSelectedTx(null);
                   }}
                 >
-                  {lang === 'tr' ? 'Gönderen Defteri' : 'Sender Ledger'}
+                  {t('tx_senderLedger')}
                 </Button>
               )}
               {onOpenTrail && (
@@ -560,7 +556,7 @@ export default function BridgeTab({
                     setSelectedTx(null);
                   }}
                 >
-                  {lang === 'tr' ? 'Para İzi' : 'Money Trail'}
+                  {t('unlocks_moneyTrail')}
                 </Button>
               )}
               {onOpenTx && selectedTx.tx_hash && (
@@ -574,7 +570,7 @@ export default function BridgeTab({
                     setSelectedTx(null);
                   }}
                 >
-                  {lang === 'tr' ? 'İşleme Git' : 'View Tx'}
+                  {t('bridge_viewTx')}
                 </Button>
               )}
             </Group>

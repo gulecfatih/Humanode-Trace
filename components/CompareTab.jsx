@@ -4,10 +4,12 @@ import { Paper, Stack, Group, Title, Text, TextInput, Button, Badge, SimpleGrid,
 import { IconScale, IconArrowRight, IconArrowLeft, IconEye, IconBook } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function CompareTab({ initialA, initialB, onSelectAddress, onOpenLedger }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [addrA, setAddrA] = useState(initialA || '');
   const [addrB, setAddrB] = useState(initialB || '');
   const [result, setResult] = useState(null);
@@ -44,7 +46,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
   const rel = result?.relationship;
   const wA = result?.walletA;
   const wB = result?.walletB;
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Stack gap="md">
@@ -81,9 +83,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
       {!result && !loading && (
         <Paper p="xl" ta="center">
           <Text size="sm" c="dimmed">
-            {lang === 'tr'
-              ? 'Karşılaştırmak istediğiniz 2 cüzdan adresini yukarıdaki alanlara girin veya Borsa & Önemli Cüzdanlar sekmesinden seçin.'
-              : 'Enter 2 wallet addresses above to compare or select them from the Exchange & Major Wallets tab.'}
+            {t('compare_enter2WalletAddresses')}
           </Text>
         </Paper>
       )}
@@ -92,31 +92,31 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
         <>
           {/* Karşılıklı İlişki Durum Kartı */}
           <Paper p="md" style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-            <Title order={5} c="violet" mb="xs">{lang === 'tr' ? 'Zincir Üstü İlişki & Karşılıklı Etkileşim' : 'On-Chain Relationship & Mutual Flow'}</Title>
+            <Title order={5} c="violet" mb="xs">{t('compare_onChainRelationshipMutual')}</Title>
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
               <Paper p="xs" bg="rgba(0,0,0,0.3)">
-                <Text size="xs" c="dimmed">{lang === 'tr' ? 'ÇİFT KATMAN BAĞLANTISI' : 'DUAL-LAYER LINK'}</Text>
+                <Text size="xs" c="dimmed">{t('compare_dualLayerLink')}</Text>
                 <Badge size="md" color={rel?.isCrossLayerLinked ? 'violet' : 'gray'} mt={4}>
-                  {rel?.isCrossLayerLinked ? (lang === 'tr' ? '🔗 Doğrulanmış Çift Katman Kimliği' : '🔗 Verified Dual-Layer Identity') : (lang === 'tr' ? 'Bağlantı Yok' : 'No Link')}
+                  {rel?.isCrossLayerLinked ? (t('compare_verifiedDualLayerIdentity')) : (t('compare_noLink'))}
                 </Badge>
                 {rel?.crossLayerDetails && (
                   <Text size="10px" c="dimmed" mt={4}>
-                    {rel.crossLayerDetails.swap_count} {lang === 'tr' ? 'Takas' : 'Swaps'}, {lang === 'tr' ? 'Toplam' : 'Total'} {formatHMND(rel.crossLayerDetails.total_swapped_hmnd, lang)}
+                    {rel.crossLayerDetails.swap_count} {t('compare_swaps')}, {t('compare_total')} {formatHMND(rel.crossLayerDetails.total_swapped_hmnd, lang)}
                   </Text>
                 )}
               </Paper>
 
               <Paper p="xs" bg="rgba(0,0,0,0.3)">
-                <Text size="xs" c="dimmed">{lang === 'tr' ? 'DOĞRUDAN TRANSFER (A ➔ B)' : 'DIRECT TRANSFER (A ➔ B)'}</Text>
+                <Text size="xs" c="dimmed">{t('compare_directTransferAB')}</Text>
                 <Text size="sm" fw={700} c="green" className="font-mono mt-1">
-                  {rel?.directTransfersAToB?.count || 0} {lang === 'tr' ? 'İşlem' : 'Txs'} ({formatHMND(rel?.directTransfersAToB?.volume, lang)})
+                  {rel?.directTransfersAToB?.count || 0} {t('unlocks_txs_3')} ({formatHMND(rel?.directTransfersAToB?.volume, lang)})
                 </Text>
               </Paper>
 
               <Paper p="xs" bg="rgba(0,0,0,0.3)">
-                <Text size="xs" c="dimmed">{lang === 'tr' ? 'ORTAK KARŞI TARAFLAR' : 'MUTUAL COUNTERPARTIES'}</Text>
+                <Text size="xs" c="dimmed">{t('compare_mutualCounterparties')}</Text>
                 <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
-                  {rel?.mutualCounterpartiesCount || 0} {lang === 'tr' ? 'Ortak Adres' : 'Shared Addresses'}
+                  {rel?.mutualCounterpartiesCount || 0} {t('compare_sharedAddresses')}
                 </Text>
               </Paper>
             </SimpleGrid>
@@ -129,7 +129,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
               <Group justify="space-between" mb="xs">
                 <Badge color={wA?.isEvm ? 'cyan' : 'green'}>{wA?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>
                 <Button size="xs" variant="light" color="cyan" onClick={() => onOpenLedger(wA?.address)}>
-                  {lang === 'tr' ? 'Defterini Aç' : 'Open Ledger'}
+                  {t('compare_openLedger_2')}
                 </Button>
               </Group>
               <Text size="xs" fw={700} className="font-mono" c="cyan" mb="md" style={{ wordBreak: 'break-all' }}>
@@ -147,7 +147,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Toplam Gelen Hacim:' : 'Total Volume In:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_totalVolumeIn_2')}</Text>
                   <AmountDisplay
                     value={formatHMND(wA?.totalVolumeIn, { suffix: false, locale: lang })}
                     unit="HMND"
@@ -157,7 +157,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Toplam Giden Hacim:' : 'Total Volume Out:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_totalVolumeOut_2')}</Text>
                   <AmountDisplay
                     value={formatHMND(wA?.totalVolumeOut, { suffix: false, locale: lang })}
                     unit="HMND"
@@ -167,7 +167,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Harcanan Fee:' : 'Paid Fee:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_paidFee_2')}</Text>
                   <AmountDisplay
                     value={formatFee(wA?.totalFeesPaid, false, lang)}
                     unit="HMND"
@@ -176,9 +176,9 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Validatör Durumu:' : 'Validator Status:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_validatorStatus_2')}</Text>
                   <Badge size="xs" color={wA?.isValidator ? 'teal' : 'gray'}>
-                    {wA?.isValidator ? (lang === 'tr' ? 'Doğrulayıcı' : 'Validator') : (lang === 'tr' ? 'Kullanıcı' : 'User')}
+                    {wA?.isValidator ? (t('compare_validator_2')) : (t('compare_user_2'))}
                   </Badge>
                 </Group>
               </Stack>
@@ -189,7 +189,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
               <Group justify="space-between" mb="xs">
                 <Badge color={wB?.isEvm ? 'cyan' : 'green'}>{wB?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>
                 <Button size="xs" variant="light" color="violet" onClick={() => onOpenLedger(wB?.address)}>
-                  {lang === 'tr' ? 'Defterini Aç' : 'Open Ledger'}
+                  {t('compare_openLedger_2')}
                 </Button>
               </Group>
               <Text size="xs" fw={700} className="font-mono" c="violet" mb="md" style={{ wordBreak: 'break-all' }}>
@@ -207,7 +207,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Toplam Gelen Hacim:' : 'Total Volume In:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_totalVolumeIn_2')}</Text>
                   <AmountDisplay
                     value={formatHMND(wB?.totalVolumeIn, { suffix: false, locale: lang })}
                     unit="HMND"
@@ -217,7 +217,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Toplam Giden Hacim:' : 'Total Volume Out:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_totalVolumeOut_2')}</Text>
                   <AmountDisplay
                     value={formatHMND(wB?.totalVolumeOut, { suffix: false, locale: lang })}
                     unit="HMND"
@@ -227,7 +227,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Harcanan Fee:' : 'Paid Fee:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_paidFee_2')}</Text>
                   <AmountDisplay
                     value={formatFee(wB?.totalFeesPaid, false, lang)}
                     unit="HMND"
@@ -236,9 +236,9 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   />
                 </Group>
                 <Group justify="space-between">
-                  <Text size="xs" c="dimmed">{lang === 'tr' ? 'Validatör Durumu:' : 'Validator Status:'}</Text>
+                  <Text size="xs" c="dimmed">{t('compare_validatorStatus_2')}</Text>
                   <Badge size="xs" color={wB?.isValidator ? 'teal' : 'gray'}>
-                    {wB?.isValidator ? (lang === 'tr' ? 'Doğrulayıcı' : 'Validator') : (lang === 'tr' ? 'Kullanıcı' : 'User')}
+                    {wB?.isValidator ? (t('compare_validator_2')) : (t('compare_user_2'))}
                   </Badge>
                 </Group>
               </Stack>

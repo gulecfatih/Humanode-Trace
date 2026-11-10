@@ -37,6 +37,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatUSD, formatTimestamp, timeAgo, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
@@ -48,7 +49,8 @@ export default function UnlocksTab({
   onOpenBlock,
   onOpenTx,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [category, setCategory] = useState('all');
@@ -111,7 +113,7 @@ export default function UnlocksTab({
     setTimeout(fetchUnlocks, 0);
   };
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Stack gap="md">
@@ -121,16 +123,14 @@ export default function UnlocksTab({
           <div>
             <Group gap={8}>
               <Badge color="pink" variant="light" size="md">
-                🔓 {lang === 'tr' ? 'Vesting & Hak Ediş' : 'Vesting & Claims'}
+                🔓 {t('unlocks_vestingClaims')}
               </Badge>
               <Title order={4}>
-                {lang === 'tr' ? 'Token Kilit Açılımı & Vesting Takvimi' : 'Token Unlocks & Vesting Schedule'}
+                {t('unlocks_tokenUnlocksVestingSchedule')}
               </Title>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              {lang === 'tr'
-                ? 'Humanode yerel ağında vesting kilit açılımları, tokenClaims airdrop hak edişleri ve çoklu imzalı hazine operasyonları'
-                : 'Substrate native vesting schedule, tokenClaims airdrops and multisig treasury unlocks'}
+              {t('unlocks_substrateNativeVestingSchedule')}
             </Text>
           </div>
         </Group>
@@ -142,17 +142,15 @@ export default function UnlocksTab({
               <IconCalendarEvent size={22} color="#ec4899" />
               <div>
                 <Text size="sm" fw={700} c="#f0f6fc">
-                  ⏱️ {lang === 'tr' ? 'Bir Sonraki Kilit Açılış Dönemi (Cliff / Epoch)' : 'Next Token Unlock Epoch'}
+                  ⏱️ {t('unlocks_nextTokenUnlockEpoch')}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  {lang === 'tr'
-                    ? 'Aylık periyodik kilit açılımı • Tahmini hak ediş: ~1.250.000 HMND (Vakıf & Ekosistem Teşvikleri)'
-                    : 'Monthly periodic unlock epoch • Estimated cliff: ~1,250,000 HMND (Foundation & Ecosystem Incentives)'}
+                  {t('unlocks_monthlyPeriodicUnlockEpoch')}
                 </Text>
               </div>
             </Group>
             <Badge color="pink" variant="light" size="md">
-              {lang === 'tr' ? 'Periyodik Takvim Aktif' : 'Vesting Schedule Active'}
+              {t('unlocks_vestingScheduleActive')}
             </Badge>
           </Group>
         </Card>
@@ -161,14 +159,14 @@ export default function UnlocksTab({
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm">
           <Box style={{ cursor: 'pointer' }} onClick={() => { setCategory('vesting'); setPage(1); }}>
             <KpiStatCard
-              title={lang === 'tr' ? 'Vesting Kilit Açılımı' : 'Vesting Unlocks'}
+              title={t('unlocks_vestingUnlocks')}
               value={`${kpis?.vesting?.toLocaleString(locStr) || 0}`}
-              unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+              unit={t('unlocks_txs_3')}
               color="pink"
               icon={IconLockOpen}
               badge={category === 'vesting' ? 'AKTİF' : null}
               badgeColor="pink"
-              subtext={kpis?.vesting_amount_hmnd > 0 ? formatHMND(kpis.vesting_amount_hmnd, { locale: lang, showScale: false }) : (lang === 'tr' ? 'Vakıf Dağıtımları' : 'Vault Distributions')}
+              subtext={kpis?.vesting_amount_hmnd > 0 ? formatHMND(kpis.vesting_amount_hmnd, { locale: lang, showScale: false }) : (t('unlocks_vaultDistributions'))}
             />
           </Box>
 
@@ -176,7 +174,7 @@ export default function UnlocksTab({
             <KpiStatCard
               title="Token Claims (Airdrop)"
               value={`${kpis?.tokenClaims?.toLocaleString(locStr) || 0}`}
-              unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+              unit={t('unlocks_txs_3')}
               color="yellow"
               icon={IconGift}
               badge={category === 'tokenClaims' ? 'AKTİF' : null}
@@ -187,23 +185,23 @@ export default function UnlocksTab({
 
           <Box style={{ cursor: 'pointer' }} onClick={() => { setCategory('multisig'); setPage(1); }}>
             <KpiStatCard
-              title={lang === 'tr' ? 'Multisig Onayları' : 'Multisig Ops'}
+              title={t('unlocks_multisigOps')}
               value={`${kpis?.multisig?.toLocaleString(locStr) || 0}`}
-              unit={lang === 'tr' ? 'İşlem' : 'Txs'}
+              unit={t('unlocks_txs_3')}
               color="orange"
               icon={IconShieldLock}
               badge={category === 'multisig' ? 'AKTİF' : null}
               badgeColor="orange"
-              subtext={lang === 'tr' ? 'Çoklu İmzalı Hazine' : 'Multi-Sig Governance'}
+              subtext={t('unlocks_multiSigGovernance')}
             />
           </Box>
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Toplam Açılan Token' : 'Total Unlocked'}
+            title={t('unlocks_totalUnlocked')}
             value={formatHMND((kpis?.vesting_amount_hmnd || 0) + (kpis?.tokenClaims_amount_hmnd || 0), { locale: lang, showScale: false })}
             color="teal"
             icon={IconCoins}
-            subtext={lang === 'tr' ? 'Kümülatif hak sahipliği' : 'Cumulative claimed tokens'}
+            subtext={t('unlocks_cumulativeClaimedTokens')}
           />
         </SimpleGrid>
       </Paper>
@@ -232,7 +230,7 @@ export default function UnlocksTab({
                   color="gray"
                   onClick={() => { setCategory('all'); setPage(1); }}
                 >
-                  {lang === 'tr' ? 'Tüm Açılımlar' : 'All Unlocks'}
+                  {t('unlocks_allUnlocks')}
                 </Button>
                 <Button
                   size="xs"
@@ -267,7 +265,7 @@ export default function UnlocksTab({
                 <form onSubmit={handleSearchSubmit} style={{ flex: 1 }}>
                   <TextInput
                     size="xs"
-                    placeholder={lang === 'tr' ? 'Cüzdan veya extrinsic ara...' : 'Search wallet or hash...'}
+                    placeholder={t('unlocks_searchWalletOrHash')}
                     leftSection={<IconSearch size={14} />}
                     rightSection={
                       searchQuery && (
@@ -311,13 +309,13 @@ export default function UnlocksTab({
                 }}
               >
                 <Table.Tr>
-                  <Table.Th style={{ width: 140 }}>{lang === 'tr' ? 'Zaman' : 'Time'}</Table.Th>
-                  <Table.Th style={{ width: 100 }}>{lang === 'tr' ? 'Blok #' : 'Block #'}</Table.Th>
-                  <Table.Th style={{ width: 130 }}>{lang === 'tr' ? 'Kategori & Metot' : 'Pallet & Method'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Gönderen / Hazine' : 'Sender / Vault'}</Table.Th>
-                  <Table.Th>{lang === 'tr' ? 'Hak Sahibi Cüzdan' : 'Beneficiary Wallet'}</Table.Th>
-                  <Table.Th style={{ textAlign: 'right' }}>{lang === 'tr' ? 'Açılan Tutar' : 'Unlocked Amount'}</Table.Th>
-                  <Table.Th style={{ width: 60, textAlign: 'center' }}>{lang === 'tr' ? 'Detay' : 'Info'}</Table.Th>
+                  <Table.Th style={{ width: 140 }}>{t('unlocks_time')}</Table.Th>
+                  <Table.Th style={{ width: 100 }}>{t('colBlock')}</Table.Th>
+                  <Table.Th style={{ width: 130 }}>{t('unlocks_palletMethod')}</Table.Th>
+                  <Table.Th>{t('unlocks_senderVault')}</Table.Th>
+                  <Table.Th>{t('unlocks_beneficiaryWallet')}</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>{t('unlocks_unlockedAmount')}</Table.Th>
+                  <Table.Th style={{ width: 60, textAlign: 'center' }}>{t('unlocks_info')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -333,7 +331,7 @@ export default function UnlocksTab({
                   <Table.Tr>
                     <Table.Td colSpan={7} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Kriterlere uygun kilit açılımı bulunamadı.' : 'No unlocks found matching criteria.'}
+                        {t('unlocks_noUnlocksFoundMatching')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -420,9 +418,7 @@ export default function UnlocksTab({
           {totalPages > 1 && (
             <Group justify="space-between" align="center" mt="sm">
               <Text size="xs" c="dimmed">
-                {lang === 'tr'
-                  ? `Sayfa ${page} / ${totalPages} (Toplam ${totalCount.toLocaleString(locStr)} işlem)`
-                  : `Page ${page} of ${totalPages} (${totalCount.toLocaleString(locStr)} total)`}
+                {t('paginationSummary', { page: page, totalPages: totalPages, total: totalCount.toLocaleString(locStr) })}
               </Text>
               <Pagination
                 size="sm"
@@ -447,7 +443,7 @@ export default function UnlocksTab({
               {selectedExtrinsic?.pallet}:{selectedExtrinsic?.method}
             </Badge>
             <Text fw={700} size="sm">
-              {lang === 'tr' ? 'Kilit Açılım & Extrinsic Detayı' : 'Unlock & Extrinsic Details'}
+              {t('unlocks_unlockExtrinsicDetails')}
             </Text>
           </Group>
         }
@@ -460,7 +456,7 @@ export default function UnlocksTab({
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Blok Numarası:' : 'Block Number:'}
+                    {t('unlocks_blockNumber')}
                   </Text>
                   <Text size="sm" fw={700} className="font-mono">
                     #{selectedExtrinsic.block_number?.toLocaleString(locStr)}
@@ -468,19 +464,19 @@ export default function UnlocksTab({
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Zaman:' : 'Timestamp:'}
+                    {t('unlocks_timestamp')}
                   </Text>
                   <Text size="sm">{formatTimestamp(selectedExtrinsic.timestamp, locStr)}</Text>
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Açılan Miktar:' : 'Unlocked Amount:'}
+                    {t('unlocks_unlockedAmount_2')}
                   </Text>
                   <AmountDisplay amount={selectedExtrinsic.value_hmnd} size="sm" />
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    {lang === 'tr' ? 'Ödenen Ücret:' : 'Fee:'}
+                    {t('unlocks_fee')}
                   </Text>
                   <Text size="sm" className="font-mono">
                     {formatFee(selectedExtrinsic.fee_hmnd)}
@@ -491,7 +487,7 @@ export default function UnlocksTab({
 
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                {lang === 'tr' ? 'İmzalayan / Hazine:' : 'Signer / Treasury:'}
+                {t('unlocks_signerTreasury')}
               </Text>
               <AddressBadge
                 address={selectedExtrinsic.signer}
@@ -503,7 +499,7 @@ export default function UnlocksTab({
 
             <div>
               <Text size="xs" c="dimmed" mb={4}>
-                {lang === 'tr' ? 'Hak Sahibi Cüzdan:' : 'Beneficiary Wallet:'}
+                {t('unlocks_beneficiaryWallet_2')}
               </Text>
               <AddressBadge
                 address={selectedExtrinsic.target || selectedExtrinsic.signer}
@@ -527,7 +523,7 @@ export default function UnlocksTab({
                     setSelectedExtrinsic(null);
                   }}
                 >
-                  {lang === 'tr' ? 'Hak Sahibi Defteri' : 'Beneficiary Ledger'}
+                  {t('unlocks_beneficiaryLedger')}
                 </Button>
               )}
               {onOpenTrail && (
@@ -541,7 +537,7 @@ export default function UnlocksTab({
                     setSelectedExtrinsic(null);
                   }}
                 >
-                  {lang === 'tr' ? 'Para İzi' : 'Money Trail'}
+                  {t('unlocks_moneyTrail')}
                 </Button>
               )}
               {onOpenBlock && (
@@ -555,7 +551,7 @@ export default function UnlocksTab({
                     setSelectedExtrinsic(null);
                   }}
                 >
-                  {lang === 'tr' ? 'Bloğu İncele' : 'Inspect Block'}
+                  {t('unlocks_inspectBlock')}
                 </Button>
               )}
             </Group>

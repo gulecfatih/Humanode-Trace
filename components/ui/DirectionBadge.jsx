@@ -12,8 +12,7 @@ import {
 import { useLanguage } from '../LanguageContext';
 
 export default function DirectionBadge({ type = 'in', size = 'xs', label = null }) {
-  const { lang } = useLanguage();
-  const isTr = lang === 'tr';
+  const { t } = useLanguage();
 
   const normalized = (type || 'in').toLowerCase();
 
@@ -28,7 +27,7 @@ export default function DirectionBadge({ type = 'in', size = 'xs', label = null 
     case 'inflow':
       color = 'teal';
       Icon = IconArrowDownLeft;
-      text = text || (isTr ? 'GELEN' : 'IN');
+      text = text || t('badgeIn');
       break;
 
     case 'out':
@@ -37,7 +36,7 @@ export default function DirectionBadge({ type = 'in', size = 'xs', label = null 
     case 'outflow':
       color = 'orange';
       Icon = IconArrowUpRight;
-      text = text || (isTr ? 'GİDEN' : 'OUT');
+      text = text || t('badgeOut');
       break;
 
     case 'burn':
@@ -45,14 +44,14 @@ export default function DirectionBadge({ type = 'in', size = 'xs', label = null 
     case 'gas':
       color = 'yellow';
       Icon = IconFlame;
-      text = text || (isTr ? 'YAKIM' : 'BURN');
+      text = text || t('badgeBurn');
       break;
 
     case 'reward':
     case 'payout':
       color = 'cyan';
       Icon = IconGift;
-      text = text || (isTr ? 'ÖDÜL' : 'REWARD');
+      text = text || t('badgeReward');
       break;
 
     case 'call':
@@ -60,13 +59,13 @@ export default function DirectionBadge({ type = 'in', size = 'xs', label = null 
     case 'tx':
       color = 'indigo';
       Icon = IconCpu;
-      text = text || (isTr ? 'ÇAĞRI' : 'CALL');
+      text = text || t('badgeCall');
       break;
 
     default:
       color = 'blue';
       Icon = IconArrowsExchange;
-      text = text || (isTr ? 'TRANSFER' : 'TRANSFER');
+      text = text || t('badgeTransfer');
       break;
   }
 

@@ -30,11 +30,13 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatFee, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTrail }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [network, setNetwork] = useState('substrate'); // 'substrate' | 'evm' | 'all'
@@ -80,7 +82,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
     return true;
   });
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
   const topThree = rows.slice(0, 3);
 
   return (
@@ -267,7 +269,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                     <Center>
                       <Loader size="sm" color="yellow" mr="xs" />
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Lider tablosu yükleniyor...' : 'Loading leaderboard data...'}
+                        {t('leaderboard_loadingLeaderboardData')}
                       </Text>
                     </Center>
                   </Table.Td>
@@ -365,7 +367,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                 <Table.Tr>
                   <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '30px' }}>
                     <Text size="sm" c="dimmed">
-                      {lang === 'tr' ? 'Seçilen ağ için kayıt bulunamadı.' : 'No records found for the selected network.'}
+                      {t('leaderboard_noRecordsFoundFor')}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

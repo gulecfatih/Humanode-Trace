@@ -28,6 +28,19 @@ public class LocalizationController : ControllerBase
         return Ok(translations);
     }
 
+    [HttpGet("localization/page")]
+    public async Task<IActionResult> GetPageLocalization([FromQuery] string page = "overview", [FromQuery] string lang = "")
+    {
+        var fields = await _locRepo.GetPageLocalizationAsync(page, lang);
+        return Ok(new
+        {
+            page = string.IsNullOrWhiteSpace(page) ? "overview" : page.Trim().ToLower(),
+            lang = string.IsNullOrWhiteSpace(lang) ? "tr" : lang.Trim().ToLower(),
+            count = fields.Count,
+            fields
+        });
+    }
+
     [HttpPost("translations")]
     public async Task<IActionResult> UpdateTranslation([FromBody] UpdateTranslationRequest req)
     {

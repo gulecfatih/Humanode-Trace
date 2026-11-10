@@ -29,6 +29,7 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatUSD, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
 
@@ -38,20 +39,21 @@ export default function MajorWalletsTab({
   onOpenTrail,
   onOpenCompare,
 }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [search, setSearch] = useState('');
 
   const CATEGORY_META = {
-    exchange: { label: lang === 'tr' ? 'Borsa (CEX)' : 'Exchange (CEX)', color: 'yellow' },
-    system: { label: lang === 'tr' ? 'Sistem & Hazine' : 'System & Treasury', color: 'violet' },
-    whale: { label: lang === 'tr' ? 'Büyük Balina' : 'Major Whale', color: 'cyan' },
-    bridge: { label: lang === 'tr' ? 'Köprü (Bridge)' : 'Bridge', color: 'pink' },
-    dex: { label: lang === 'tr' ? 'DEX Havuzu' : 'DEX Pool', color: 'blue' },
-    defi: { label: lang === 'tr' ? 'DeFi / Staking' : 'DeFi / Staking', color: 'teal' },
-    token: { label: lang === 'tr' ? 'ERC-20 Kontratı' : 'ERC-20 Contract', color: 'indigo' },
+    exchange: { label: t('directory_exchangeCex'), color: 'yellow' },
+    system: { label: t('directory_systemTreasury'), color: 'violet' },
+    whale: { label: t('directory_majorWhale'), color: 'cyan' },
+    bridge: { label: t('directory_bridge'), color: 'pink' },
+    dex: { label: t('directory_dexPool'), color: 'blue' },
+    defi: { label: t('directory_defiStaking'), color: 'teal' },
+    token: { label: t('directory_erc20Contract'), color: 'indigo' },
   };
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export default function MajorWalletsTab({
     contracts: items.filter((i) => ['bridge', 'dex', 'defi', 'token'].includes(i.category)).length,
   };
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
 
   return (
     <Stack gap="md">
@@ -271,12 +273,12 @@ export default function MajorWalletsTab({
 
                     <Table.Td style={{ whiteSpace: 'nowrap' }}>
                       <Text size="xs" fw={800} c="white" className="font-mono">
-                        {(w.tx_count || 0).toLocaleString(loc)} {lang === 'tr' ? 'İşlem' : 'Txs'}
+                        {(w.tx_count || 0).toLocaleString(loc)} {t('unlocks_txs_3')}
                       </Text>
                       <Text size="11px" c="dimmed" className="font-mono">
-                        <span style={{ color: '#34d399' }}>↓ {(w.in_count || 0).toLocaleString(loc)} {lang === 'tr' ? 'giriş' : 'in'}</span>
+                        <span style={{ color: '#34d399' }}>↓ {(w.in_count || 0).toLocaleString(loc)} {t('directory_in')}</span>
                         {' • '}
-                        <span style={{ color: '#f87171' }}>↑ {(w.out_count || 0).toLocaleString(loc)} {lang === 'tr' ? 'çıkış' : 'out'}</span>
+                        <span style={{ color: '#f87171' }}>↑ {(w.out_count || 0).toLocaleString(loc)} {t('directory_out')}</span>
                       </Text>
                     </Table.Td>
 
@@ -292,7 +294,7 @@ export default function MajorWalletsTab({
 
                     <Table.Td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                       <Group gap={4} wrap="nowrap" justify="center">
-                        <Tooltip label={lang === 'tr' ? 'Önizle' : 'Preview'} withArrow position="top">
+                        <Tooltip label={t('preview')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -302,7 +304,7 @@ export default function MajorWalletsTab({
                             <IconEye size={14} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={lang === 'tr' ? 'Hesap Defteri' : 'Wallet Ledger'} withArrow position="top">
+                        <Tooltip label={t('validators_walletLedger')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -312,7 +314,7 @@ export default function MajorWalletsTab({
                             <IconBook size={14} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={lang === 'tr' ? 'Para İzi (Multi-Hop)' : 'Money Trail'} withArrow position="top">
+                        <Tooltip label={t('navMoneytrail')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -322,7 +324,7 @@ export default function MajorWalletsTab({
                             <IconGitFork size={14} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={lang === 'tr' ? 'Karşılaştır' : 'Compare'} withArrow position="top">
+                        <Tooltip label={t('directory_compare')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"

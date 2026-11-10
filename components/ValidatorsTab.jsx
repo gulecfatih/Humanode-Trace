@@ -36,12 +36,14 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatHMS, shortAddr, timeAgo, formatTimestamp, exportToCsv } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [validators, setValidators] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
@@ -77,7 +79,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
       });
   }, []);
 
-  const loc = lang === 'en' ? 'en-US' : 'tr-TR';
+  const loc = lang;
 
   // Aktif ve Pasif listeler
   const activeValidators = useMemo(() => {
@@ -138,7 +140,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         <KpiStatCard
           title={t('valActiveCard')}
           value={activeCount.toLocaleString(loc)}
-          unit={lang === 'tr' ? 'Düğüm' : 'Nodes'}
+          unit={t('validators_nodes')}
           color="teal"
           icon={IconUserCheck}
           subtext={t('valActiveCardSub')}
@@ -147,7 +149,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         <KpiStatCard
           title={t('valHistoricalCard')}
           value={totalHistoricalCount.toLocaleString(loc)}
-          unit={lang === 'tr' ? 'Kişi' : 'Total'}
+          unit={t('validators_total')}
           color="cyan"
           icon={IconUsers}
           subtext={t('valHistoricalCardSub')}
@@ -156,7 +158,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         <KpiStatCard
           title={t('valPassiveCard')}
           value={offlineCount.toLocaleString(loc)}
-          unit={lang === 'tr' ? 'Pasif' : 'Inactive'}
+          unit={t('validators_inactive')}
           color="gray"
           icon={IconUserOff}
           subtext={t('valPassiveCardSub')}
@@ -165,7 +167,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         <KpiStatCard
           title={t('valBioauthCard')}
           value={totalBioauthCount.toLocaleString(loc)}
-          unit={lang === 'tr' ? 'Onay' : 'Bioauths'}
+          unit={t('validators_bioauths')}
           color="violet"
           icon={IconDna}
           subtext={t('valBioauthCardSub')}
@@ -202,16 +204,14 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
               <Box p={8} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '6px' }}>
                 <Group justify="space-between" wrap="nowrap" mb={2}>
                   <Text size="11px" fw={700} c="teal">
-                    🏛️ {lang === 'tr' ? 'FeesPot Havuzu' : 'FeesPot Pool'}
+                    🏛️ {t('validators_feespotPool')}
                   </Text>
                   <Badge size="xs" color="teal" variant="light">
                     {stats?.fees_pot_balance_hmnd ? `${Math.round(stats.fees_pot_balance_hmnd).toLocaleString(loc)} HMND` : '402.744 HMND'}
                   </Badge>
                 </Group>
                 <Text size="10px" c="dimmed">
-                  {lang === 'tr'
-                    ? 'Son tur: 613,48 HMND • Gelecek tur tahmini: ~610-650 HMND / kişi'
-                    : 'Last batch: 613.48 HMND • Next round est: ~610-650 HMND / node'}
+                  {t('validators_lastBatch61348')}
                 </Text>
               </Box>
             </SimpleGrid>
@@ -312,12 +312,12 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
               <Table.Th style={{ whiteSpace: 'nowrap' }}>{t('valColStatus')}</Table.Th>
               <Table.Th style={{ whiteSpace: 'nowrap' }}>{t('valColBlocks')}</Table.Th>
               <Table.Th style={{ whiteSpace: 'nowrap' }}>
-                {statusFilter === 'passive' ? t('valColLastActive') : (lang === 'tr' ? 'FeesPot Havuz Ödülü' : 'FeesPot Payout')}
+                {statusFilter === 'passive' ? t('valColLastActive') : (t('validators_feespotPayout'))}
               </Table.Th>
               <Table.Th style={{ whiteSpace: 'nowrap' }}>
-                {statusFilter === 'passive' ? (lang === 'tr' ? 'Geçmiş Biyometri' : 'Historical Bioauth') : t('valColEpochTime')}
+                {statusFilter === 'passive' ? (t('validators_historicalBioauth')) : t('valColEpochTime')}
               </Table.Th>
-              <Table.Th style={{ whiteSpace: 'nowrap' }}>{lang === 'tr' ? 'Bakiye' : 'Balance'}</Table.Th>
+              <Table.Th style={{ whiteSpace: 'nowrap' }}>{t('validators_balance')}</Table.Th>
               <Table.Th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{t('valColActions')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -357,7 +357,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                         <Badge size="sm" color="teal" variant="dot" style={{ flexShrink: 0 }}>
                           {(v.is_bio_valid ?? ((v.seconds_left ?? v.bio_remaining_seconds ?? 0) > 0))
                             ? t('valStatusActive')
-                            : `${t('valStatusActive')} (${lang === 'tr' ? 'Süre Doldu' : 'Expired'})`}
+                            : `${t('valStatusActive')} (${t('validators_expired')})`}
                         </Badge>
                       ) : (
                         <Badge size="sm" color="gray" variant="light" style={{ flexShrink: 0 }}>
@@ -369,7 +369,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                     {/* Blok Üretimi */}
                     <Table.Td className="font-mono">
                       <Text size="xs" fw={700} style={{ whiteSpace: 'nowrap' }}>
-                        {(v.total_blocks ?? v.blocks_authored ?? 0).toLocaleString(loc)} {lang === 'tr' ? 'blok' : 'blocks'}
+                        {(v.total_blocks ?? v.blocks_authored ?? 0).toLocaleString(loc)} {t('validators_blocks')}
                       </Text>
                       {isActiveNode ? (
                         <Text size="10px" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
@@ -377,7 +377,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                         </Text>
                       ) : (
                         <Text size="10px" c="dimmed">
-                          {lang === 'tr' ? 'Geçmiş blok üretimi' : 'Historical authoring'}
+                          {t('validators_historicalAuthoring')}
                         </Text>
                       )}
                     </Table.Td>
@@ -412,10 +412,10 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       {statusFilter === 'passive' ? (
                         <div>
                           <Text size="xs" fw={600} c="dimmed">
-                            {v.total_bioauth ?? v.total_ops ?? 0} {lang === 'tr' ? 'biyometrik onay' : 'bioauths'}
+                            {v.total_bioauth ?? v.total_ops ?? 0} {t('validators_bioauths_2')}
                           </Text>
                           <Text size="10px" c="dimmed">
-                            {lang === 'tr' ? 'Bioauth süresi doldu' : 'Session expired'}
+                            {t('validators_sessionExpired')}
                           </Text>
                         </div>
                       ) : (() => {
@@ -443,11 +443,11 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                               style={{ whiteSpace: 'nowrap' }}
                             >
                               {!isExp
-                                ? `${displayEpoch} / 42 Epoch (${formatHMS(liveRemSec)} ${lang === 'tr' ? 'kaldı' : 'remaining'})`
-                                : (lang === 'tr' ? 'Süresi doldu' : 'Expired')}
+                                ? `${displayEpoch} / 42 Epoch (${formatHMS(liveRemSec)} ${t('validators_remaining')})`
+                                : (t('validators_expired_2'))}
                             </Text>
                             <Text size="10px" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-                              {lang === 'tr' ? `Toplam ${bioCount} biyometrik onay` : `Total ${bioCount} bioauths`}
+                              {t('totalBioauthCount', { count: bioCount })}
                             </Text>
                           </div>
                         );
@@ -462,7 +462,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                     {/* Eylemler */}
                     <Table.Td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                       <Group gap={4} wrap="nowrap" justify="center">
-                        <Tooltip label={lang === 'tr' ? 'Cüzdan Önizlemesi' : 'Quick Peek'} withArrow position="top">
+                        <Tooltip label={t('validators_quickPeek')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -472,7 +472,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                             <IconEye size={14} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={lang === 'tr' ? 'Hesap Defteri' : 'Wallet Ledger'} withArrow position="top">
+                        <Tooltip label={t('validators_walletLedger')} withArrow position="top">
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -491,7 +491,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
               <Table.Tr>
                 <Table.Td colSpan={8} style={{ textAlign: 'center', padding: '30px' }}>
                   <Text size="sm" c="dimmed">
-                    {lang === 'tr' ? 'Arama kriterine uygun validatör kaydı bulunamadı.' : 'No validators found matching your search.'}
+                    {t('validators_noValidatorsFoundMatching')}
                   </Text>
                 </Table.Td>
               </Table.Tr>
@@ -504,9 +504,11 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
       {totalPages > 1 && (
         <Group justify="space-between" align="center" mt="md" wrap="wrap">
           <Text size="xs" c="dimmed">
-            {lang === 'tr'
-              ? `Toplam ${filteredValidators.length} validatörden ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, filteredValidators.length)} arası gösteriliyor`
-              : `Showing ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, filteredValidators.length)} of ${filteredValidators.length} validators`}
+            {t('validatorsShowingRange', {
+              total: filteredValidators.length,
+              start: (page - 1) * pageSize + 1,
+              end: Math.min(page * pageSize, filteredValidators.length)
+            })}
           </Text>
           <Pagination
             total={totalPages}

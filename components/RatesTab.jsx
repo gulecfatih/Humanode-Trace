@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import { Paper, Title, Text, Table, Badge, Group, Button, Box } from '@mantine/core';
 import { IconTrendingUp, IconRefresh } from '@tabler/icons-react';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 
 import { formatUSD } from './formatters';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function RatesTab() {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -42,7 +44,7 @@ export default function RatesTab() {
       .catch(() => setSyncing(false));
   };
 
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
@@ -54,7 +56,7 @@ export default function RatesTab() {
           </Text>
         </div>
         <Button size="xs" color="cyan" leftSection={<IconRefresh size={14} />} onClick={handleSync} loading={syncing}>
-          {lang === 'tr' ? 'Kurları Senkronize Et' : 'Sync Rates'}
+          {t('rates_syncRates')}
         </Button>
       </Group>
 
@@ -62,9 +64,9 @@ export default function RatesTab() {
         <Table striped highlightOnHover verticalSpacing="xs">
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>{lang === 'tr' ? 'Tarih (Gün)' : 'Date'}</Table.Th>
-              <Table.Th>{lang === 'tr' ? 'Birim Fiyat (USD)' : 'Price (USD)'}</Table.Th>
-              <Table.Th>{lang === 'tr' ? 'Kaynak' : 'Source'}</Table.Th>
+              <Table.Th>{t('rates_date')}</Table.Th>
+              <Table.Th>{t('rates_priceUsd')}</Table.Th>
+              <Table.Th>{t('rates_source')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>

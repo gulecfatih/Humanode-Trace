@@ -34,13 +34,15 @@ import {
 } from '@tabler/icons-react';
 import { shortAddr, formatTimestamp, formatHMND, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 import AmountDisplay from './ui/AmountDisplay';
 
 export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }) {
-  const { lang, t } = useLanguage();
-  const locStr = lang === 'tr' ? 'tr-TR' : 'en-US';
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
+  const locStr = lang;
 
   const [activeSegment, setActiveSegment] = useState('radar');
   const [assetFilter, setAssetFilter] = useState('hmnd'); // 'hmnd' | 'usdc' | 'all'
@@ -131,16 +133,14 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
             <Group gap="xs" mb={4}>
               <IconRadar size={24} color="#f59e0b" />
               <Title order={2} size="h3" c="white">
-                {lang === 'tr' ? 'Balina Radarı & Kişisel Takip Listesi' : 'Whale Radar & Watchlist'}
+                {t('whales_whaleRadarWatchlist')}
               </Title>
               <Badge color="yellow" variant="light" size="sm">
                 On-Chain Whale Alerts
               </Badge>
             </Group>
             <Text size="xs" c="dimmed" maw={820}>
-              {lang === 'tr'
-                ? 'Humanode ağında gerçekleşen yüksek hacimli yerel HMND, WeHMND köprü ve USDC transferleri; net ve doğrulanmış tutarlarla anlık izleme merkezi.'
-                : 'High-value transaction alerts across Substrate, EVM native, WeHMND bridged token and USDC with exact values and estimated USD equivalents.'}
+              {t('whales_highValueTransactionAlerts')}
             </Text>
           </Box>
 
@@ -150,8 +150,8 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
             color="yellow"
             size="xs"
             data={[
-              { label: `🐋 ${lang === 'tr' ? 'Balina Radarı' : 'Whale Radar'}`, value: 'radar' },
-              { label: `⭐ ${lang === 'tr' ? 'Takip Listem' : 'Watchlist'} (${watchlist.length})`, value: 'watchlist' },
+              { label: `🐋 ${t('whales_whaleRadar')}`, value: 'radar' },
+              { label: `⭐ ${t('whales_watchlist')} (${watchlist.length})`, value: 'watchlist' },
             ]}
           />
         </Group>
@@ -159,29 +159,29 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
         {/* 4 Ana KPI Kartı (Standardize Edilmiş) */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mt="md">
           <KpiStatCard
-            title={lang === 'tr' ? 'Aktif Balina Eşiği' : 'Active Whale Threshold'}
+            title={t('whales_activeWhaleThreshold')}
             value={`≥ ${Number(minHmnd).toLocaleString(locStr)}`}
             unit={assetFilter === 'usdc' ? 'USDC' : 'HMND'}
             color="yellow"
             icon={IconFilter}
-            subtext={lang === 'tr' ? 'Bu tutarın üzerindeki tüm transferler filtrelenir' : 'Filters extrinsics meeting or exceeding threshold'}
+            subtext={t('whales_filtersExtrinsicsMeetingOr')}
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Yakalanan İşlem' : 'Detected Transactions'}
+            title={t('whales_detectedTransactions')}
             value={whales.length}
-            unit={lang === 'tr' ? 'Transfer' : 'Txs'}
+            unit={t('tokenColTransfers')}
             color="cyan"
             icon={IconRadar}
             subtext={
               assetFilter === 'hmnd'
-                ? (lang === 'tr' ? 'Doğrulanmış HMND ve WeHMND transferleri' : 'Verified HMND & WeHMND transfers')
-                : (lang === 'tr' ? 'Seçili varlık katman transferleri' : 'Transfers in selected asset tier')
+                ? (t('whales_verifiedHmndWehmndTransfers'))
+                : (t('whales_transfersInSelectedAsset'))
             }
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Listenin En Büyük Transferi' : 'Largest In List'}
+            title={t('whales_largestInList')}
             value={topTransfer ? Number(topTransfer.value_hmnd).toLocaleString(locStr, { maximumFractionDigits: 0 }) : '-'}
             unit={topTransfer?.symbol || 'HMND'}
             color="teal"
@@ -190,17 +190,17 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
             subtext={
               topTransfer?.usd_est
                 ? `≈ $${Number(topTransfer.usd_est).toLocaleString(locStr, { maximumFractionDigits: 0 })} USD`
-                : (lang === 'tr' ? 'Kayıt taranıyor' : 'Scanning records')
+                : (t('whales_scanningRecords'))
             }
           />
 
           <KpiStatCard
-            title={lang === 'tr' ? 'Yıldızlı Cüzdanlarım' : 'Saved Watchlist Wallets'}
+            title={t('whales_savedWatchlistWallets')}
             value={watchlist.length}
-            unit={lang === 'tr' ? 'Cüzdan' : 'Wallets'}
+            unit={t('whales_wallets')}
             color="violet"
             icon={IconStar}
-            subtext={lang === 'tr' ? 'Tarayıcınızda kayıtlı özel portföy' : 'Stored locally in your browser'}
+            subtext={t('whales_storedLocallyInYour')}
           />
         </SimpleGrid>
       </Paper>
@@ -219,7 +219,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                 leftSection={<IconCoins size={14} />}
                 onClick={() => handleAssetChange('hmnd')}
               >
-                {lang === 'tr' ? 'HMND & WeHMND (Önerilen)' : 'HMND & WeHMND (Recommended)'}
+                {t('whales_hmndWehmndRecommended')}
               </Button>
               <Button
                 size="xs"
@@ -235,14 +235,14 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                 color="gray"
                 onClick={() => handleAssetChange('all')}
               >
-                {lang === 'tr' ? 'Tüm Doğrulanmış Varlıklar' : 'All Verified Assets'}
+                {t('whales_allVerifiedAssets')}
               </Button>
             </Group>
 
             {/* Eşik Butonları */}
             <Group gap="xs" wrap="wrap">
               <Text size="xs" c="dimmed">
-                {lang === 'tr' ? 'Minimum Eşik:' : 'Minimum Threshold:'}
+                {t('whales_minimumThreshold')}
               </Text>
               {(assetFilter === 'usdc'
                 ? ['5000', '10000', '25000', '50000']
@@ -274,22 +274,22 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
               <Table.Thead>
                 <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <Table.Th style={{ width: '12%', minWidth: 80, padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Katman' : 'Layer'}
+                    {t('layer')}
                   </Table.Th>
                   <Table.Th style={{ width: '13%', minWidth: 85, padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Blok #' : 'Block #'}
+                    {t('colBlock')}
                   </Table.Th>
                   <Table.Th style={{ width: '16%', minWidth: 110, padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Tarih' : 'Timestamp'}
+                    {t('whales_timestamp')}
                   </Table.Th>
                   <Table.Th style={{ width: '18%', minWidth: 120, padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Gönderici (Sender)' : 'Sender'}
+                    {t('whales_sender')}
                   </Table.Th>
                   <Table.Th style={{ width: '18%', minWidth: 120, padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Alıcı (Target)' : 'Target'}
+                    {t('whales_target')}
                   </Table.Th>
                   <Table.Th style={{ width: '23%', minWidth: 165, textAlign: 'right', padding: '10px 8px' }}>
-                    {lang === 'tr' ? 'Transfer Tutarı & Değer ($)' : 'Amount & Value ($)'}
+                    {t('whales_amountValue')}
                   </Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -300,7 +300,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                       <Center>
                         <Loader size="sm" color="yellow" mr="xs" />
                         <Text size="sm" c="dimmed">
-                          {lang === 'tr' ? 'Balina transferleri taranıyor...' : 'Scanning for whale extrinsics...'}
+                          {t('whales_scanningForWhaleExtrinsics')}
                         </Text>
                       </Center>
                     </Table.Td>
@@ -404,7 +404,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                   <Table.Tr>
                     <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '30px' }}>
                       <Text size="sm" c="dimmed">
-                        {lang === 'tr' ? 'Belirtilen kriterde balina transferi bulunamadı.' : 'No whale transactions found matching criteria.'}
+                        {t('whales_noWhaleTransactionsFound')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -422,14 +422,14 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
             <Group gap={8}>
               <IconStarFilled size={18} color="#eab308" />
               <Text size="sm" fw={700} c="white">
-                {lang === 'tr' ? 'Yıldızlı Özel Cüzdan Takip Listem' : 'Personal Watchlist'}
+                {t('whales_personalWatchlist')}
               </Text>
             </Group>
 
             {/* Adres Ekleme Girişi */}
             <Group gap="xs" style={{ flex: 1, maxWidth: 500 }}>
               <TextInput
-                placeholder={lang === 'tr' ? 'Takip etmek istediğiniz adresi yapıştırın (0x... veya hm...)' : 'Enter 0x... or hm... address to watch'}
+                placeholder={t('whales_enter0xOrHm')}
                 size="xs"
                 style={{ flex: 1 }}
                 value={newAddrInput}
@@ -437,7 +437,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                 onKeyDown={(e) => e.key === 'Enter' && handleAddWatchlist()}
               />
               <Button size="xs" color="yellow" leftSection={<IconPlus size={14} />} onClick={handleAddWatchlist}>
-                {lang === 'tr' ? 'Ekle' : 'Add'}
+                {t('whales_add')}
               </Button>
             </Group>
           </Group>
@@ -445,9 +445,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
           {watchlist.length === 0 ? (
             <Paper p="xl" bg="rgba(0,0,0,0.1)" style={{ textAlign: 'center' }}>
               <Text size="sm" c="dimmed">
-                {lang === 'tr'
-                  ? 'Henüz izleme listenize cüzdan eklemediniz. Yukarıdaki alana adres yapıştırarak veya tablolardan cüzdanları yıldızlayarak takip edebilirsiniz.'
-                  : 'Your watchlist is empty. Add addresses above or star them across the explorer to track them here.'}
+                {t('whales_yourWatchlistIsEmpty')}
               </Text>
             </Paper>
           ) : (
@@ -470,7 +468,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                       </Group>
 
                       <Group gap={4}>
-                        <Tooltip label={lang === 'tr' ? 'Önizle' : 'Preview'}>
+                        <Tooltip label={t('preview')}>
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -481,7 +479,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                           </ActionIcon>
                         </Tooltip>
 
-                        <Tooltip label={lang === 'tr' ? 'Hesap Defterini Aç' : 'Open Ledger'}>
+                        <Tooltip label={t('quickPeekOpenLedger')}>
                           <ActionIcon
                             size="sm"
                             variant="light"
@@ -492,7 +490,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                           </ActionIcon>
                         </Tooltip>
 
-                        <Tooltip label={lang === 'tr' ? 'Listeden Kaldır' : 'Remove'}>
+                        <Tooltip label={t('whales_remove')}>
                           <ActionIcon
                             size="sm"
                             variant="subtle"
@@ -514,9 +512,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                     />
 
                     <Text size="11px" c="dimmed" mt={6}>
-                      {lang === 'tr'
-                        ? 'Hesap Defteri veya Hızlı Önizleme ile işlem geçmişini ve net bakiyesini anında inceleyebilirsiniz.'
-                        : 'Click to inspect full ledger history, net balance and money trail.'}
+                      {t('whales_clickToInspectFull')}
                     </Text>
                   </Paper>
                 );

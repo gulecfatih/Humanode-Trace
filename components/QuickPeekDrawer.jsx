@@ -4,9 +4,11 @@ import { Drawer, Stack, Group, Title, Text, Badge, Button, Paper, CopyButton, Ac
 import { IconCopy, IconCheck, IconBook, IconGitFork, IconExternalLink } from '@tabler/icons-react';
 import { formatHMND, formatUSD, formatFee, formatCompact, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
+import { useModuleFields } from './ModuleLayout';
 
 export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger, onOpenTrail }) {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
+  const { t, fields } = useModuleFields();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +30,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
   if (!address) return null;
 
   const isEvm = address.startsWith('0x') || address.startsWith('0X');
-  const locStr = lang === 'en' ? 'en-US' : 'tr-TR';
+  const locStr = lang;
 
   return (
     <Drawer
@@ -104,7 +106,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
             <Text size="lg" fw={800} c="cyan" className="font-mono">
               {((data?.evm?.sentCount || 0) + (data?.evm?.receivedCount || 0) + (data?.substrate?.signedCount || 0) + (data?.substrate?.targetCount || 0)).toLocaleString(locStr)}
             </Text>
-            <Text size="xs" c="dimmed">{lang === 'tr' ? 'Ağ Hareketi' : 'Network Activity'}</Text>
+            <Text size="xs" c="dimmed">{t('peek_networkActivity')}</Text>
           </Paper>
         </SimpleGrid>
 
@@ -112,9 +114,9 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
         {data?.tokens && data.tokens.length > 1 && (
           <Paper p="sm" style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.3)' }}>
             <Group justify="space-between" mb={6}>
-              <Text size="xs" fw={700} c="teal">🪙 {lang === 'tr' ? 'Cüzdandaki Ek Varlıklar & Tokenlar:' : 'Additional Wallet Assets:'}</Text>
+              <Text size="xs" fw={700} c="teal">🪙 {t('peek_additionalWalletAssets')}</Text>
               <Badge size="xs" color="teal">
-                {data.tokens.length} {lang === 'tr' ? 'Varlık' : 'Assets'} (≈ {formatUSD(data?.totalPortfolioUsd || data?.valueUsd, lang)})
+                {data.tokens.length} {t('tokens_assets')} (≈ {formatUSD(data?.totalPortfolioUsd || data?.valueUsd, lang)})
               </Badge>
             </Group>
             <Group gap={6} wrap="wrap">
@@ -137,18 +139,16 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
         {data?.crossLayer?.hasLink && (
           <Paper p="sm" style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
             <Group justify="space-between" mb={4}>
-              <Text size="xs" fw={700} c="violet">🔗 {lang === 'tr' ? 'Bağlı Çift Katman Kimliği:' : 'Linked Dual-Layer Address:'}</Text>
+              <Text size="xs" fw={700} c="violet">🔗 {t('peek_linkedDualLayerAddress')}</Text>
               <Badge size="xs" color="violet">
-                {data.crossLayer.linkedAddresses?.[0]?.swapCount || 0} {lang === 'tr' ? 'Köprü Takası' : 'Bridge Swaps'}
+                {data.crossLayer.linkedAddresses?.[0]?.swapCount || 0} {t('peek_bridgeSwaps')}
               </Badge>
             </Group>
             <Text size="xs" fw={700} className="font-mono" c="indigo" style={{ wordBreak: 'break-all' }}>
               {data.crossLayer.linkedAddresses?.[0]?.linkedAddress}
             </Text>
             <Text size="xs" c="dimmed" mt={4}>
-              {lang === 'tr'
-                ? `Toplam ${formatHMND(data.crossLayer.linkedAddresses?.[0]?.totalSwappedHmnd, lang)} köprü transferi yapılmıştır.`
-                : `Total ${formatHMND(data.crossLayer.linkedAddresses?.[0]?.totalSwappedHmnd, lang)} transferred across bridge.`}
+              {t('peekBridgeTotal', { amount: formatHMND(data.crossLayer.linkedAddresses?.[0]?.totalSwappedHmnd, lang) })}
             </Text>
           </Paper>
         )}
@@ -156,15 +156,16 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
         {/* Validatör Rozeti */}
         {data?.isValidator && (
           <Paper p="sm" style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
-            <Text size="xs" fw={700} c="cyan">🧬 {lang === 'tr' ? 'Aktif Biyometrik Doğrulayıcı (Proof-of-Humanity)' : 'Active Biometric Validator (Proof-of-Humanity)'}</Text>
+            <Text size="xs" fw={700} c="cyan">🧬 {t('peek_activeBiometricValidatorProof')}</Text>
             <Text size="xs" c="dimmed" mt={4}>
-              {lang === 'tr'
-                ? `Üretilen Blok: ${data?.validatorStats?.blocksAuthored || 0} | Biyometri Onayı: ${data?.validatorStats?.bioauthCount || 0}`
-                : `Blocks Authored: ${data?.validatorStats?.blocksAuthored || 0} | Bioauth Count: ${data?.validatorStats?.bioauthCount || 0}`}
+              {t('peekValidatorStats', {
+                blocks: data?.validatorStats?.blocksAuthored || 0,
+                bioauth: data?.validatorStats?.bioauthCount || 0
+              })}
             </Text>
             <Group gap="xs" mt={6}>
               <Badge size="xs" color="cyan" variant="light">
-                FeesPot: {formatHMND(data?.validatorStats?.totalPayoutHmnd || 0, lang)} ({data?.validatorStats?.payoutRounds || 0} {lang === 'tr' ? 'tur' : 'rounds'})
+                FeesPot: {formatHMND(data?.validatorStats?.totalPayoutHmnd || 0, lang)} ({data?.validatorStats?.payoutRounds || 0} {t('peek_rounds')})
               </Badge>
             </Group>
           </Paper>
