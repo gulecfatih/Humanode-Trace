@@ -646,7 +646,7 @@ export default function LedgerTab({
                                   </Text>
                                   {Number(tk.priceUsd || 0) > 0 && (
                                     <Text size="xs" c="dimmed">
-                                      @ ${Number(tk.priceUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                                      @ ${Number(tk.priceUsd).toLocaleString(loc || lang || undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
                                     </Text>
                                   )}
                                 </div>

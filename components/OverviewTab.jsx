@@ -409,7 +409,7 @@ export default function OverviewTab({
   const displayVolumeHmnd = rangeStats?.total_all_volume ?? rangeStats?.totalVolumeHmnd ?? ((stats?.evm?.total_volume_hmnd || 0) + (stats?.substrate?.total_volume_hmnd || 0)) ?? 0;
   const avgFeePerBlock = totalCount > 0 ? (displayFeesHmnd / totalCount) : 0;
 
-  const loc = lang;
+  const loc = lang || undefined;
 
   return (
     <Stack gap="md">

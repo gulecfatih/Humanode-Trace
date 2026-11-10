@@ -97,7 +97,7 @@ export default function HodlersTab({
     setTimeout(fetchHodlers, 0);
   };
 
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Stack gap="md">

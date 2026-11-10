@@ -46,7 +46,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
   const rel = result?.relationship;
   const wA = result?.walletA;
   const wB = result?.walletB;
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Stack gap="md">

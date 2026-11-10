@@ -126,7 +126,7 @@ export default function BiomapperTab({
     });
   };
 
-  const locStr = lang;
+  const locStr = lang || undefined;
   const kpis = data?.kpis;
   const chains = data?.chains || [];
   const bioauthFeed = data?.bioauthFeed?.items || [];

@@ -40,7 +40,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="tr" data-mantine-color-scheme="dark">
+    <html data-mantine-color-scheme="dark">
       <head>
         <ColorSchemeScript defaultColorScheme="dark" forceColorScheme="dark" />
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no" />

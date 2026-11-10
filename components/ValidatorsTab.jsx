@@ -79,7 +79,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
       });
   }, []);
 
-  const loc = lang;
+  const loc = lang || undefined;
 
   // Aktif ve Pasif listeler
   const activeValidators = useMemo(() => {

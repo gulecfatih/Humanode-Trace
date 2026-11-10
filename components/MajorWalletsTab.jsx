@@ -99,7 +99,7 @@ export default function MajorWalletsTab({
     contracts: items.filter((i) => ['bridge', 'dex', 'defi', 'token'].includes(i.category)).length,
   };
 
-  const loc = lang;
+  const loc = lang || undefined;
 
   return (
     <Stack gap="md">

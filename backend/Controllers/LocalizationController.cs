@@ -22,20 +22,20 @@ public class LocalizationController : ControllerBase
     }
 
     [HttpGet("translations")]
-    public async Task<IActionResult> GetTranslations([FromQuery] string lang = "tr")
+    public async Task<IActionResult> GetTranslations([FromQuery] string lang = "")
     {
         var translations = await _locRepo.GetTranslationsAsync(lang);
         return Ok(translations);
     }
 
     [HttpGet("localization/page")]
-    public async Task<IActionResult> GetPageLocalization([FromQuery] string page = "overview", [FromQuery] string lang = "")
+    public async Task<IActionResult> GetPageLocalization([FromQuery] string page = "", [FromQuery] string lang = "")
     {
         var fields = await _locRepo.GetPageLocalizationAsync(page, lang);
         return Ok(new
         {
             page = string.IsNullOrWhiteSpace(page) ? "overview" : page.Trim().ToLower(),
-            lang = string.IsNullOrWhiteSpace(lang) ? "tr" : lang.Trim().ToLower(),
+            lang = lang ?? "",
             count = fields.Count,
             fields
         });
@@ -54,7 +54,7 @@ public class LocalizationController : ControllerBase
 
 public class UpdateTranslationRequest
 {
-    public string Lang { get; set; } = "tr";
+    public string Lang { get; set; } = "";
     public string Key { get; set; } = "";
     public string Value { get; set; } = "";
 }

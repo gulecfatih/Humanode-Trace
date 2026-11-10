@@ -85,7 +85,7 @@ export default function TransactionDetailModal({
       });
   }, [opened, txHash]);
 
-  const loc = lang;
+  const loc = lang || undefined;
 
   return (
     <Modal

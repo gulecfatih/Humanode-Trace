@@ -27,7 +27,7 @@ export function ModuleLayout({ activeTab = 'overview', children }) {
 
   const loadPageFields = useCallback((pageName, langCode) => {
     const cleanPage = (pageName || 'overview').toLowerCase();
-    const cleanLang = (langCode || 'tr').toLowerCase();
+    const cleanLang = (langCode || '').toLowerCase();
     const cacheKey = `${cleanPage}_${cleanLang}`;
 
     // Instant local memory restore to prevent UI flickering

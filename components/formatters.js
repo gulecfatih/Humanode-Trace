@@ -1,10 +1,10 @@
 // Centralized Number, Currency, and Datetime Formatters for Humanode Tracker
 
-let currentLocale = 'tr'; // 'tr' | 'en'
+let currentLocale = '';
 
 export function setAppLocale(locale) {
-  if (locale === 'en' || locale === 'tr') {
-    currentLocale = locale;
+  if (locale && typeof locale === 'string') {
+    currentLocale = locale.trim().toLowerCase();
   }
 }
 
@@ -13,8 +13,7 @@ export function getAppLocale() {
 }
 
 function getLocaleString(locale) {
-  const loc = locale || currentLocale;
-  return loc === 'en' ? 'en-US' : 'tr-TR';
+  return locale || currentLocale || undefined;
 }
 
 /**
@@ -28,7 +27,7 @@ function getLocaleString(locale) {
  * @param {number} [options.minDecimals]
  * @param {boolean} [options.sign=false] Prepend '+' for positive numbers
  * @param {boolean} [options.showScale=false] Append scale in parentheses ONLY when explicitly true
- * @param {string} [options.locale] 'tr' or 'en'
+ * @param {string} [options.locale] ISO language/locale code
  * @returns {string} e.g. '45.799.956,64 HMND' or '600.199,72 HMND (600,2 Bin)'
  */
 export function formatHMND(amount, options = {}) {
@@ -187,24 +186,23 @@ export function formatTimestamp(ts, locale = null) {
  */
 export function timeAgo(ts, locale = null) {
   if (!ts) return '';
-  const isEn = (locale || currentLocale) === 'en';
   const now = Date.now();
   const time = Number(ts) > 1e11 ? Number(ts) : Number(ts) * 1000;
   const diffSec = Math.floor((now - time) / 1000);
+  const loc = locale || currentLocale || undefined;
 
-  if (isEn) {
-    if (diffSec < 5) return 'just now';
+  try {
+    const rtf = new Intl.RelativeTimeFormat(loc, { numeric: 'auto' });
+    if (diffSec < 60) return rtf.format(-diffSec, 'second');
+    if (diffSec < 3600) return rtf.format(-Math.floor(diffSec / 60), 'minute');
+    if (diffSec < 86400) return rtf.format(-Math.floor(diffSec / 3600), 'hour');
+    return rtf.format(-Math.floor(diffSec / 86400), 'day');
+  } catch {
     if (diffSec < 60) return `${diffSec}s ago`;
     if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
     if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     return `${Math.floor(diffSec / 86400)}d ago`;
   }
-
-  if (diffSec < 5) return 'az önce';
-  if (diffSec < 60) return `${diffSec} sn önce`;
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)} dk önce`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} saat önce`;
-  return `${Math.floor(diffSec / 86400)} gün önce`;
 }
 
 /**

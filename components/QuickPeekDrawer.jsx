@@ -30,7 +30,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
   if (!address) return null;
 
   const isEvm = address.startsWith('0x') || address.startsWith('0X');
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Drawer

@@ -74,7 +74,7 @@ export default function BlockDetailModal({
       });
   }, [opened, blockNumber]);
 
-  const loc = lang;
+  const loc = lang || undefined;
   const cleanNum = blockNumber ? parseInt(String(blockNumber).replace('#', ''), 10) : '';
 
   return (

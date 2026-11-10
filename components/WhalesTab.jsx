@@ -42,7 +42,7 @@ import AmountDisplay from './ui/AmountDisplay';
 export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }) {
   const { lang } = useLanguage();
   const { t, fields } = useModuleFields();
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   const [activeSegment, setActiveSegment] = useState('radar');
   const [assetFilter, setAssetFilter] = useState('hmnd'); // 'hmnd' | 'usdc' | 'all'

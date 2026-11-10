@@ -48,7 +48,7 @@ export default function HeatmapTab({ onSelectDate }) {
   }, [days]);
 
   const yearsList = heatmapData?.years || ['2026', '2025', '2024', '2023', '2022'];
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Paper p="md">

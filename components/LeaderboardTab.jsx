@@ -82,7 +82,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
     return true;
   });
 
-  const loc = lang;
+  const loc = lang || undefined;
   const topThree = rows.slice(0, 3);
 
   return (

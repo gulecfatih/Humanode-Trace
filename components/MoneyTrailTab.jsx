@@ -45,17 +45,17 @@ function formatShortAmount(amount, locale = null) {
   const val = Number(amount);
   if (isNaN(val) || val === 0) return '0';
   const abs = Math.abs(val);
-  const isTr = locale === 'tr' || locale === 'tr-TR';
+  const loc = locale || undefined;
   if (abs >= 1_000_000_000) {
-    return (val / 1_000_000_000).toLocaleString(isTr ? 'tr-TR' : 'en-US', { maximumFractionDigits: 1 }) + 'B';
+    return (val / 1_000_000_000).toLocaleString(loc, { maximumFractionDigits: 1 }) + 'B';
   }
   if (abs >= 1_000_000) {
-    return (val / 1_000_000).toLocaleString(isTr ? 'tr-TR' : 'en-US', { maximumFractionDigits: 1 }) + 'M';
+    return (val / 1_000_000).toLocaleString(loc, { maximumFractionDigits: 1 }) + 'M';
   }
   if (abs >= 1_000) {
-    return (val / 1_000).toLocaleString(isTr ? 'tr-TR' : 'en-US', { maximumFractionDigits: 1 }) + 'K';
+    return (val / 1_000).toLocaleString(loc, { maximumFractionDigits: 1 }) + 'K';
   }
-  return val.toLocaleString(isTr ? 'tr-TR' : 'en-US', { maximumFractionDigits: 2 });
+  return val.toLocaleString(loc, { maximumFractionDigits: 2 });
 }
 
 function computePositions(nodes, links, mode = 'hierarchical', width = 900, height = 520) {

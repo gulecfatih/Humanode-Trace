@@ -70,7 +70,7 @@ export default function TokensTab({ onSelectAddress }) {
       });
   }, []);
 
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   // KPI Hesaplamaları
   const totalTokensCount = tokens.length;

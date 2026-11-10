@@ -44,7 +44,7 @@ export default function RatesTab() {
       .catch(() => setSyncing(false));
   };
 
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>

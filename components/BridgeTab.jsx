@@ -105,7 +105,7 @@ export default function BridgeTab({
     setTimeout(fetchBridgeData, 0);
   };
 
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Stack gap="md">

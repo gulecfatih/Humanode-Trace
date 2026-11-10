@@ -5,63 +5,62 @@ import { Menu, Button, Text, Group } from '@mantine/core';
 import { IconChevronDown, IconCheck } from '@tabler/icons-react';
 
 // Default initial languages list (loaded and kept in sync with SQLite app_languages)
-export const DEFAULT_LANGUAGES = [
-  { code: 'tr', flag: '🇹🇷', label: 'Türkçe', nativeName: 'Türkçe', country: 'Türkiye' },
-  { code: 'en', flag: '🇬🇧', label: 'English', nativeName: 'English', country: 'Global / UK' },
-  { code: 'de', flag: '🇩🇪', label: 'Deutsch', nativeName: 'Deutsch', country: 'Deutschland' },
-  { code: 'ru', flag: '🇷🇺', label: 'Русский', nativeName: 'Русский', country: 'Россия' },
-  { code: 'es', flag: '🇪🇸', label: 'Español', nativeName: 'Español', country: 'España' },
-  { code: 'zh', flag: '🇨🇳', label: '简体中文', nativeName: '简体中文', country: '中国' },
-];
+export const DEFAULT_LANGUAGES = [];
 
 export const SUPPORTED_LANGUAGES = DEFAULT_LANGUAGES;
 
 const LanguageContext = createContext({
-  lang: 'tr',
-  languages: DEFAULT_LANGUAGES,
+  lang: '',
+  languages: [],
   setLang: () => {},
   t: (key) => key,
   loading: false,
 });
 
 export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState('tr');
-  const [languages, setLanguages] = useState(DEFAULT_LANGUAGES);
+  const [lang, setLangState] = useState('');
+  const [languages, setLanguages] = useState([]);
   const [translations, setTranslations] = useState({});
   const [loading, setLoading] = useState(true);
 
   // 1. Initial Load: Check localStorage and fetch languages from SQLite
   useEffect(() => {
-    let initialLang = 'tr';
+    let initialLang = '';
+    let savedLang = null;
     try {
-      const savedLang = localStorage.getItem('hmnd_lang');
+      savedLang = localStorage.getItem('hmnd_lang');
       if (savedLang) {
         initialLang = savedLang;
         setLangState(savedLang);
         setAppLocale(savedLang);
-      }
 
-      // Load cached SQL translations from localStorage for instantaneous first render
-      const cached = localStorage.getItem(`hmnd_sql_trans_${initialLang}`);
-      if (cached) {
-        setTranslations(JSON.parse(cached));
+        const cached = localStorage.getItem(`hmnd_sql_trans_${initialLang}`);
+        if (cached) {
+          setTranslations(JSON.parse(cached));
+        }
       }
     } catch (e) {
       console.warn('Locale storage read warning:', e);
     }
 
-    // Fetch supported languages dynamically from SQL
+    // Fetch supported languages dynamically from SQLite
     fetch('/api/languages')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setLanguages(data);
+          const defaultLangObj = data.find((l) => l.isDefault || l.IsDefault) || data[0];
+          const defaultCode = (defaultLangObj?.code || defaultLangObj?.Code || '').toLowerCase();
+
+          const activeCode = savedLang || defaultCode;
+          if (activeCode) {
+            setLangState(activeCode);
+            setAppLocale(activeCode);
+            loadTranslationsFromSql(activeCode);
+          }
         }
       })
       .catch((err) => console.error('Failed to load SQL languages:', err));
-
-    // Fetch active translations dynamically from SQL
-    loadTranslationsFromSql(initialLang);
   }, []);
 
   // 2. Fetch translations for specific language from SQLite backend
@@ -124,7 +123,7 @@ export function useLanguage() {
 
 export function LanguageSwitcher({ size = 'xs' }) {
   const { lang, languages, setLang, t } = useLanguage();
-  const currentLang = languages.find((l) => l.code === lang) || languages[0] || DEFAULT_LANGUAGES[0];
+  const currentLang = languages.find((l) => l.code === lang) || languages[0] || { flag: '🌐', label: '', nativeName: '' };
 
   return (
     <Menu shadow="md" width={220} position="bottom-end" withArrow offset={6}>
@@ -140,11 +139,11 @@ export function LanguageSwitcher({ size = 'xs' }) {
             paddingRight: 8,
             borderRadius: 8,
           }}
-          leftSection={<Text size="sm">{currentLang.flag}</Text>}
+          leftSection={<Text size="sm">{currentLang?.flag || '🌐'}</Text>}
           rightSection={<IconChevronDown size={13} style={{ opacity: 0.7 }} />}
         >
           <Text size="xs" fw={600}>
-            {currentLang.nativeName || currentLang.label}
+            {currentLang?.nativeName || currentLang?.label || ''}
           </Text>
         </Button>
       </Menu.Target>

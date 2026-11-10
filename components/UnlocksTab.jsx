@@ -113,7 +113,7 @@ export default function UnlocksTab({
     setTimeout(fetchUnlocks, 0);
   };
 
-  const locStr = lang;
+  const locStr = lang || undefined;
 
   return (
     <Stack gap="md">

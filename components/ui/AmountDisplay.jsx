@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Group, Text, Tooltip } from '@mantine/core';
+import { useLanguage } from '../LanguageContext';
 
 /**
  * AmountDisplay renders monetary and numeric amounts with:
@@ -22,7 +23,10 @@ export default function AmountDisplay({
   className = '',
   dimUnit = true,
   showUSD = true,
+  locale = null,
 }) {
+  const { lang } = useLanguage();
+  const activeLocale = locale || lang || undefined;
   const fontSizes = {
     xs: { val: '12px', unit: '10px' },
     sm: { val: '14px', unit: '11px' },
@@ -44,7 +48,7 @@ export default function AmountDisplay({
   const rawVal = value ?? amount ?? 0;
   let formattedValue = rawVal;
   if (typeof rawVal === 'number') {
-    formattedValue = rawVal.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+    formattedValue = rawVal.toLocaleString(activeLocale, { maximumFractionDigits: 2 });
   }
 
   const content = (
