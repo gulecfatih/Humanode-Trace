@@ -117,7 +117,7 @@ export default function UnlocksTab({
 
   return (
     <Stack gap="md">
-      {/* 1. HERO BAŞLIK & GERİ SAYIM KARTI */}
+      {/* 1. HERO HEADER & COUNTDOWN CARD */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
@@ -135,7 +135,7 @@ export default function UnlocksTab({
           </div>
         </Group>
 
-        {/* GERİ SAYIM & TAKVİM BİLGİ KARTI */}
+        {/* COUNTDOWN & CALENDAR INFO CARD */}
         <Card p="sm" radius="md" mb="sm" style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid rgba(236, 72, 153, 0.25)' }}>
           <Group justify="space-between" align="center" wrap="wrap">
             <Group gap="xs">
@@ -206,7 +206,7 @@ export default function UnlocksTab({
         </SimpleGrid>
       </Paper>
 
-      {/* 2. KİLİT AÇILIMI TABLOSU VE STICKY ARAMA ÇUBUĞU */}
+      {/* 2. UNLOCK SCHEDULE TABLE AND STICKY SEARCH BAR */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Stack gap="sm">
           {/* STICKY TOOLBAR */}

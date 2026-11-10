@@ -83,27 +83,27 @@ export default function OverviewTab({
   const [hideZeroFee, setHideZeroFee] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Tarih Aralığı & Belirlenen Tarihte Gas Hesaplama Durumu
+  // Date range filter & gas calculation state
   const [startDate, setStartDate] = useState(initialDate ? `${initialDate}T00:00` : '');
   const [endDate, setEndDate] = useState(initialDate ? `${initialDate}T23:59` : '');
   const [quickFilter, setQuickFilter] = useState(initialDate ? 'custom' : 'all'); // 'all', 'today', 'yesterday', '7d', '30d', '1y', 'custom'
   const [rangeStats, setRangeStats] = useState(null);
   const [rangeLoading, setRangeLoading] = useState(false);
 
-  // Dönemsel Gas & Aktivite Çizelgesi (Yıllık / Aylık / Haftalık / Günlük)
+  // Periodic gas & activity chart (Yearly / Monthly / Weekly / Daily)
   const [chartInterval, setChartInterval] = useState('month'); // 'year', 'month', 'week', 'day'
   const [chartDayScope, setChartDayScope] = useState('30d'); // '30d', '90d', '1y', 'all'
   const [chartMetric, setChartMetric] = useState('fee'); // 'fee', 'count', 'volume'
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
 
-  // Blok & Tx Detay Modalları
+  // Block & transaction detail modal state
   const [selectedBlockModal, setSelectedBlockModal] = useState(null);
   const [loadingBlockModal, setLoadingBlockModal] = useState(false);
   const [selectedTxModal, setSelectedTxModal] = useState(null);
   const [loadingTxModal, setLoadingTxModal] = useState(false);
 
-  // 1. Genel İstatistik ve İlerleme Polling
+  // 1. General KPIs and indexer progress polling. TODO: Use WebSocket stream for sub-second updates
   useEffect(() => {
     const fetchStatsAndProgress = () => {
       fetch('/api/stats')
@@ -122,7 +122,7 @@ export default function OverviewTab({
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Dönemsel Gas & Aktivite Grafiği (Filtrelerle tam senkronize)
+  // 2. Periodic gas and activity chart synchronized with active filters
   const loadDailyChart = () => {
     setChartLoading(true);
     const params = new URLSearchParams({
@@ -152,7 +152,7 @@ export default function OverviewTab({
     loadDailyChart();
   }, [chartInterval, chartMetric, layerFilter, selectedPallet, hideZeroFee, startDate, endDate, searchQuery]);
 
-  // 3. Belirlenen Tarihte Gas Hesabı (Range Stats)
+  // 3. Range-specific gas analytics and calculation
   const loadRangeStats = () => {
     setRangeLoading(true);
     const params = new URLSearchParams({
@@ -181,7 +181,7 @@ export default function OverviewTab({
     loadRangeStats();
   }, [startDate, endDate, quickFilter, layerFilter, selectedPallet, hideZeroFee, searchQuery]);
 
-  // 4. Belirlenen Tarihteki Blokları veya İşlemleri Getir
+  // 4. Fetch blocks or transactions for targeted date range
   const loadActivities = () => {
     setLoading(true);
     const params = new URLSearchParams({
@@ -218,7 +218,7 @@ export default function OverviewTab({
     loadActivities();
   }, [page, viewMode, selectedPallet, layerFilter, hideZeroFee, startDate, endDate, quickFilter]);
 
-  // Hızlı Tarih Butonuna Tıklandığında
+  // Quick date preset click handler
   const handleQuickFilter = (qf) => {
     setQuickFilter(qf);
     setPage(1);
@@ -250,7 +250,7 @@ export default function OverviewTab({
     }
   };
 
-  // Tüm Filtreleri Temizle
+  // Clear all active filters and reset query parameters
   const handleResetFilters = () => {
     setSearchQuery('');
     setStartDate('');
@@ -262,7 +262,7 @@ export default function OverviewTab({
     setPage(1);
   };
 
-  // Grafikteki bir çubuğa tıklandığında o döneme ait blokları seç
+  // Filter blocks corresponding to clicked chart bar timestamp window
   const handleBarClick = (item) => {
     if (!item?.period && !item?.day) return;
     const period = item.period || item.day;
@@ -311,7 +311,7 @@ export default function OverviewTab({
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Bloğu detaylı incele
+  // Open detailed block inspection modal
   const handleOpenBlock = (blockNumber) => {
     if (!blockNumber) return;
     if (onOpenBlock) {
@@ -343,7 +343,7 @@ export default function OverviewTab({
       });
   };
 
-  // Tekil İşlemi Detaylı İncele (İç Transferler & Swaplar Dahil)
+  // Open detailed transaction inspection modal (including internal transfers and DEX swaps)
   const handleOpenTx = (txHash) => {
     if (!txHash) return;
     if (onOpenTx) {
@@ -366,7 +366,7 @@ export default function OverviewTab({
       });
   };
 
-  // Günlük Kapsamına Göre Çizelge Verisi
+  // Periodic chart data scaled by date range
   const displayChartData = (chartData && chartData.length > 0)
     ? (chartInterval === 'day' && !startDate && !endDate && (!quickFilter || quickFilter === 'all')
         ? (chartDayScope === '30d'
@@ -379,7 +379,7 @@ export default function OverviewTab({
         : chartData)
     : [];
 
-  // Grafik Hesaplamaları
+  // Chart visualization metrics
   const maxMetricVal = Math.max(
     ...displayChartData.map((d) => {
       if (chartMetric === 'fee') return Number(d.total_fees_hmnd ?? d.totalFeesHmnd ?? 0);
@@ -400,7 +400,7 @@ export default function OverviewTab({
 
   const isDateFiltered = Boolean(startDate || endDate || (quickFilter && quickFilter !== 'all'));
 
-  // Seçili dönem aktif değerleri
+  // Active values for selected timeframe
   const displayFeesHmnd = rangeStats?.total_network_fees ?? rangeStats?.totalFeesHmnd ?? totalFeesHmnd ?? 0;
   const displayFeesUsd = rangeStats?.total_network_fees_usd ?? rangeStats?.totalFeesUsd ?? stats?.total_network_fees_usd ?? stats?.totalFeesUsd ?? 0;
   const displayTxCount = rangeStats?.total_all_transactions ?? (rangeStats?.totalTransactions != null ? (rangeStats.totalTransactions + (rangeStats.totalExtrinsics || 0)) : null) ?? (evmTxCount + subExtrinsicCount) ?? 0;
@@ -480,7 +480,7 @@ export default function OverviewTab({
         />
       </SimpleGrid>
 
-      {/* 3. TEK VE BİRLEŞİK ANA PANEL (Tüm Filtreler, Gas Hesabı, Grafik ve Bloklar Tek Çatıda) */}
+      {/* 3. UNIFIED PRIMARY DASHBOARD (Filters, Gas Estimator, Chart & Blocks) */}
       <Paper p="md" id="unifiedSection" style={{ border: '1px solid rgba(255, 255, 255, 0.08)' }}>
         <Stack gap="md">
           {/* Üst Başlık & Görünüm Seçimi */}
@@ -498,7 +498,7 @@ export default function OverviewTab({
             </Group>
           </Group>
 
-          {/* Filtre ve Tarih Şeridi */}
+          {/* Filter and Date Range Ribbon */}
           <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
             <Stack gap="xs">
               <Group justify="space-between" align="center" wrap="wrap" gap="xs">
@@ -558,7 +558,7 @@ export default function OverviewTab({
                 </Group>
               </Group>
 
-              {/* Detaylı Filtre Seçimleri */}
+              {/* Detailed Filter Selectors */}
               <Group gap="sm" align="flex-end" wrap="wrap">
                 <TextInput
                   type="datetime-local"
@@ -649,7 +649,7 @@ export default function OverviewTab({
             </Stack>
           </Paper>
 
-          {/* 5'li Birleşik KPI Raporu */}
+          {/* 5-Column Unified KPI Report */}
           <Paper
             p="md"
             style={{
@@ -689,7 +689,7 @@ export default function OverviewTab({
             <Divider my="xs" color="rgba(255, 255, 255, 0.08)" />
 
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, lg: 5 }} spacing="sm">
-              {/* 1. Yakılan Gas */}
+              {/* 1. Burned Gas KPI Card */}
               <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #f59e0b' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiBurnedGas')}</Text>
                 <Box my={3}>
@@ -720,7 +720,7 @@ export default function OverviewTab({
                 <Text size="10px" c="dimmed" style={{ lineHeight: 1.3 }}>{t('kpiTotalBlocksSub')}</Text>
               </Box>
 
-              {/* 3. Toplam İşlem */}
+              {/* 3. Total Transactions KPI Card */}
               <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #10b981' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiTotalTxs')}</Text>
                 <Box my={3}>
@@ -766,7 +766,7 @@ export default function OverviewTab({
             </SimpleGrid>
           </Paper>
 
-          {/* İnteraktif Çubuk Grafiği */}
+          {/* Interactive Bar Chart Visualization */}
           <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
             <Group justify="space-between" align="center" mb="xs" wrap="wrap" gap="xs">
               <Group gap="xs">
@@ -839,7 +839,7 @@ export default function OverviewTab({
 
                     const currVal = chartMetric === 'fee' ? feeVal : chartMetric === 'count' ? txVal : volVal;
 
-                    // Logaritmik / Yumuşatılmış güç ölçeklendirmesi (Aşırı balina işlemleri normal günleri tabana yapıştırmasın)
+                    // Power-law / logarithmic chart scale (prevents massive whale bars from squashing baseline daily bars)
                     let heightPercent = 6;
                     if (currVal > 0 && maxMetricVal > 0) {
                       if (chartMetric === 'volume') {
@@ -881,11 +881,11 @@ export default function OverviewTab({
                         showLabel = true;
                       }
                     } else {
-                      // Günlük mod: Çakışmayı önleyen akıllı takvim aralığı (TradingView / CoinGecko standardı)
+                      // Daily view: Intelligent non-overlapping calendar step intervals (TradingView / CoinGecko standard)
                       isVertical = true;
                       labelText = String(periodLabel).slice(5); // MM-DD
                       if (totalBars <= 31) {
-                        showLabel = true; // 31 güne kadar her gün rahatça sığar
+                        showLabel = true; // Fits comfortably for up to 31 daily intervals
                       } else if (totalBars <= 90) {
                         showLabel = idx % 3 === 0 || idx === totalBars - 1;
                       } else if (totalBars <= 180) {
@@ -971,7 +971,7 @@ export default function OverviewTab({
             </Group>
           </form>
 
-          {/* Blok / Tekil İşlem Görünüm Seçici ve Tablo Başlığı (Blok Gridinin Hemen Üstü) */}
+          {/* Block / Extrinsic View Switcher and Table Header */}
           <Paper
             p="xs"
             bg="rgba(15, 23, 42, 0.75)"
@@ -1033,10 +1033,10 @@ export default function OverviewTab({
             </Group>
           </Paper>
 
-          {/* Bloklar veya Tekil İşlemler Tablosu */}
+          {/* Blocks or Extrinsics Data Table */}
           <Box style={{ overflowX: 'auto' }}>
             {viewMode === 'block' ? (
-              /* =================== BLOK GÖRÜNÜMÜ =================== */
+              /* =================== BLOCK VIEW =================== */
               <Table striped highlightOnHover verticalSpacing="xs">
                 <Table.Thead>
                   <Table.Tr>
@@ -1165,7 +1165,7 @@ export default function OverviewTab({
                 </Table.Tbody>
               </Table>
             ) : (
-              /* =================== TEKİL İŞLEM GÖRÜNÜMÜ =================== */
+              /* =================== TRANSACTION VIEW =================== */
               <Table striped highlightOnHover verticalSpacing="xs">
                 <Table.Thead>
                   <Table.Tr>
@@ -1331,7 +1331,7 @@ export default function OverviewTab({
       >
         {selectedBlockModal && (
           <Stack gap="md">
-            {/* 3'lü Özet Bilgi Kartları */}
+            {/* 3-Column Summary Cards */}
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
               <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #38bdf8', borderRadius: 8 }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
@@ -1514,7 +1514,7 @@ export default function OverviewTab({
         )}
       </Modal>
 
-      {/* 5. KAPSAMLI İŞLEM DETAY & TOKEN SWAP MODALI */}
+      {/* 5. TRANSACTION DETAIL & TOKEN SWAP MODAL */}
       <Modal
         opened={Boolean(selectedTxModal)}
         onClose={() => setSelectedTxModal(null)}
@@ -1528,7 +1528,7 @@ export default function OverviewTab({
       >
         {selectedTxModal && (
           <Stack gap="md">
-            {/* Üst Bilgi Kartı */}
+            {/* Top Information Card */}
             <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
               <Group justify="space-between" align="center" wrap="wrap" mb="xs">
                 <Group gap="xs">
@@ -1656,7 +1656,7 @@ export default function OverviewTab({
               </SimpleGrid>
             </Paper>
 
-            {/* İç Token Transferleri & DEX Swap Adımları */}
+            {/* Internal Token Transfers & DEX Swap Steps */}
             {selectedTxModal.tokenTransfers && selectedTxModal.tokenTransfers.length > 0 && (
               <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(56, 189, 248, 0.25)' }}>
                 <Group justify="space-between" mb="xs">
@@ -1702,7 +1702,7 @@ export default function OverviewTab({
               </Paper>
             )}
 
-            {/* Eylemler ve Cüzdan Defterine Gitme Butonları */}
+            {/* Actions & Navigate to Wallet Ledger Buttons */}
             <Group justify="flex-end" gap="xs">
               <Button
                 size="xs"

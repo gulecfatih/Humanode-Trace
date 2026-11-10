@@ -109,7 +109,7 @@ export default function BridgeTab({
 
   return (
     <Stack gap="md">
-      {/* 1. HERO BAŞLIK & GENEL KÖPRÜ BİLGİSİ */}
+      {/* 1. HERO HEADER & GENERAL BRIDGE OVERVIEW */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
@@ -127,7 +127,7 @@ export default function BridgeTab({
           </div>
         </Group>
 
-        {/* 2. ÇİFT YÖNLÜ NET AKIŞ VE PRECOMPILE KARTLARI */}
+        {/* 2. BIDIRECTIONAL NET FLOW AND PRECOMPILE CARDS */}
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="sm" mt="sm">
           {/* Substrate -> EVM */}
           <Card p="sm" radius="md" style={{ background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
@@ -161,7 +161,7 @@ export default function BridgeTab({
             </Text>
           </Card>
 
-          {/* Net Yön ve Fark */}
+          {/* Net Direction and Volume Delta */}
           <Card p="sm" radius="md" style={{ background: 'rgba(46, 160, 67, 0.06)', border: '1px solid rgba(46, 160, 67, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="teal" variant="light" size="xs">
@@ -177,7 +177,7 @@ export default function BridgeTab({
             </Text>
           </Card>
 
-          {/* Resmi Precompile Sözleşmesi */}
+          {/* Official Precompile Contract */}
           <Card p="sm" radius="md" style={{ background: 'rgba(234, 179, 8, 0.06)', border: '1px solid rgba(234, 179, 8, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="yellow" variant="light" size="xs">
@@ -194,7 +194,7 @@ export default function BridgeTab({
           </Card>
         </SimpleGrid>
 
-        {/* 4 KPI Kartı */}
+        {/* 4 KPI Metric Cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm" mt="sm">
           <KpiStatCard
             title={t('bridge_totalBridgeVolume')}
@@ -229,7 +229,7 @@ export default function BridgeTab({
         </SimpleGrid>
       </Paper>
 
-      {/* 3. KÖPRÜ İŞLEMLERİ TABLOSU VE STICKY ARAMA ÇUBUĞU */}
+      {/* 3. BRIDGE TRANSACTIONS TABLE AND STICKY SEARCH BAR */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Stack gap="sm">
           {/* STICKY TOOLBAR: Arama, Filtre ve Sayfalama */}
@@ -452,7 +452,7 @@ export default function BridgeTab({
         </Stack>
       </Paper>
 
-      {/* 4. İŞLEM DETAY MODALI */}
+      {/* 4. TRANSACTION DETAIL MODAL */}
       <Modal
         opened={Boolean(selectedTx)}
         onClose={() => setSelectedTx(null)}

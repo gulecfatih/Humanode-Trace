@@ -45,10 +45,10 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Görünüm seçimi: 'payouts' (Çıkış turları) veya 'inflows' (Kasaya giren paralar)
+  // View selection: 'payouts' (Outflow rounds) or 'inflows' (Treasury funding sources)
   const [activeView, setActiveView] = useState('payouts');
 
-  // Canlı geri sayım için saniye
+  // Seconds remaining for live epoch countdown
   const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
 
   // Sayfalama
@@ -70,7 +70,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
         if (mounted) setLoading(false);
       });
 
-    // Her saniye geri sayımı güncelle
+    // Update countdown ticker every second. TODO: Sync with block timestamp drift
     const timer = setInterval(() => {
       setNowSec(Math.floor(Date.now() / 1000));
     }, 1000);
@@ -81,7 +81,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
     };
   }, []);
 
-  // Geri sayım hesaplama
+  // Countdown calculation
   const nextTargetTs = data?.nextEstimatedTs || (1793211744 + 14 * 86400);
   const diffSec = Math.max(0, nextTargetTs - nowSec);
   const cdDays = Math.floor(diffSec / 86400);
@@ -90,7 +90,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
   const cdSecs = diffSec % 60;
   const countdownFormatted = `${cdDays}g ${String(cdHours).padStart(2, '0')}:${String(cdMins).padStart(2, '0')}:${String(cdSecs).padStart(2, '0')}`;
 
-  // Sayfalanmış tarihçe listesi
+  // Paginated payout batch history. TODO: Support CSV export of historic rounds
   const historyList = data?.history || [];
   const totalPages = Math.ceil(historyList.length / pageSize) || 1;
   const paginatedHistory = historyList.slice((page - 1) * pageSize, page * pageSize);
@@ -99,7 +99,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
   return (
     <Stack gap="md">
-      {/* Üst Başlık & Açıklama */}
+      {/* Header Title & Description */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
           <Box>
@@ -142,9 +142,9 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
           </Group>
         </Group>
 
-        {/* 5 Ana KPI Kartı (Standardize Edilmiş, Satır Bölünmez) */}
+        {/* 5 Primary KPI Cards (Standardized single-row layout) */}
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 5 }} spacing="sm" mt="md">
-          {/* 1. Güncel Havuz Bakiyesi */}
+          {/* 1. Current Pool Balance Card */}
           <KpiStatCard
             title={t('feespot_poolBalanceFeespot')}
             value={data ? Number(data.currentBalance).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '403.719,23'}
@@ -155,7 +155,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             tooltip={t('activeBalanceTooltip', { amount: data?.currentBalance || '403,719.23' })}
           />
 
-          {/* 2. Kasaya Şimdiye Kadar Giren Toplam Para (INFLOW) */}
+          {/* 2. Total Cumulative Inflow to Treasury Card */}
           <KpiStatCard
             title={t('feespot_totalTreasuryInflow')}
             value={data?.totalInflowHmnd ? Number(data.totalInflowHmnd).toLocaleString(locStr, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '1.094.941,16'}
@@ -172,7 +172,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             }
           />
 
-          {/* 3. Runway Dayanma Süresi */}
+          {/* 3. Runway Estimated Duration Card */}
           <KpiStatCard
             title={t('feespot_runwayEstimate')}
             value={`~${data?.runwayDays || 113}`}
@@ -183,7 +183,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             tooltip={t('feespot_estimatedDaysUntilReserve')}
           />
 
-          {/* 4. Son Tur Ödülü */}
+          {/* 4. Last Round Reward Card */}
           <KpiStatCard
             title={t('feespot_lastBatch112')}
             value={Number(data?.lastBatch?.samplePerValidator || 613.48).toFixed(2)}
@@ -194,7 +194,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             tooltip={t('feespot_perValidatorNetReward')}
           />
 
-          {/* 5. Sonraki Dağıtım Geri Sayımı */}
+          {/* 5. Next Distribution Countdown Card */}
           <KpiStatCard
             title={t('feespot_nextBatchCountdown')}
             value={countdownFormatted}
@@ -206,7 +206,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
         </SimpleGrid>
       </Paper>
 
-      {/* Tablo Alanı: Dağıtım Turları (Çıkış) vs Kasaya Giren Transferler & Fon Kaynakları (Giriş) */}
+      {/* Table Area: Distribution Rounds (Outflow) vs Treasury Inflow Transfers */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" mb="md" wrap="wrap" gap="xs">
           <SegmentedControl
@@ -239,7 +239,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
         {activeView === 'inflows' ? (
           <Stack gap="md">
-            {/* Giriş Kaynakları 3'lü Dağılım Kartları */}
+            {/* Inflow Sources 3-Column Distribution Cards */}
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
               <KpiStatCard
                 title={t('feespot_1NetworkGasTransaction')}
@@ -281,7 +281,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
               />
             </SimpleGrid>
 
-            {/* Giriş İşlemleri Tablosu */}
+            {/* Inflow Transactions Stream Table */}
             <Box style={{ overflowX: 'auto', width: '100%' }}>
               <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 680, tableLayout: 'fixed' }}>
                 <Table.Thead>
@@ -307,7 +307,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {/* Kayıt 1: Doğrudan Cüzdan Transferleri */}
+                  {/* Record 1: Direct Wallet Transfers */}
                   {(data?.incomingTransfers?.length ? data.incomingTransfers : [
                     {
                       hash: '0x2449f8114d4b905a1e82441cd6585122bc49d1cd1dbc12c704a31a765c428065',
@@ -369,7 +369,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     </Table.Tr>
                   ))}
 
-                  {/* Kayıt 2: Genesis / Sistem Rezerv Girişi */}
+                  {/* Record 2: Genesis / System Reserve Inflow */}
                   <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: 'rgba(56, 189, 248, 0.02)' }}>
                     <Table.Td style={{ padding: '8px 8px' }}>
                       <Text size="xs" fw={700} c="cyan">
@@ -418,7 +418,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     </Table.Td>
                   </Table.Tr>
 
-                  {/* Kayıt 3: Ağ İşlem Gas Havuzu Girişi */}
+                  {/* Record 3: Network Transaction Gas Pool Inflow */}
                   <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: 'rgba(16, 185, 129, 0.02)' }}>
                     <Table.Td style={{ padding: '8px 8px' }}>
                       <Text size="xs" fw={700} c="teal">
@@ -545,14 +545,14 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                             </Text>
                           </Table.Td>
 
-                          {/* Hak Eden Validatör Sayısı */}
+                          {/* Eligible Validator Count */}
                           <Table.Td style={{ textAlign: 'center', padding: '8px 8px' }}>
                             <Badge variant="dot" color="blue" size="sm">
                               {item.recipientCount} {t('validators_nodes')}
                             </Badge>
                           </Table.Td>
 
-                          {/* Toplam Dağıtılan */}
+                          {/* Total Distributed */}
                           <Table.Td style={{ textAlign: 'right', padding: '8px 8px' }}>
                             <AmountDisplay
                               value={Number(item.totalDistributed || 0).toLocaleString(locStr)}
@@ -562,7 +562,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                             />
                           </Table.Td>
 
-                          {/* Düğüm Başına */}
+                          {/* Per Node Amount */}
                           <Table.Td style={{ textAlign: 'right', padding: '8px 8px' }}>
                             <AmountDisplay
                               value={`~${Number(item.samplePerValidator || 0).toFixed(1)}`}

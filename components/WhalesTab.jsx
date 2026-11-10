@@ -50,11 +50,11 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
   const [whales, setWhales] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Watchlist (Kişisel Takip Listesi)
+  // Personal Watchlist state
   const [watchlist, setWatchlist] = useState([]);
   const [newAddrInput, setNewAddrInput] = useState('');
 
-  // LocalStorage'dan takip listesini yükle
+  // Load saved watchlist from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('humannode_watchlist');
@@ -72,7 +72,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
     }
   }, []);
 
-  // Varlık türü değiştiğinde mantıklı varsayılan eşik ata
+  // Set intelligent default threshold when asset filter switches
   const handleAssetChange = (newAsset) => {
     setAssetFilter(newAsset);
     if (newAsset === 'usdc') {
@@ -84,7 +84,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
     }
   };
 
-  // Balina verilerini API'den çek
+  // Fetch whale transactions from API. TODO: Support threshold alert push notifications
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -121,12 +121,12 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
     localStorage.setItem('humannode_watchlist', JSON.stringify(updated));
   };
 
-  // En yüksek transfer bilgisi
+  // Top detected transaction metadata
   const topTransfer = whales[0];
 
   return (
     <Stack gap="md">
-      {/* Üst Başlık & Açıklama */}
+      {/* Header Title & Description */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
           <Box>
@@ -205,12 +205,12 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
         </SimpleGrid>
       </Paper>
 
-      {/* 1. BÖLÜM: BALİNA RADARI */}
+      {/* 1. SECTION: WHALE RADAR */}
       {activeSegment === 'radar' && (
         <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
-          {/* Filtre Çubuğu (Varlık Seçimi + Eşik Seçimi) */}
+          {/* Filter Bar (Asset Selection + Threshold Selection) */}
           <Group justify="space-between" mb="sm" wrap="wrap" gap="sm">
-            {/* Varlık Seçici Butonları */}
+            {/* Asset Selector Buttons */}
             <Group gap="xs" wrap="wrap">
               <Button
                 size="xs"
@@ -239,7 +239,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
               </Button>
             </Group>
 
-            {/* Eşik Butonları */}
+            {/* Threshold Selector Buttons */}
             <Group gap="xs" wrap="wrap">
               <Text size="xs" c="dimmed">
                 {t('whales_minimumThreshold')}
@@ -361,7 +361,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                           </Text>
                         </Table.Td>
 
-                        {/* Gönderici */}
+                        {/* Sender Column */}
                         <Table.Td style={{ padding: '8px 8px' }}>
                           <AddressBadge
                             address={w.sender}
@@ -372,7 +372,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                           />
                         </Table.Td>
 
-                        {/* Alıcı */}
+                        {/* Recipient Column */}
                         <Table.Td style={{ padding: '8px 8px' }}>
                           {w.target ? (
                             <AddressBadge
@@ -387,7 +387,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                           )}
                         </Table.Td>
 
-                        {/* Transfer Tutarı & Değer ($) */}
+                        {/* Transfer Amount & USD Value */}
                         <Table.Td style={{ textAlign: 'right', padding: '8px 8px' }}>
                           <AmountDisplay
                             value={formattedAmount}
@@ -415,7 +415,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
         </Paper>
       )}
 
-      {/* 2. BÖLÜM: WATCHLIST (KİŞİSEL TAKİP LİSTESİ) */}
+      {/* 2. SECTION: WATCHLIST (CUSTOM TRACKER) */}
       {activeSegment === 'watchlist' && (
         <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
           <Group justify="space-between" mb="md" wrap="wrap" gap="xs">
@@ -426,7 +426,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
               </Text>
             </Group>
 
-            {/* Adres Ekleme Girişi */}
+            {/* Add Address Input Form */}
             <Group gap="xs" style={{ flex: 1, maxWidth: 500 }}>
               <TextInput
                 placeholder={t('whales_enter0xOrHm')}

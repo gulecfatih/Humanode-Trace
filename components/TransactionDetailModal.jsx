@@ -107,7 +107,7 @@ export default function TransactionDetailModal({
         </Center>
       ) : txData ? (
         <Stack gap="md">
-          {/* Üst Bilgi Kartı */}
+          {/* Top Information Card */}
           <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
             <Group justify="space-between" align="center" wrap="wrap" mb="xs">
               <Group gap="xs">
@@ -273,7 +273,7 @@ export default function TransactionDetailModal({
             </SimpleGrid>
           </Paper>
 
-          {/* Çağrı Detayları ve Ekosistem Açıklaması */}
+          {/* Call Details and Ecosystem Explanation */}
           {(txData.details || (txData.pallet && txData.pallet !== 'Ethereum')) && (
             <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: 8 }}>
               <Group justify="space-between" mb="xs">
@@ -367,7 +367,7 @@ export default function TransactionDetailModal({
             </Paper>
           )}
 
-          {/* Alt Hızlı Aksiyon Butonları */}
+          {/* Bottom Quick Action Buttons */}
           <Group justify="space-between" mt="xs">
             <Button
               size="xs"

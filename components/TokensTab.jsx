@@ -35,7 +35,7 @@ import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
 import AddressBadge from './ui/AddressBadge';
 
-// Astronomik veya taşan (uint256 max) token hacimlerinin tabloyu patlatmasını önler
+// Protect against astronomical or overflowing (uint256 max) token volume numbers
 function formatTokenVolume(vol, locStr) {
   const num = Number(vol);
   if (isNaN(num) || num === 0) return '0,00';
@@ -72,7 +72,7 @@ export default function TokensTab({ onSelectAddress }) {
 
   const locStr = lang || undefined;
 
-  // KPI Hesaplamaları
+  // Token KPI computations
   const totalTokensCount = tokens.length;
   const totalTransfers = useMemo(() => {
     return tokens.reduce((sum, tk) => sum + (Number(tk.transfer_count) || 0), 0);
@@ -129,7 +129,7 @@ export default function TokensTab({ onSelectAddress }) {
 
   return (
     <Stack gap="md">
-      {/* Başlık ve Açıklama */}
+      {/* Title and Description */}
       <Paper p="md" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" align="flex-start" mb="sm" wrap="wrap">
           <div>
@@ -142,7 +142,7 @@ export default function TokensTab({ onSelectAddress }) {
           </div>
         </Group>
 
-        {/* KPI Kartları */}
+        {/* KPI Metric Cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm">
           <KpiStatCard
             title={t('tokensTotalCount')}
@@ -182,7 +182,7 @@ export default function TokensTab({ onSelectAddress }) {
         </SimpleGrid>
       </Paper>
 
-      {/* Arama ve Kategori Filtre Butonları */}
+      {/* Search and Category Filter Buttons */}
       <Paper p="xs" bg="rgba(0,0,0,0.2)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" wrap="wrap" gap="sm">
           <Group gap="xs" wrap="wrap">
@@ -294,7 +294,7 @@ export default function TokensTab({ onSelectAddress }) {
                         borderBottom: '1px solid rgba(255,255,255,0.04)',
                       }}
                     >
-                      {/* Varlık (Sembol Rozeti + İsim + Kategori) */}
+                      {/* Asset (Symbol Badge + Name + Category) */}
                       <Table.Td style={{ padding: '8px 8px', overflow: 'hidden' }}>
                         <Group gap={8} wrap="nowrap" align="center" style={{ minWidth: 0 }}>
                           <Badge
@@ -327,7 +327,7 @@ export default function TokensTab({ onSelectAddress }) {
                         </Group>
                       </Table.Td>
 
-                      {/* Sözleşme Adresi */}
+                      {/* Contract Address */}
                       <Table.Td style={{ whiteSpace: 'nowrap', padding: '8px 8px' }}>
                         <Group gap={4} wrap="nowrap">
                           <Text
@@ -360,14 +360,14 @@ export default function TokensTab({ onSelectAddress }) {
                         </Group>
                       </Table.Td>
 
-                      {/* Transfer Sayısı */}
+                      {/* Transfer Count */}
                       <Table.Td style={{ textAlign: 'right', whiteSpace: 'nowrap', padding: '8px 8px' }} className="font-mono">
                         <Badge variant="light" color="cyan" size="sm">
                           {(Number(tk.transfer_count) || 0).toLocaleString(locStr)}
                         </Badge>
                       </Table.Td>
 
-                      {/* Kümülatif Hacim */}
+                      {/* Cumulative Volume */}
                       <Table.Td style={{ textAlign: 'right', whiteSpace: 'nowrap', padding: '8px 8px' }} className="font-mono">
                         <Text size="xs" fw={700} c="teal" truncate>
                           {formatTokenVolume(vol, locStr)}
@@ -377,7 +377,7 @@ export default function TokensTab({ onSelectAddress }) {
                         </Text>
                       </Table.Td>
 
-                      {/* Gönderici / Alıcı Dağılımı */}
+                      {/* Sender / Recipient Distribution */}
                       <Table.Td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '8px 8px' }}>
                         <Text size="xs" className="font-mono" c="gray.2" fw={600}>
                           {Number(tk.unique_senders || 0).toLocaleString(locStr)} / {Number(tk.unique_holders || 0).toLocaleString(locStr)}
@@ -387,7 +387,7 @@ export default function TokensTab({ onSelectAddress }) {
                         </Text>
                       </Table.Td>
 
-                      {/* İncele Butonu */}
+                      {/* Inspect Button */}
                       <Table.Td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '8px 8px' }}>
                         <Tooltip label={t('preview')} withArrow position="left">
                           <ActionIcon

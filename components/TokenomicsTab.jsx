@@ -52,7 +52,7 @@ export default function TokenomicsTab({
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Kilit Açılımları Tablosu Verileri
+  // Vesting unlock table data. TODO: Cache historic unlock curves in memory
   const [unlocks, setUnlocks] = useState([]);
   const [unlocksLoading, setUnlocksLoading] = useState(false);
   const [unlocksSearch, setUnlocksSearch] = useState('');
@@ -138,7 +138,7 @@ export default function TokenomicsTab({
 
   return (
     <Stack gap="md">
-      {/* 1. ÜST BAŞLIK & AÇIKLAMA */}
+      {/* 1. HEADER TITLE & DESCRIPTION */}
       <Paper p="md" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
           <Box>
@@ -169,7 +169,7 @@ export default function TokenomicsTab({
           </Group>
         </Group>
 
-        {/* 4 Ana KPI Kartı */}
+        {/* 4 Core KPI Cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mt="md">
           <KpiStatCard
             title={t('tokenomics_circulatingSupply')}
@@ -209,7 +209,7 @@ export default function TokenomicsTab({
         </SimpleGrid>
       </Paper>
 
-      {/* 2. MAKRO DAĞILIM ÇUBUĞU */}
+      {/* 2. MACRO DISTRIBUTION BAR */}
       <Paper p="md" bg="rgba(0,0,0,0.2)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" mb="xs">
           <Text size="sm" fw={700} c="white">
@@ -283,7 +283,7 @@ export default function TokenomicsTab({
         </Group>
       </Paper>
 
-      {/* 3. TARİHSEL KİLİT AÇILIMLARI VE BLOK / İŞLEM DÖKÜM TABLOSU */}
+      {/* 3. HISTORICAL UNLOCK EVENTS AND BLOCK/TX AUDIT TABLE */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Stack gap="sm">
           {/* STICKY TOOLBAR */}
@@ -468,9 +468,9 @@ export default function TokenomicsTab({
         </Stack>
       </Paper>
 
-      {/* 4. İKİLİ BÖLÜM: CÜZDAN KADEMELERİ & BİYOMETRİK ADALET SKORU */}
+      {/* 4. DUAL SECTION: WALLET TIERS & BIOMETRIC FAIRNESS SCORE */}
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        {/* Cüzdan Kademeleri Piramidi */}
+        {/* Wallet Tiers Pyramid */}
         <Paper p="md" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
           <Group gap={8} mb="sm">
             <IconUsers size={20} color="#38bdf8" />

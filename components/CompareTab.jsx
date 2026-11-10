@@ -90,7 +90,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
 
       {result && (
         <>
-          {/* Karşılıklı İlişki Durum Kartı */}
+          {/* Mutual Relationship Status Card */}
           <Paper p="md" style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
             <Title order={5} c="violet" mb="xs">{t('compare_onChainRelationshipMutual')}</Title>
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
@@ -122,9 +122,9 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
             </SimpleGrid>
           </Paper>
 
-          {/* Yan Yana Kıyaslama Kartları */}
+          {/* Side-by-Side Comparison Cards */}
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {/* Cüzdan A */}
+            {/* Wallet A Card */}
             <Paper p="md" style={{ borderTop: '3px solid #38bdf8' }}>
               <Group justify="space-between" mb="xs">
                 <Badge color={wA?.isEvm ? 'cyan' : 'green'}>{wA?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>
@@ -184,7 +184,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
               </Stack>
             </Paper>
 
-            {/* Cüzdan B */}
+            {/* Wallet B Card */}
             <Paper p="md" className="glass-panel" style={{ borderTop: '3px solid #a855f7', borderRadius: 8 }}>
               <Group justify="space-between" mb="xs">
                 <Badge color={wB?.isEvm ? 'cyan' : 'green'}>{wB?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>

@@ -25,7 +25,7 @@ export default function AppHeader({
         }
       })
       .catch(() => {
-        // Fallback varsayılan canlı veri değerleri
+        // Fallback default live stats values. TODO: Add WebSocket real-time broadcast
       });
 
     return () => {
@@ -76,7 +76,7 @@ export default function AppHeader({
               </Title>
             </Group>
 
-            {/* Canlı Ağ Nabzı Rozeti */}
+            {/* Live Network Pulse Badge */}
             <Tooltip label="Humanode Çift Katmanlı Ağ Durumu: Senkronize ve Canlı">
               <Badge
                 variant="light"
@@ -110,10 +110,10 @@ export default function AppHeader({
           </Group>
 
           <Group gap="sm" align="center">
-            {/* Dil Seçeneği: Dinamik SQL Sözlüğü */}
+            {/* Dynamic SQL Dictionary Language Switcher */}
             <LanguageSwitcher size="xs" />
 
-            {/* Ağ Kılavuzu & Terimler Sözlüğü Butonu */}
+            {/* Network Guide & Terminology Glossary Button */}
             <Tooltip label="Ağ Kılavuzu & Terimler Sözlüğü">
               <ActionIcon
                 variant="default"
@@ -126,7 +126,7 @@ export default function AppHeader({
               </ActionIcon>
             </Tooltip>
 
-            {/* Hızlı Arama Butonu */}
+            {/* Quick Global Search Button */}
             <Button
               variant="default"
               size="xs"
@@ -147,7 +147,7 @@ export default function AppHeader({
         </Group>
       </Box>
 
-      {/* Ağ Kılavuzu & Sözlük Modalı */}
+      {/* Network Guide & Glossary Modal Dialog */}
       <NetworkGlossaryModal
         opened={glossaryOpen}
         onClose={() => setGlossaryOpen(false)}

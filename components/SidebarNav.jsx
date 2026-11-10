@@ -117,7 +117,7 @@ export default function SidebarNav({
         userSelect: 'none',
       }}
     >
-      {/* Menü Üst Başlığı & Daralt/Genişlet Butonu */}
+      {/* Sidebar Header & Collapse/Expand Button */}
       <Box pb="xs" mb={4} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.07)' }}>
         {!collapsed ? (
           <Group justify="space-between" align="center" px={4} py={2}>
@@ -186,7 +186,7 @@ export default function SidebarNav({
         )}
       </Box>
 
-      {/* Navigasyon Kategorileri ve Elemanları */}
+      {/* Navigation Categories & Menu Items */}
       <Stack gap={6} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {NAV_CATEGORIES.map((category, catIdx) => (
           <Box key={category.id} mb={catIdx < NAV_CATEGORIES.length - 1 ? 4 : 0}>
@@ -304,7 +304,7 @@ export default function SidebarNav({
         ))}
       </Stack>
 
-      {/* Menü Alt Bölümü */}
+      {/* Sidebar Footer Area */}
       <Box pt="xs" mt="auto" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.07)' }}>
         {!collapsed ? (
           <UnstyledButton

@@ -13,11 +13,11 @@ const ModuleContext = createContext({
 
 /**
  * ModuleLayout
- * Sarmallayıcı Layout Modülü:
- * 1. Sayfa (activeTab) veya dil (lang) her değiştiğinde C# Kestrel SQL API'sine (/api/localization/page) istek atar.
- * 2. SQLite'tan gelen en güncel alanları (fields) yükler.
- * 3. ModuleContext ile tüm alt modüllere (Overview, Whales, Validators, Biomapper vb.) aktarır.
- * 4. Alt bileşenler if/else yapmadan doğrudan fields[key] veya t(key) ile veritabanından beslenir.
+ * Module Layout Wrapper:
+ * 1. Fetches fresh page fields from C# Kestrel SQL API (/api/localization/page) on tab or language change.
+ * 2. Loads zero-if/else field mappings directly from SQLite.
+ * 3. Supplies ModuleContext to all child modules (Overview, Whales, Validators, Biomapper, etc.).
+ * 4. Child components read fields without if/else via fields[key] or t(key). TODO: Support user dashboard widget toggles.
  */
 export function ModuleLayout({ activeTab = 'overview', children }) {
   const { lang, t: globalT } = useLanguage();

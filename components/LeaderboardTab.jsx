@@ -75,7 +75,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
     else rawList = data?.topVolume || [];
   }
 
-  // Güvenlik filtrelemesi (Substrate vs EVM)
+  // Protocol layer security filtering (Substrate vs EVM)
   const rows = rawList.filter((r) => {
     if (network === 'substrate') return r.address && r.address.startsWith('hm');
     if (network === 'evm') return r.address && (r.address.startsWith('0x') || r.address.startsWith('0X'));
@@ -87,7 +87,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
 
   return (
     <Stack gap="md">
-      {/* Üst Başlık & Kontroller */}
+      {/* Header Title & Controls */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" align="center" mb="sm" wrap="wrap" gap="sm">
           <div>
@@ -119,7 +119,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
           />
         </Group>
 
-        {/* Ağ Seçim Sekmeleri: Substrate vs EVM */}
+        {/* Network Selection Tabs: Substrate vs EVM */}
         <Group justify="space-between" align="center" wrap="wrap" gap="sm">
           <SegmentedControl
             size="xs"
@@ -140,10 +140,10 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
           </Badge>
         </Group>
 
-        {/* İlk 3 Podyumu (Görsel Vurgu) */}
+        {/* Top 3 Podium (Visual Highlight) */}
         {topThree.length >= 3 && (
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm" mt="md">
-            {/* 1. Sıra (Altın) */}
+            {/* Rank 1 (Gold) */}
             <Paper
               p="sm"
               style={{
@@ -176,7 +176,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
               </Box>
             </Paper>
 
-            {/* 2. Sıra (Gümüş) */}
+            {/* Rank 2 (Silver) */}
             <Paper
               p="sm"
               style={{
@@ -209,7 +209,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
               </Box>
             </Paper>
 
-            {/* 3. Sıra (Bronz) */}
+            {/* Rank 3 (Bronze) */}
             <Paper
               p="sm"
               style={{

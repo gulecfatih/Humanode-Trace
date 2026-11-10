@@ -101,7 +101,7 @@ export default function HodlersTab({
 
   return (
     <Stack gap="md">
-      {/* 1. HERO BAŞLIK & İKİ AĞ KARŞILAŞTIRMA KARTLARI */}
+      {/* 1. HERO HEADER & DUAL-NETWORK COMPARISON CARDS */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
@@ -119,9 +119,9 @@ export default function HodlersTab({
           </div>
         </Group>
 
-        {/* 4 KPI Karşılaştırma Kartı */}
+        {/* 4 KPI Comparison Cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm" mt="sm">
-          {/* Toplam Bakiye ve Cüzdanlar */}
+          {/* Total Balance and Wallets */}
           <KpiStatCard
             title={t('hodlers_totalTrackedBalance')}
             value={formatHMND(kpis?.total_balance_hmnd || 0, { locale: lang, showScale: false })}
@@ -130,7 +130,7 @@ export default function HodlersTab({
             subtext={`${kpis?.total_holders || 0} ${t('hodlers_verifiedWallets')}`}
           />
 
-          {/* Substrate Ağı */}
+          {/* Substrate Network */}
           <Card p="sm" radius="md" style={{ background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="teal" variant="light" size="xs">
@@ -151,7 +151,7 @@ export default function HodlersTab({
             </Group>
           </Card>
 
-          {/* EVM Ağı */}
+          {/* EVM Network */}
           <Card p="sm" radius="md" style={{ background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="cyan" variant="light" size="xs">
@@ -172,7 +172,7 @@ export default function HodlersTab({
             </Group>
           </Card>
 
-          {/* En Büyük Hodler Payı */}
+          {/* Top Hodler Concentration Share */}
           <KpiStatCard
             title={t('hodlers_top1HolderShare')}
             value={`%${kpis?.top_holder_share || 0}`}
@@ -183,7 +183,7 @@ export default function HodlersTab({
         </SimpleGrid>
       </Paper>
 
-      {/* 2. HODLERS TABLOSU VE STICKY ARAMA ÇUBUĞU */}
+      {/* 2. HODLERS TABLE AND STICKY SEARCH BAR */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Stack gap="sm">
           {/* STICKY TOOLBAR */}

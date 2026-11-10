@@ -67,7 +67,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
 
   return (
     <Stack gap="md">
-      {/* Üst Başlık & Açıklama */}
+      {/* Header Title & Description */}
       <Paper p="md" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
           <Box>
@@ -113,7 +113,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
           </Group>
         </Group>
 
-        {/* 4 Ana KPI Kartı */}
+        {/* 4 Core KPI Cards */}
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mt="md">
           <KpiStatCard
             title={t('governance_sudoInterventions')}
@@ -152,7 +152,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
         </SimpleGrid>
       </Paper>
 
-      {/* Segment Seçici */}
+      {/* Segment Selector Tabs */}
       <Paper p="xs" bg="rgba(0,0,0,0.2)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
         <SegmentedControl
           value={activeSegment}
@@ -253,7 +253,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
                         </Text>
                       </Table.Td>
 
-                      {/* İmzalayan */}
+                      {/* Signer Identity */}
                       <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                         <Group gap={4} wrap="nowrap">
                           <Text
@@ -408,7 +408,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
         </Paper>
       )}
 
-      {/* 3. Güvenlik Mimarisi & Yetki Matrisi */}
+      {/* 3. Security Architecture & Permission Matrix */}
       {activeSegment === 'security' && (
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           <Paper p="md" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>

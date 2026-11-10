@@ -107,7 +107,7 @@ export default function LedgerTab({
 
   return (
     <Stack gap="md">
-      {/* Arama Kartı */}
+      {/* Search Card */}
       <Paper p="md">
         <form onSubmit={handleSearch}>
           <Group justify="space-between" align="center" gap="sm">
@@ -149,7 +149,7 @@ export default function LedgerTab({
 
       {data?.found && (
         <>
-          {/* Cüzdan Başlık Şeridi */}
+          {/* Wallet Header Ribbon */}
           <Paper p="md">
             <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
               <div>

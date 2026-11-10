@@ -110,7 +110,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
           </Paper>
         </SimpleGrid>
 
-        {/* Çoklu Varlık & Token Portföyü (Varsa) */}
+        {/* Multi-Asset & Token Portfolio */}
         {data?.tokens && data.tokens.length > 1 && (
           <Paper p="sm" style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.3)' }}>
             <Group justify="space-between" mb={6}>
@@ -135,7 +135,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
           </Paper>
         )}
 
-        {/* Çift Katman Eşleşmesi (Varsa) */}
+        {/* Dual-Layer Cross Match Badge */}
         {data?.crossLayer?.hasLink && (
           <Paper p="sm" style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
             <Group justify="space-between" mb={4}>
@@ -153,7 +153,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
           </Paper>
         )}
 
-        {/* Validatör Rozeti */}
+        {/* Validator Badge */}
         {data?.isValidator && (
           <Paper p="sm" style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
             <Text size="xs" fw={700} c="cyan">🧬 {t('peek_activeBiometricValidatorProof')}</Text>
@@ -173,7 +173,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
 
         <Divider my="xs" />
 
-        {/* Eylem Butonları */}
+        {/* Quick Action Buttons */}
         <Stack gap="xs">
           <Button
             color="green"

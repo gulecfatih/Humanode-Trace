@@ -63,7 +63,7 @@ export default function BiomapperTab({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState('25');
 
-  // Simülatör State
+  // Simulator state
   const [simAddress, setSimAddress] = useState('');
   const [simResult, setSimResult] = useState(null);
 
@@ -134,7 +134,7 @@ export default function BiomapperTab({
 
   return (
     <Stack gap="md">
-      {/* 1. HERO BAŞLIK & MİMARİ PANELİ */}
+      {/* 1. HERO HEADER & ARCHITECTURE PANEL */}
       <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
@@ -152,7 +152,7 @@ export default function BiomapperTab({
           </div>
         </Group>
 
-        {/* AKTİF JENERASYON (GENERATIONS HEAD) KARTI */}
+        {/* ACTIVE GENERATIONS HEAD KPI CARD */}
         <Card p="sm" radius="md" mb="sm" style={{ background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
           <Group justify="space-between" align="center" wrap="wrap">
             <Group gap="xs">
@@ -212,7 +212,7 @@ export default function BiomapperTab({
         </SimpleGrid>
       </Paper>
 
-      {/* 2. ANA SEKMELER: 25+ AĞ SÖZLEŞMELERİ | ON-CHAIN BIOAUTH AKIŞI | GELİŞTİRİCİ SDK */}
+      {/* 2. MAIN TABS: 25+ NETWORK CONTRACTS | LIVE ON-CHAIN BIOAUTH STREAM | DEVELOPER SDK */}
       <Tabs defaultValue="registry" color="cyan" variant="outline">
         <Tabs.List mb="sm">
           <Tabs.Tab value="registry" leftSection={<IconNetwork size={15} />}>
@@ -226,7 +226,7 @@ export default function BiomapperTab({
           </Tabs.Tab>
         </Tabs.List>
 
-        {/* TAB 1: 25+ AĞ SÖZLEŞME KAYIT DEFTERİ */}
+        {/* TAB 1: 25+ NETWORK CONTRACT REGISTRY */}
         <Tabs.Panel value="registry">
           <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
             <Stack gap="sm">
@@ -409,7 +409,7 @@ export default function BiomapperTab({
           </Paper>
         </Tabs.Panel>
 
-        {/* TAB 2: CANLI ON-CHAIN BIOAUTH AKIŞI */}
+        {/* TAB 2: LIVE ON-CHAIN BIOAUTH STREAM */}
         <Tabs.Panel value="feed">
           <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
             <Stack gap="sm">
@@ -425,7 +425,7 @@ export default function BiomapperTab({
                 </Badge>
               </Group>
 
-              {/* AĞ & EKOSİSTEM FİLTRELEME ÇUBUĞU */}
+              {/* NETWORK & ECOSYSTEM FILTER BAR */}
               <Box
                 p="xs"
                 style={{
@@ -649,10 +649,10 @@ export default function BiomapperTab({
           </Paper>
         </Tabs.Panel>
 
-        {/* TAB 3: GELİŞTİRİCİ SDK & SİMÜLATÖR */}
+        {/* TAB 3: DEVELOPER SDK & SIMULATOR */}
         <Tabs.Panel value="sdk">
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            {/* Solidity Arayüzü */}
+            {/* Solidity Contract Interface */}
             <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
               <Group justify="space-between" mb="xs">
                 <Text size="sm" fw={700} c="white">
@@ -680,11 +680,11 @@ interface IBridgedBiomapperRead {
 pragma solidity ^0.8.20;
 
 interface IBridgedBiomapperRead {
-    /// @notice Mevcut aktif jenerasyon indeksini döner
+    /// @notice Returns current active generation index
     function generationsHead() external view returns (uint256);
 
-    /// @notice Adresin belirli bir jenerasyonda biomapped olup olmadığını sorgular
-    /// @return 0 değilse hesap doğrulanmış tekil bir insandır
+    /// @notice Queries whether address is biomapped in a specific generation
+    /// @return Non-zero indicates verified unique human node
     function lookupBiomappingPtr(
         address account,
         uint256 generationPtr
@@ -697,7 +697,7 @@ interface IBridgedBiomapperRead {
               </Text>
             </Paper>
 
-            {/* Etkileşimli Benzersizlik Kontrol Simülatörü */}
+            {/* Interactive Uniqueness Check Simulator */}
             <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
               <Text size="sm" fw={700} c="white" mb={4}>
                 🧪 {t('biomapper_biomapperUniquenessSimulator')}

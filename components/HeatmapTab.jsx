@@ -31,7 +31,7 @@ export default function HeatmapTab({ onSelectDate }) {
     ? Object.values(heatmapData.dayMap)
     : (Array.isArray(heatmapData?.days) ? heatmapData.days : []);
 
-  // Kullanıcı İsteği: Yeşillik işlem sayısına göre değil, alınan/yakılan gas ücretine göre belirlenir
+  // Intensity determined by gas fees burned/collected, rather than raw transaction count
   const feeThresholds = useMemo(() => {
     const nonZeroFees = days
       .map((d) => Number(d.total_fees || d.fee || 0))
@@ -63,7 +63,7 @@ export default function HeatmapTab({ onSelectDate }) {
           </Text>
         </div>
 
-        {/* Yıl Seçim Hapları */}
+        {/* Year Selection Pills */}
         <Group gap={6}>
           {yearsList.map((yr) => (
             <Button
@@ -146,13 +146,13 @@ export default function HeatmapTab({ onSelectDate }) {
               const fees = Number(day.total_fees || day.fee || 0);
               const dateStr = day.date || day.day || idx;
 
-              // Yeşillik seviyesi: Alınan/yakılan gas masrafı miktarına göre
+              // Gas intensity levels: 1=Low gas, 2=Medium, 3=High, 4=Peak tier
               let bg = 'rgba(255, 255, 255, 0.05)';
               if (fees > 0) {
-                if (fees <= feeThresholds.q1) bg = '#0e4429'; // 1. Kademe: Düşük Gas
+                if (fees <= feeThresholds.q1) bg = '#0e4429'; // Tier 1: Low Gas activity
                 else if (fees <= feeThresholds.q2) bg = '#006d32'; // 2. Kademe: Orta Gas
-                else if (fees <= feeThresholds.q3) bg = '#26a641'; // 3. Kademe: Yüksek Gas
-                else bg = '#39d353'; // 4. Kademe: Zirve Gas (En parlak yeşil)
+                else if (fees <= feeThresholds.q3) bg = '#26a641'; // Tier 3: High Gas activity
+                else bg = '#39d353'; // Tier 4: Peak Gas activity (Bright green)
               } else if (count > 0) {
                 bg = '#0e4429';
               }

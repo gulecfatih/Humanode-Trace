@@ -54,7 +54,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
   const [nowMs, setNowMs] = useState(Date.now());
   const [fetchBaseTime, setFetchBaseTime] = useState(Date.now());
 
-  // Canlı saniye geri sayımı sayacı (drift yapmayan saat)
+  // Live epoch countdown ticker (drift-free timer)
   useEffect(() => {
     const timer = setInterval(() => {
       setNowMs(Date.now());
@@ -123,7 +123,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
 
   return (
     <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
-      {/* Başlık */}
+      {/* Header Title */}
       <Group justify="space-between" align="flex-start" mb="sm" wrap="wrap">
         <div>
           <Title order={3} mb={4} c="white">
@@ -135,7 +135,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         </div>
       </Group>
 
-      {/* 4 Özet Bilgi Kartı (En Tepede Bilgiler) */}
+      {/* 4 Summary Info Cards (Top Banner) */}
       <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mb="md">
         <KpiStatCard
           title={t('valActiveCard')}
@@ -174,7 +174,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         />
       </SimpleGrid>
 
-      {/* Validatör Kazanç & Ekonomi Kılavuzu */}
+      {/* Validator Economics & Earnings Guide */}
       <Paper p="xs" mb="md" style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', borderRadius: '8px' }}>
         <Group align="flex-start" gap="xs">
           <IconInfoCircle size={18} color="#06b6d4" style={{ marginTop: '2px', flexShrink: 0 }} />
@@ -219,10 +219,10 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
         </Group>
       </Paper>
 
-      {/* Arama ve 2 Ayrı Görünüm Seçici (Aktif vs Pasif) */}
+      {/* Search & 2 View Switchers (Active vs Inactive) */}
       <Paper p="xs" bg="rgba(15, 23, 42, 0.7)" mb="sm" style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
         <Group justify="space-between" wrap="wrap" gap="sm">
-          {/* Liderlik Tablosu Tarzı 2 Ayrı Görünüm Sekmesi */}
+          {/* Leaderboard Style 2 View Tabs */}
           <SegmentedControl
             value={statusFilter}
             onChange={(val) => {
@@ -329,7 +329,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
 
                 return (
                   <Table.Tr key={v.address || idx}>
-                    {/* Sıra */}
+                    {/* Rank Column */}
                     <Table.Td>
                       <Badge
                         size="xs"
@@ -340,7 +340,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       </Badge>
                     </Table.Td>
 
-                    {/* Cüzdan Adresi */}
+                    {/* Wallet Address Column */}
                     <Table.Td>
                       <AddressBadge
                         address={v.address}
@@ -366,7 +366,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       )}
                     </Table.Td>
 
-                    {/* Blok Üretimi */}
+                    {/* Block Production Column */}
                     <Table.Td className="font-mono">
                       <Text size="xs" fw={700} style={{ whiteSpace: 'nowrap' }}>
                         {(v.total_blocks ?? v.blocks_authored ?? 0).toLocaleString(loc)} {t('validators_blocks')}
@@ -382,7 +382,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       )}
                     </Table.Td>
 
-                    {/* FeesPot Ödülü veya Son Görülme */}
+                    {/* FeesPot Reward or Last Seen Column */}
                     <Table.Td className="font-mono">
                       {statusFilter === 'passive' ? (
                         <div>
@@ -407,7 +407,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       )}
                     </Table.Td>
 
-                    {/* 168s Döngü (42 Epoch Sayacı: SS:DD:SN Canlı Geri Sayım) */}
+                    {/* 168h Cycle (42 Epoch Counter: HH:MM:SS Live Countdown) */}
                     <Table.Td className="font-mono">
                       {statusFilter === 'passive' ? (
                         <div>
@@ -430,7 +430,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                           liveRemSec = Math.max(0, baseSec - elapsedSeconds);
                         }
                         const isExp = liveRemSec <= 0;
-                        const isUrgent = liveRemSec > 0 && liveRemSec < 4 * 3600; // Son 4 saat kalmışsa turuncu ikaz
+                        const isUrgent = liveRemSec > 0 && liveRemSec < 4 * 3600; // Orange alert if less than 4 hours remaining
                         const displayEpoch = v.bio_current_epoch || (liveRemSec > 0 ? Math.min(42, Math.max(1, 42 - Math.floor(liveRemSec / 14400))) : 0);
                         const bioCount = v.total_bioauth ?? v.total_ops ?? 0;
 

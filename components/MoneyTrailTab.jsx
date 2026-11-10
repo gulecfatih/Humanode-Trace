@@ -63,7 +63,7 @@ function computePositions(nodes, links, mode = 'hierarchical', width = 900, heig
   if (!nodes || nodes.length === 0) return positions;
 
   if (mode === 'radial') {
-    // Katmanlı Halka Düzeni (Concentric Rings - Root merkezde, Hop 1 iç halkada, Hop 2 ebeveynine yakın dış halkada)
+    // Concentric rings layout: Root at center, Hop 1 in inner ring, Hop 2 in outer ring clustered near parent
     const centerX = width / 2;
     const centerY = height / 2;
     const rootNode = nodes.find((n) => n.isRoot) || nodes[0];
@@ -106,7 +106,7 @@ function computePositions(nodes, links, mode = 'hierarchical', width = 900, heig
     return positions;
   }
 
-  // Varsayılan: Sıralı Akış (Hierarchical Directed DAG - Sol'dan Sağa)
+  // Default: Hierarchical Directed DAG layout (Left-to-Right money trail flow)
   const depthGroups = {};
   nodes.forEach((n) => {
     const d = n.isRoot ? 0 : (n.depth || 1);
@@ -117,14 +117,14 @@ function computePositions(nodes, links, mode = 'hierarchical', width = 900, heig
   const maxDepth = Math.max(...Object.keys(depthGroups).map(Number), 1);
   const colWidth = (width - 200) / (maxDepth || 1);
 
-  // Depth 0: Kök (Root)
+  // Depth 0: Root node
   if (depthGroups[0]) {
     depthGroups[0].forEach((n) => {
       positions[n.id] = { x: 95, y: Math.round(height / 2) };
     });
   }
 
-  // Depth 1: 1. Kademe Alıcılar (Root'a doğrudan bağlı)
+  // Depth 1: Direct first-hop counterparties (connected to Root)
   if (depthGroups[1]) {
     depthGroups[1].sort((a, b) => {
       const volA = links.filter((l) => l.target === a.id).reduce((s, l) => s + l.valueHmnd, 0);
@@ -141,7 +141,7 @@ function computePositions(nodes, links, mode = 'hierarchical', width = 900, heig
     });
   }
 
-  // Depth 2: 2. Kademe Alıcılar (Kendi ebeveynlerinin Y konumuna göre sıralı)
+  // Depth 2: Second-hop counterparties (ordered relative to parent Y position)
   if (depthGroups[2]) {
     depthGroups[2].sort((a, b) => {
       const parentA = links.find((l) => l.target === a.id)?.source;
@@ -193,18 +193,18 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
   const [loading, setLoading] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // Görünüm Modları: 'diagram' (Akış Şeması) veya 'table' (Sıralı Transfer Tablosu)
+  // View Modes: 'diagram' (Visual DAG Flowchart) or 'table' (Sequential Transfer Ledger)
   const [viewMode, setViewMode] = useState('diagram');
-  // Yerleşim Algoritması: 'hierarchical' (Soldan Sağa Sıralı) veya 'radial' (Katmanlı Halka)
+  // Layout Algorithm: 'hierarchical' (Left-to-Right DAG) or 'radial' (Concentric Rings)
   const [layoutMode, setLayoutMode] = useState('hierarchical');
-  // Miktar Filtresi: 'all' (Tümü) veya 'major' (> 1M HMND)
+  // Volume Filter: 'all' (Show all transfers) or 'major' (> 1M HMND threshold)
   const [labelFilter, setLabelFilter] = useState('all');
 
-  // Hover Durumları
+  // Hover and focus state
   const [hoveredNodeId, setHoveredNodeId] = useState(null);
   const [hoveredLinkKey, setHoveredLinkKey] = useState(null);
 
-  // SVG Sürükleme Durumu
+  // SVG Drag and Pan interaction state
   const [nodePositions, setNodePositions] = useState({});
   const [draggingNodeId, setDraggingNodeId] = useState(null);
   const svgRef = useRef(null);
@@ -282,7 +282,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
     setDraggingNodeId(null);
   };
 
-  // Filtrelenmiş Linkler
+  // Filtered graph links and connections
   const filteredLinks = useMemo(() => {
     if (!trailData?.links) return [];
     if (labelFilter === 'major') {
@@ -291,7 +291,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
     return trailData.links;
   }, [trailData, labelFilter]);
 
-  // Çoklu bağlantı tespiti (Aynı çift arasında hem bridge hem transfer varsa kavis ver)
+  // Multi-link detection (adds curvature when both bridge and transfer occur between the same pair)
   const linkPairMap = useMemo(() => {
     const counts = {};
     filteredLinks.forEach((l) => {
@@ -627,7 +627,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                     const isBridge = link.type === 'bridge';
                     const strokeColor = isBridge ? '#ec4899' : '#38bdf8';
 
-                    // İki cüzdan arasında birden fazla akış varsa kavis ver
+                    // Add arc curvature if multiple flows exist between the same pair of wallets
                     const hasMulti = (linkPairMap[pairKey] || 0) > 1;
                     const curveOffset = hasMulti ? (pairIdx === 0 ? -22 : 22) : 0;
 

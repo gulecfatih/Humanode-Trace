@@ -112,7 +112,7 @@ export default function BlockDetailModal({
         </Center>
       ) : blockData ? (
         <Stack gap="md">
-          {/* 3'lü Özet Bilgi Kartları */}
+          {/* 3-Column Summary Cards */}
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
             <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #38bdf8', borderRadius: 8 }}>
               <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
