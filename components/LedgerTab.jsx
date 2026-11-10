@@ -58,6 +58,7 @@ export default function LedgerTab({
   onOpenTx,
 }) {
   const { lang } = useLanguage();
+  const loc = lang || undefined;
   const { t, fields } = useModuleFields();
   const [address, setAddress] = useState(initialAddress || '');
   const [searchInput, setSearchInput] = useState(initialAddress || '');
@@ -646,7 +647,7 @@ export default function LedgerTab({
                                   </Text>
                                   {Number(tk.priceUsd || 0) > 0 && (
                                     <Text size="xs" c="dimmed">
-                                      @ ${Number(tk.priceUsd).toLocaleString(loc || lang || undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                                      @ ${Number(tk.priceUsd).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
                                     </Text>
                                   )}
                                 </div>
