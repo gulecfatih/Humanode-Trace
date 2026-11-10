@@ -16,15 +16,12 @@ export default function AppHeader({
 
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/stats/overview')
+    fetch('/api/stats')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!isMounted || !data) return;
         if (data.total_blocks) {
           setBlockCount(Number(data.total_blocks).toLocaleString());
-        }
-        if (data.active_validators) {
-          setValidatorCount(data.active_validators);
         }
       })
       .catch(() => {

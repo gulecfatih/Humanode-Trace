@@ -44,12 +44,13 @@ public class LocalizationRepository : ILocalizationRepository
         var cleanLang = (lang ?? "tr").Trim().ToLower();
         using var connection = _dbFactory.CreateConnection();
 
-        // 1. First fetch default language (English or Turkish) as base fallback
+        // 1. First fetch default base language (TR for Turkish, EN for all others)
+        var baseFallbackLang = cleanLang == "tr" ? "tr" : "en";
         const string fallbackSql = @"
             SELECT translation_key, translation_value
             FROM app_translations
-            WHERE lang_code = 'tr'";
-        var fallbackRows = await connection.QueryAsync<(string key, string val)>(fallbackSql);
+            WHERE lang_code = @baseFallbackLang";
+        var fallbackRows = await connection.QueryAsync<(string key, string val)>(fallbackSql, new { baseFallbackLang });
 
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var r in fallbackRows)
@@ -58,8 +59,8 @@ public class LocalizationRepository : ILocalizationRepository
                 result[r.key] = r.val;
         }
 
-        // 2. Overlay requested language if not 'tr'
-        if (cleanLang != "tr")
+        // 2. Overlay requested language if different from base fallback
+        if (cleanLang != baseFallbackLang)
         {
             const string langSql = @"
                 SELECT translation_key, translation_value
