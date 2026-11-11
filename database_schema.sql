@@ -1797,3 +1797,29 @@ INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'quickPeekTraceMoney', '追踪资金流向');
 
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'quickPeekAddToCompare', '加入对比');
+
+
+-- FeesPot Imminent Payout countdown and status keys
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'feespot_imminentPayout', 'Dağıtım Eşiğinde');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'feespot_pendingMultisig', 'Bekleniyor');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'feespot_multisigConfirmationPending', 'Tur her an tetiklenebilir');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'feespot_imminentPayout', 'Distribution Imminent');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'feespot_pendingMultisig', 'Pending');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'feespot_multisigConfirmationPending', 'Round may trigger at any moment');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'feespot_imminentPayout', 'Ausschüttung bevorstehend');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'feespot_pendingMultisig', 'Ausstehend');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'feespot_multisigConfirmationPending', 'Runde kann jederzeit ausgelöst werden');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'feespot_imminentPayout', 'В ожидании распределения');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'feespot_pendingMultisig', 'Ожидается');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'feespot_multisigConfirmationPending', 'Раунд может начаться в любой момент');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'feespot_imminentPayout', 'Distribución Inminente');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'feespot_pendingMultisig', 'Pendiente');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'feespot_multisigConfirmationPending', 'La ronda puede activarse en cualquier momento');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_imminentPayout', '即将分发');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_pendingMultisig', '等待中');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_multisigConfirmationPending', '轮次可能随时触发');
