@@ -55,6 +55,8 @@ Thumbs.db
 
 # Logs & Audit Dumps
 *.log
+*.lock
+.indexer.lock
 audit_results.json
 scratch/
 test-results/
