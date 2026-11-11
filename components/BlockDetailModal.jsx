@@ -21,7 +21,6 @@ import {
 import { IconCube, IconCheck, IconCopy, IconEye, IconArrowRight, IconActivity } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
-import { useModuleFields } from './ModuleLayout';
 
 export default function BlockDetailModal({
   opened,
@@ -30,8 +29,7 @@ export default function BlockDetailModal({
   onOpenTx,
   onSelectAddress,
 }) {
-  const { lang } = useLanguage();
-  const { t, fields } = useModuleFields();
+  const { lang, t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [blockData, setBlockData] = useState(null);
 

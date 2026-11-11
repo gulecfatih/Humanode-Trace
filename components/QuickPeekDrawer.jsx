@@ -4,11 +4,9 @@ import { Drawer, Stack, Group, Title, Text, Badge, Button, Paper, CopyButton, Ac
 import { IconCopy, IconCheck, IconBook, IconGitFork, IconExternalLink } from '@tabler/icons-react';
 import { formatHMND, formatUSD, formatFee, formatCompact, shortAddr } from './formatters';
 import { useLanguage } from './LanguageContext';
-import { useModuleFields } from './ModuleLayout';
 
 export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger, onOpenTrail }) {
-  const { lang } = useLanguage();
-  const { t, fields } = useModuleFields();
+  const { lang, t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 

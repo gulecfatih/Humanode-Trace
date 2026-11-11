@@ -30,7 +30,6 @@ import {
 } from '@tabler/icons-react';
 import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
 import { useLanguage } from './LanguageContext';
-import { useModuleFields } from './ModuleLayout';
 
 export default function TransactionDetailModal({
   opened,
@@ -40,8 +39,7 @@ export default function TransactionDetailModal({
   onSelectAddress,
   onOpenLedger,
 }) {
-  const { lang } = useLanguage();
-  const { t, fields } = useModuleFields();
+  const { lang, t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [txData, setTxData] = useState(null);
 
