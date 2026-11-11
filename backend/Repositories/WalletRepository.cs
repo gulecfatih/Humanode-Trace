@@ -3,6 +3,7 @@ using System.Text;
 using Dapper;
 using HumanodeTracker.Data;
 using HumanodeTracker.Models;
+using HumanodeTracker.Services;
 
 namespace HumanodeTracker.Repositories;
 
@@ -21,11 +22,13 @@ public class WalletRepository : IWalletRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
     private readonly IPriceRepository _priceRepo;
+    private readonly IHumanodeSidecarClient _sidecarClient;
 
-    public WalletRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
+    public WalletRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo, IHumanodeSidecarClient sidecarClient)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
+        _sidecarClient = sidecarClient;
     }
 
     public async Task<object?> GetAddressSummaryAsync(string address)
@@ -73,6 +76,23 @@ public class WalletRepository : IWalletRepository
 
         const string cacheSql = "SELECT balance_hmnd FROM wallet_balances_cache WHERE LOWER(address) = LOWER(@clean)";
         var liveBal = await connection.QueryFirstOrDefaultAsync<double?>(cacheSql, new { clean });
+
+        if (!liveBal.HasValue)
+        {
+            try
+            {
+                var onChainBal = await _sidecarClient.GetAccountBalanceAsync(clean);
+                if (onChainBal.HasValue)
+                {
+                    liveBal = onChainBal.Value;
+                    var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    await connection.ExecuteAsync(
+                        "INSERT OR REPLACE INTO wallet_balances_cache (address, balance_hmnd, updated_at) VALUES (@clean, @liveBal, @now)",
+                        new { clean, liveBal = liveBal.Value, now });
+                }
+            }
+            catch { }
+        }
 
         var totalIn = Math.Round(recvVol, 4);
         var totalOut = Math.Round(sentVol, 4);
@@ -139,9 +159,11 @@ public class WalletRepository : IWalletRepository
         var cleanLower = address.Trim().ToLowerInvariant();
         var isEvm = cleanLower.StartsWith("0x");
 
-        var tokenList = new List<object>
+        var tokenList = new List<object>();
+
+        if (netBalanceHmnd > 0.000001 || !isEvm)
         {
-            new
+            tokenList.Add(new
             {
                 address = "NATIVE",
                 token_address = "NATIVE",
@@ -164,8 +186,8 @@ public class WalletRepository : IWalletRepository
                 isNative = true,
                 category = "Yerel Kripto Para (Native)",
                 color = "#38bdf8"
-            }
-        };
+            });
+        }
 
         double portfolioUsd = Math.Round(netBalanceHmnd * priceUsd, 2);
 
@@ -205,16 +227,32 @@ public class WalletRepository : IWalletRepository
                 string tokenAddr = r.TokenAddress ?? "";
                 string symbol = r.Symbol ?? "TOKEN";
                 string name = r.Name ?? "ERC-20 Token";
+                int decimals = (int)(r.Decimals ?? 18);
                 double totalIn = (double)r.TotalIn;
                 double totalOut = (double)r.TotalOut;
                 long transferCount = (long)r.TransferCount;
 
                 double rawNet = totalIn - totalOut;
                 double net = Math.Round(Math.Max(0, rawNet), 4);
-                if (net <= 0 && rawNet < 0)
+
+                // For wrapped token 0x802 or active ERC20 tokens, query live on-chain balance via RPC
+                if (!string.IsNullOrEmpty(tokenAddr) && !string.IsNullOrEmpty(evmTarget))
                 {
-                    if (transferCount < 5) continue;
-                    net = Math.Round(Math.Abs(rawNet), 4);
+                    try
+                    {
+                        var liveTokenBal = await _sidecarClient.GetErc20BalanceAsync(tokenAddr, evmTarget, decimals);
+                        if (liveTokenBal.HasValue)
+                        {
+                            net = liveTokenBal.Value;
+                        }
+                    }
+                    catch { }
+                }
+
+                // If balance is 0 or negligible, do not show in wallet assets list (wallet does not hold it)
+                if (net <= 0.000001)
+                {
+                    continue;
                 }
 
                 double tokenPrice = 0.0;
@@ -395,6 +433,7 @@ public class WalletRepository : IWalletRepository
         {
             found = true,
             address = clean,
+            addressType = isEvm ? "EVM" : "SUBSTRATE",
             summary,
             tokens = (summary as dynamic)?.tokens ?? new List<object>(),
             ledger = activities,

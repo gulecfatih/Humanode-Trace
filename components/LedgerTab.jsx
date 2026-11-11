@@ -40,6 +40,7 @@ import {
   formatHMNDWithUSD,
   formatCompact,
   formatTimestamp,
+  formatNumber,
   timeAgo,
   shortAddr,
 } from './formatters';
@@ -67,6 +68,7 @@ export default function LedgerTab({
   const [activeSubtab, setActiveSubtab] = useState('statement');
   const [ledgerPage, setLedgerPage] = useState(1);
   const [hideBioauth, setHideBioauth] = useState(true);
+  const [showZeroBalances, setShowZeroBalances] = useState(false);
 
   const fetchLedger = (targetAddr, pageNum = 1) => {
     if (!targetAddr) return;
@@ -105,6 +107,7 @@ export default function LedgerTab({
   const totalFlow = inVal + outVal;
   const inPercent = totalFlow > 0 ? Math.round((inVal / totalFlow) * 100) : 50;
   const outPercent = 100 - inPercent;
+  const isEvm = data?.addressType === 'EVM' || data?.address?.startsWith('0x') || data?.address?.startsWith('0X');
 
   return (
     <Stack gap="md">
@@ -155,8 +158,8 @@ export default function LedgerTab({
             <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
               <div>
                 <Group gap="xs" align="center">
-                  <Badge color={data.addressType === 'EVM' ? 'cyan' : 'teal'} variant="light">
-                    {data.addressType === 'EVM' ? 'EVM (0x...)' : 'Substrate (hm...)'}
+                  <Badge color={isEvm ? 'cyan' : 'teal'} variant="light">
+                    {isEvm ? 'EVM (0x...)' : 'Substrate (hm...)'}
                   </Badge>
                   <Text fw={700} className="font-mono" size="md">
                     {data.address}
@@ -487,236 +490,249 @@ export default function LedgerTab({
 
               {/* Tokenlar Sekmesi */}
               <Tabs.Panel value="tokens">
-                {/* Cüzdan ve Portföy Bilgi Şeridi */}
-                <Paper
-                  p="sm"
-                  mb="md"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.07)',
-                    borderRadius: 8,
-                  }}
-                >
-                  <Group justify="space-between" align="center" wrap="wrap" gap="md">
-                    <Group gap="md" align="center" wrap="wrap">
-                      <div>
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {t('ledger_walletInfoPortfolioOwner')}
-                        </Text>
-                        <Group gap="xs" mt={3} align="center">
-                          <AddressBadge address={data.address} network={data.addressType} showNetwork={true} />
-                        </Group>
-                      </div>
+                {(() => {
+                  const activeTokens = (data.tokens || []).filter(tk => (tk.balance ?? tk.netBalance ?? 0) > 0.000001);
+                  const displayedTokens = showZeroBalances ? (data.tokens || []) : activeTokens;
+                  return (
+                    <>
+                      {/* Cüzdan ve Portföy Bilgi Şeridi */}
+                      <Paper
+                        p="sm"
+                        mb="md"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          border: '1px solid rgba(255, 255, 255, 0.07)',
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Group justify="space-between" align="center" wrap="wrap" gap="md">
+                          <Group gap="md" align="center" wrap="wrap">
+                            <div>
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                                {t('ledger_walletInfoPortfolioOwner')}
+                              </Text>
+                              <Group gap="xs" mt={3} align="center">
+                                <AddressBadge address={data.address} network={isEvm ? 'EVM' : 'SUBSTRATE'} showNetwork={true} />
+                              </Group>
+                            </div>
 
-                      {data?.crossLayer?.hasLink && data.crossLayer.linkedAddresses?.[0] && (
-                        <Box style={{ borderLeft: '1px solid rgba(255, 255, 255, 0.1)', paddingLeft: 12 }}>
-                          <Text size="xs" c="violet" tt="uppercase" fw={700}>
-                            🔗 {t('ledger_linkedDualIdentity')}
-                          </Text>
-                          <Group gap="xs" mt={3} align="center">
-                            <AddressBadge
-                              address={data.crossLayer.linkedAddresses[0].linkedAddress}
-                              network={data.addressType === 'EVM' ? 'SUBSTRATE' : 'EVM'}
-                              showNetwork={true}
+                            {data?.crossLayer?.hasLink && data.crossLayer.linkedAddresses?.[0] && (
+                              <Box style={{ borderLeft: '1px solid rgba(255, 255, 255, 0.1)', paddingLeft: 12 }}>
+                                <Text size="xs" c="violet" tt="uppercase" fw={700}>
+                                  🔗 {t('ledger_linkedDualIdentity')}
+                                </Text>
+                                <Group gap="xs" mt={3} align="center">
+                                  <AddressBadge
+                                    address={data.crossLayer.linkedAddresses[0].linkedAddress}
+                                    network={isEvm ? 'SUBSTRATE' : 'EVM'}
+                                    showNetwork={true}
+                                  />
+                                </Group>
+                              </Box>
+                            )}
+                          </Group>
+
+                          <Group gap="lg" align="center" wrap="wrap">
+                            <Box style={{ textAlign: 'right' }}>
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                                {t('ledger_totalPortfolioUsd')}
+                              </Text>
+                              <Text size="lg" fw={800} c="teal" className="font-mono">
+                                {formatUSD(data.summary?.totalPortfolioUsd ?? (data.summary?.netBalanceCurrentUsd || 0), lang)}
+                              </Text>
+                            </Box>
+                            <Box style={{ textAlign: 'right' }}>
+                              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                                {t('ledger_totalAssetTypes')}
+                              </Text>
+                              <Badge size="lg" color="cyan" variant="light">
+                                {activeTokens.length} {t('tokens_assets')}
+                              </Badge>
+                            </Box>
+                            <Switch
+                              label={t('ledgerShowZeroBalances')}
+                              size="xs"
+                              checked={showZeroBalances}
+                              onChange={(e) => setShowZeroBalances(e.currentTarget.checked)}
                             />
                           </Group>
-                        </Box>
-                      )}
-                    </Group>
+                        </Group>
+                      </Paper>
 
-                    <Group gap="lg" align="center">
-                      <Box style={{ textAlign: 'right' }}>
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {t('ledger_totalPortfolioUsd')}
-                        </Text>
-                        <Text size="lg" fw={800} c="teal" className="font-mono">
-                          {formatUSD(data.summary?.totalPortfolioUsd ?? (data.summary?.netBalanceCurrentUsd || 0), lang)}
-                        </Text>
-                      </Box>
-                      <Box style={{ textAlign: 'right' }}>
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                          {t('ledger_totalAssetTypes')}
-                        </Text>
-                        <Badge size="lg" color="cyan" variant="light">
-                          {data.tokens?.length || 0} {t('tokens_assets')}
-                        </Badge>
-                      </Box>
-                    </Group>
-                  </Group>
-                </Paper>
-
-                <Box style={{ overflowX: 'auto' }}>
-                  <Table striped highlightOnHover verticalSpacing="sm">
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>{t('ledger_assetSymbol')}</Table.Th>
-                        <Table.Th>{t('ledger_tokenCoinName')}</Table.Th>
-                        <Table.Th>{t('ledger_assetType')}</Table.Th>
-                        <Table.Th>{t('ledger_walletBalanceAmount')}</Table.Th>
-                        <Table.Th>{t('ledger_estimatedValue')}</Table.Th>
-                        <Table.Th>{t('ledger_totalInflowOutflow')}</Table.Th>
-                        <Table.Th>{t('ledger_contractLayerInfo')}</Table.Th>
-                        <Table.Th>{t('ledger_transferCount')}</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {data.tokens && data.tokens.length > 0 ? (
-                        data.tokens.map((tk, idx) => {
-                          const sym = tk.symbol || 'TOKEN';
-                          const isNative = tk.isNative || sym === 'HMND';
-                          const balance = tk.netBalance ?? tk.balance ?? 0;
-                          const valUsd = tk.valueUsd ?? tk.value_usd ?? 0;
-                          const contractAddr = tk.address && tk.address !== 'NATIVE' ? tk.address : tk.token_address;
-
-                          return (
-                            <Table.Tr key={contractAddr || sym || idx}>
-                              <Table.Td>
-                                <Group gap={6} wrap="nowrap">
-                                  <Badge
-                                    size="sm"
-                                    variant="light"
-                                    radius="sm"
-                                    style={{
-                                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                                      fontWeight: 700,
-                                      padding: '0 8px',
-                                    }}
-                                    color={
-                                      isNative
-                                        ? 'teal'
-                                        : sym === 'USDC' || sym === 'USDT'
-                                        ? 'blue'
-                                        : sym.toUpperCase().includes('HMND')
-                                        ? 'cyan'
-                                        : 'violet'
-                                    }
-                                    style={{ fontWeight: 800 }}
-                                  >
-                                    {sym}
-                                  </Badge>
-                                </Group>
-                              </Table.Td>
-
-                              <Table.Td>
-                                <div>
-                                  <Text size="sm" fw={600} style={{ color: '#f1f5f9', whiteSpace: 'nowrap' }}>
-                                    {tk.name || sym}
-                                  </Text>
-                                  <Text size="xs" c="dimmed">
-                                    {isNative
-                                      ? (t('ledger_humanodeL1NativeCrypto'))
-                                      : (t('erc20Decimals', { decimals: tk.decimals || 18 }))}
-                                  </Text>
-                                </div>
-                              </Table.Td>
-
-                              <Table.Td>
-                                <Badge
-                                  size="sm"
-                                  variant="light"
-                                  color={isNative ? 'teal' : tk.isLinked ? 'violet' : 'cyan'}
-                                >
-                                  {isNative
-                                    ? (t('ledger_nativeCoinL1'))
-                                    : (t('ledger_erc20Token'))}
-                                </Badge>
-                              </Table.Td>
-
-                              <Table.Td>
-                                <AmountDisplay
-                                  value={Number(balance).toLocaleString(t('whales_enUs'), {
-                                    minimumFractionDigits: Number(balance) % 1 === 0 ? 0 : 2,
-                                    maximumFractionDigits: 4,
-                                  })}
-                                  unit={sym}
-                                  color={Number(balance) > 0 ? (isNative ? 'teal' : 'white') : 'dimmed'}
-                                  fw={700}
-                                  size="sm"
-                                />
-                              </Table.Td>
-
-                              <Table.Td>
-                                <div>
-                                  <Text
-                                    size="sm"
-                                    fw={700}
-                                    className="font-mono"
-                                    c={Number(valUsd) > 0 ? 'teal' : 'dimmed'}
-                                  >
-                                    {formatUSD(valUsd, lang)}
-                                  </Text>
-                                  {Number(tk.priceUsd || 0) > 0 && (
-                                    <Text size="xs" c="dimmed">
-                                      @ ${Number(tk.priceUsd).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
-                                    </Text>
-                                  )}
-                                </div>
-                              </Table.Td>
-
-                              <Table.Td>
-                                <Group gap={6} wrap="nowrap">
-                                  <Tooltip label={t('ledger_totalInflow')}>
-                                    <Text size="xs" c="cyan" className="font-mono">
-                                      +{formatCompact(tk.totalIn || 0, lang)}
-                                    </Text>
-                                  </Tooltip>
-                                  <Text size="xs" c="dimmed">/</Text>
-                                  <Tooltip label={t('ledger_totalOutflow')}>
-                                    <Text size="xs" c="orange" className="font-mono">
-                                      -{formatCompact(tk.totalOut || 0, lang)}
-                                    </Text>
-                                  </Tooltip>
-                                </Group>
-                              </Table.Td>
-
-                              <Table.Td>
-                                {isNative ? (
-                                  <Group gap={6} wrap="nowrap">
-                                    <Badge size="xs" variant="outline" color="teal">
-                                      {t('ledger_nativeL1Layer')}
-                                    </Badge>
-                                    <AddressBadge
-                                      address={tk.walletAddress || data.address}
-                                      network={data.addressType}
-                                      showNetwork={false}
-                                    />
-                                  </Group>
-                                ) : contractAddr ? (
-                                  <Group gap={6} wrap="nowrap">
-                                    <AddressBadge
-                                      address={contractAddr}
-                                      network="EVM"
-                                      showNetwork={false}
-                                    />
-                                    {tk.isLinked && (
-                                      <Badge size="xs" color="violet" variant="light">
-                                        {t('ledger_bridgeLinked')}
-                                      </Badge>
-                                    )}
-                                  </Group>
-                                ) : (
-                                  <Text size="xs" c="dimmed">-</Text>
-                                )}
-                              </Table.Td>
-
-                              <Table.Td className="font-mono">
-                                <Badge size="sm" variant="default">
-                                  {Number(tk.txCount ?? tk.transfer_count ?? 0).toLocaleString(t('whales_enUs'))} {t('ledger_tx_2')}
-                                </Badge>
-                              </Table.Td>
+                      <Box style={{ overflowX: 'auto' }}>
+                        <Table striped highlightOnHover verticalSpacing="sm">
+                          <Table.Thead>
+                            <Table.Tr>
+                              <Table.Th>{t('ledger_assetSymbol')}</Table.Th>
+                              <Table.Th>{t('ledger_tokenCoinName')}</Table.Th>
+                              <Table.Th>{t('ledger_assetType')}</Table.Th>
+                              <Table.Th>{t('ledger_walletBalanceAmount')}</Table.Th>
+                              <Table.Th>{t('ledger_estimatedValue')}</Table.Th>
+                              <Table.Th>{t('ledger_totalInflowOutflow')}</Table.Th>
+                              <Table.Th>{t('ledger_contractLayerInfo')}</Table.Th>
+                              <Table.Th>{t('ledger_transferCount')}</Table.Th>
                             </Table.Tr>
-                          );
-                        })
-                      ) : (
-                        <Table.Tr>
-                          <Table.Td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
-                            {t('ledger_noTokenOrCrypto')}
-                          </Table.Td>
-                        </Table.Tr>
-                      )}
-                    </Table.Tbody>
-                  </Table>
-                </Box>
+                          </Table.Thead>
+                          <Table.Tbody>
+                            {displayedTokens && displayedTokens.length > 0 ? (
+                              displayedTokens.map((tk, idx) => {
+                                const sym = tk.symbol || 'TOKEN';
+                                const isNative = tk.isNative || sym === 'HMND';
+                                const balance = tk.netBalance ?? tk.balance ?? 0;
+                                const valUsd = tk.valueUsd ?? tk.value_usd ?? 0;
+                                const contractAddr = tk.address && tk.address !== 'NATIVE' ? tk.address : tk.token_address;
+
+                                return (
+                                  <Table.Tr key={contractAddr || sym || idx}>
+                                    <Table.Td>
+                                      <Group gap={6} wrap="nowrap">
+                                        <Badge
+                                          size="sm"
+                                          variant="light"
+                                          radius="sm"
+                                          style={{
+                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            fontWeight: 800,
+                                            padding: '0 8px',
+                                          }}
+                                          color={
+                                            isNative
+                                              ? 'teal'
+                                              : sym === 'USDC' || sym === 'USDT'
+                                              ? 'blue'
+                                              : sym.toUpperCase().includes('HMND')
+                                              ? 'cyan'
+                                              : 'violet'
+                                          }
+                                        >
+                                          {sym}
+                                        </Badge>
+                                      </Group>
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      <div>
+                                        <Text size="sm" fw={600} style={{ color: '#f1f5f9', whiteSpace: 'nowrap' }}>
+                                          {tk.name || sym}
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                          {isNative
+                                            ? (t('ledger_humanodeL1NativeCrypto'))
+                                            : (t('erc20Decimals', { decimals: tk.decimals || 18 }))}
+                                        </Text>
+                                      </div>
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      <Badge
+                                        size="sm"
+                                        variant="light"
+                                        color={isNative ? 'teal' : tk.isLinked ? 'violet' : 'cyan'}
+                                      >
+                                        {isNative
+                                          ? (t('ledger_nativeCoinL1'))
+                                          : (t('ledger_erc20Token'))}
+                                      </Badge>
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      <AmountDisplay
+                                        value={formatNumber(balance, {
+                                          minDecimals: Number(balance) % 1 === 0 ? 0 : 2,
+                                          maxDecimals: 4,
+                                        })}
+                                        unit={sym}
+                                        color={Number(balance) > 0 ? (isNative ? 'teal' : 'white') : 'dimmed'}
+                                        fw={700}
+                                        size="sm"
+                                      />
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      <div>
+                                        <Text
+                                          size="sm"
+                                          fw={700}
+                                          className="font-mono"
+                                          c={Number(valUsd) > 0 ? 'teal' : 'dimmed'}
+                                        >
+                                          {formatUSD(valUsd, lang)}
+                                        </Text>
+                                        {Number(tk.priceUsd || 0) > 0 && (
+                                          <Text size="xs" c="dimmed">
+                                            @ ${formatNumber(tk.priceUsd, { minDecimals: 2, maxDecimals: 6 })}
+                                          </Text>
+                                        )}
+                                      </div>
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      <Group gap={6} wrap="nowrap">
+                                        <Tooltip label={t('ledger_totalInflow')}>
+                                          <Text size="xs" c="cyan" className="font-mono">
+                                            +{formatCompact(tk.totalIn || 0, lang)}
+                                          </Text>
+                                        </Tooltip>
+                                        <Text size="xs" c="dimmed">/</Text>
+                                        <Tooltip label={t('ledger_totalOutflow')}>
+                                          <Text size="xs" c="orange" className="font-mono">
+                                            -{formatCompact(tk.totalOut || 0, lang)}
+                                          </Text>
+                                        </Tooltip>
+                                      </Group>
+                                    </Table.Td>
+
+                                    <Table.Td>
+                                      {isNative ? (
+                                        <Group gap={6} wrap="nowrap">
+                                          <Badge size="xs" variant="outline" color="teal">
+                                            {t('ledger_nativeL1Layer')}
+                                          </Badge>
+                                          <AddressBadge
+                                            address={tk.walletAddress || data.address}
+                                            network={isEvm ? 'EVM' : 'SUBSTRATE'}
+                                            showNetwork={false}
+                                          />
+                                        </Group>
+                                      ) : contractAddr ? (
+                                        <Group gap={6} wrap="nowrap">
+                                          <AddressBadge
+                                            address={contractAddr}
+                                            network="EVM"
+                                            showNetwork={false}
+                                          />
+                                          {tk.isLinked && (
+                                            <Badge size="xs" color="violet" variant="light">
+                                              {t('ledger_bridgeLinked')}
+                                            </Badge>
+                                          )}
+                                        </Group>
+                                      ) : (
+                                        <Text size="xs" c="dimmed">-</Text>
+                                      )}
+                                    </Table.Td>
+
+                                    <Table.Td className="font-mono">
+                                      <Badge size="sm" variant="default">
+                                        {formatNumber(tk.txCount ?? tk.transfer_count ?? 0, { maxDecimals: 0 })} {t('ledger_tx_2')}
+                                      </Badge>
+                                    </Table.Td>
+                                  </Table.Tr>
+                                );
+                              })
+                            ) : (
+                              <Table.Tr>
+                                <Table.Td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '24px' }}>
+                                  {t('ledger_noTokenOrCrypto')}
+                                </Table.Td>
+                              </Table.Tr>
+                            )}
+                          </Table.Tbody>
+                        </Table>
+                      </Box>
+                    </>
+                  );
+                })()}
               </Tabs.Panel>
             </Tabs>
           </Paper>

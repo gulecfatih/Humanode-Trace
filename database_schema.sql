@@ -2151,3 +2151,11 @@ INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'tokenomics_shrimpDesc', '生物识别测试网参与者、空投持有者及微额转账地址。');
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'colToken', '代币 (Token)');
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'unlocks_tokenClaimsTitle', '代币申领 (Airdrop)');
+
+-- Added ledgerShowZeroBalances
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('tr', 'ledgerShowZeroBalances', 'Sıfır Bakiyeleri Göster', 1794429844440);
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('en', 'ledgerShowZeroBalances', 'Show Zero Balances', 1794429844440);
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('de', 'ledgerShowZeroBalances', 'Nullsalden anzeigen', 1794429844440);
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('ru', 'ledgerShowZeroBalances', 'Показать нулевые балансы', 1794429844440);
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('es', 'ledgerShowZeroBalances', 'Mostrar saldos cero', 1794429844440);
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value, updated_at) VALUES ('zh', 'ledgerShowZeroBalances', '显示零余额', 1794429844440);
