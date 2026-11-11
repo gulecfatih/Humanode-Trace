@@ -9,13 +9,15 @@ public interface IPriceRepository
     Task<object> GetDailyPricesMapAsync();
     Task<object> GetHistoricalRatesListAsync(string year = "all", string search = "", bool onlySwaps = false, int page = 1, int limit = 50);
     Task<double> GetLatestPriceAsync();
+    Task<double> GetPriceForDateAsync(string dateStr);
+    Task<Dictionary<string, double>> GetPriceMapAsync();
 }
 
 public class PriceRepository : IPriceRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
     private static Dictionary<string, double>? _priceMap;
-    private static double _latestPrice = 0.045;
+    private static double _latestPrice = 0.0;
     private static DateTime _cacheTime = DateTime.MinValue;
 
     public PriceRepository(IDbConnectionFactory dbFactory)
@@ -51,6 +53,21 @@ public class PriceRepository : IPriceRepository
     {
         await EnsureLoadedAsync();
         return _latestPrice;
+    }
+
+    public async Task<double> GetPriceForDateAsync(string dateStr)
+    {
+        await EnsureLoadedAsync();
+        if (string.IsNullOrWhiteSpace(dateStr)) return _latestPrice;
+        if (_priceMap != null && _priceMap.TryGetValue(dateStr.Trim(), out var p))
+            return p;
+        return _latestPrice;
+    }
+
+    public async Task<Dictionary<string, double>> GetPriceMapAsync()
+    {
+        await EnsureLoadedAsync();
+        return _priceMap ?? new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task<object> GetDailyPricesMapAsync()

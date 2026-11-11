@@ -47,7 +47,7 @@ public class SimulationModelDto
     public double BaselineFeesPotBalance { get; set; } = 403162.33;
     public double BaselineMonthlyGasInflowHmnd { get; set; } = 15840.0;
     public double BaselineAvgBatchPayoutHmnd { get; set; } = 49078.4;
-    public double BaselinePriceUsd { get; set; } = 0.045;
+    public double BaselinePriceUsd { get; set; } = 0.0;
     public double BaselineVpsCostUsd { get; set; } = 15.0;
 }
 
@@ -55,7 +55,7 @@ public class SimulationInputDto
 {
     public int ValidatorCount { get; set; } = 48;
     public double VolumeMultiplier { get; set; } = 1.0;
-    public double HmndPriceUsd { get; set; } = 0.045;
+    public double HmndPriceUsd { get; set; } = 0.0;
     public double VpsCostPerMonth { get; set; } = 15.0;
 }
 
@@ -77,13 +77,15 @@ public class SimulationResultDto
 public class EqualityRepository : IEqualityRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
     private static EqualityMetricsDto? _cached;
     private static DateTime _cacheTime = DateTime.MinValue;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
 
-    public EqualityRepository(IDbConnectionFactory dbFactory)
+    public EqualityRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<EqualityMetricsDto> GetEqualityMetricsAsync()
@@ -241,7 +243,11 @@ public class EqualityRepository : IEqualityRepository
 
     public SimulationModelDto GetSimulationBaseline()
     {
-        return new SimulationModelDto();
+        var price = _priceRepo.GetLatestPriceAsync().GetAwaiter().GetResult();
+        return new SimulationModelDto
+        {
+            BaselinePriceUsd = price
+        };
     }
 
     public SimulationResultDto RunSimulation(SimulationInputDto input)
@@ -249,7 +255,8 @@ public class EqualityRepository : IEqualityRepository
         var baseline = GetSimulationBaseline();
         int valCount = Math.Clamp(input.ValidatorCount, 1, 1000);
         double volMul = Math.Max(0.01, input.VolumeMultiplier);
-        double price = Math.Max(0.001, input.HmndPriceUsd);
+        double effectivePrice = input.HmndPriceUsd > 0 ? input.HmndPriceUsd : baseline.BaselinePriceUsd;
+        double price = Math.Max(0.0001, effectivePrice);
         double vps = Math.Max(0, input.VpsCostPerMonth);
 
         // Inflow to FeesPot from gas fees

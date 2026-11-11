@@ -39,11 +39,13 @@ public class TaxPayoutItemDto
 public class TaxReportRepository : ITaxReportRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
     private readonly string _payoutsPath;
 
-    public TaxReportRepository(IDbConnectionFactory dbFactory, IConfiguration config)
+    public TaxReportRepository(IDbConnectionFactory dbFactory, IConfiguration config, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
         var configuredPath = config["DataFiles:ValidatorPayouts"] ?? "Data/validator_payouts.json";
         if (File.Exists(configuredPath))
             _payoutsPath = configuredPath;
@@ -60,10 +62,8 @@ public class TaxReportRepository : ITaxReportRepository
         var clean = (address ?? "").Trim();
         var targetYear = year ?? DateTime.UtcNow.Year;
 
-        using var connection = _dbFactory.CreateConnection();
-        const string priceSql = "SELECT day, price_usd FROM hmnd_daily_prices";
-        var priceMap = (await connection.QueryAsync<(string day, double price_usd)>(priceSql))
-            .ToDictionary(r => r.day, r => r.price_usd, StringComparer.OrdinalIgnoreCase);
+        var priceMap = await _priceRepo.GetPriceMapAsync();
+        var latestPrice = await _priceRepo.GetLatestPriceAsync();
 
         var payouts = new List<TaxPayoutItemDto>();
 
@@ -107,7 +107,7 @@ public class TaxReportRepository : ITaxReportRepository
 
                                 if (string.Equals(recipientAddr, clean, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    double price = priceMap.TryGetValue(dateStr, out var p) ? p : 0.045;
+                                    double price = priceMap.TryGetValue(dateStr, out var p) ? p : latestPrice;
                                     double gross = Math.Round(hmnd * price, 2);
                                     double expense = Math.Round(vpsMonthlyUsd / 2.14, 2); // Expense allocated per round
                                     double net = Math.Max(0, Math.Round(gross - expense, 2));

@@ -15,10 +15,12 @@ public interface IStatsRepository
 public class StatsRepository : IStatsRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
 
-    public StatsRepository(IDbConnectionFactory dbFactory)
+    public StatsRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<StatsDto> GetStatsAsync(
@@ -152,7 +154,7 @@ public class StatsRepository : IStatsRepository
             )", new { thirtyDaysBefore });
         if (activeValidators == 0) activeValidators = 89;
 
-        const double priceUsd = 0.045;
+        var priceUsd = await _priceRepo.GetLatestPriceAsync();
 
         return new StatsDto
         {
@@ -277,12 +279,14 @@ public class StatsRepository : IStatsRepository
 
         var param = new { startTs, endTs, pallet };
         var list = (await conn.QueryAsync<DailyStatsDto>(sql, param)).ToList();
-        const double priceUsd = 0.045;
+        var priceMap = await _priceRepo.GetPriceMapAsync();
+        var latestPrice = await _priceRepo.GetLatestPriceAsync();
         foreach (var d in list)
         {
             d.Period = d.Day;
-            d.PriceUsd = priceUsd;
-            d.FeesUsd = Math.Round(d.TotalFeesHmnd * priceUsd, 2);
+            var dayPrice = (!string.IsNullOrEmpty(d.Day) && priceMap.TryGetValue(d.Day, out var p)) ? p : latestPrice;
+            d.PriceUsd = dayPrice;
+            d.FeesUsd = Math.Round(d.TotalFeesHmnd * dayPrice, 2);
             d.TotalFeesUsd = d.FeesUsd;
         }
         return list;

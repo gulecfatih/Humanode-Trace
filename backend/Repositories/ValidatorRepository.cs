@@ -17,13 +17,15 @@ public class ValidatorRepository : IValidatorRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
     private readonly IConfiguration _config;
+    private readonly IPriceRepository _priceRepo;
     private readonly string _payoutsPath;
     private Dictionary<string, long> _activeAuthentications = new(StringComparer.OrdinalIgnoreCase);
 
-    public ValidatorRepository(IDbConnectionFactory dbFactory, IConfiguration config)
+    public ValidatorRepository(IDbConnectionFactory dbFactory, IConfiguration config, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
         _config = config;
+        _priceRepo = priceRepo;
 
         var configuredPath = _config["DataFiles:ValidatorPayouts"] ?? "Data/validator_payouts.json";
         if (File.Exists(configuredPath))
@@ -264,7 +266,7 @@ public class ValidatorRepository : IValidatorRepository
         int estMonthlyBlocks = cadenceHours > 0 ? (int)Math.Round((30.0 * 24.0) / cadenceHours) : 0;
         double estPerRoundHmnd = 595.0;
         double estMonthlyHmnd = estPerRoundHmnd * 2.0;
-        double currentPriceUsd = 0.045;
+        double currentPriceUsd = await _priceRepo.GetLatestPriceAsync();
         double estMonthlyUsd = Math.Round(estMonthlyHmnd * currentPriceUsd, 2);
         double totalEarnedHmnd = Math.Round(pInfo.totalHmnd, 2);
 

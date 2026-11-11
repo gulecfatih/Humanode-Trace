@@ -32,10 +32,12 @@ public class SnapshotHolderDto
 public class TimeMachineRepository : ITimeMachineRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
 
-    public TimeMachineRepository(IDbConnectionFactory dbFactory)
+    public TimeMachineRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<TimeMachineSnapshotDto> GetSnapshotAsync(long? blockNumber = null, string? date = null)
@@ -63,7 +65,7 @@ public class TimeMachineRepository : ITimeMachineRepository
 
         // Price at snapshot date
         const string priceSql = "SELECT price_usd FROM hmnd_daily_prices WHERE day <= @dateStr ORDER BY day DESC LIMIT 1";
-        var price = await connection.ExecuteScalarAsync<double?>(priceSql, new { dateStr }) ?? 0.045;
+        var price = await connection.ExecuteScalarAsync<double?>(priceSql, new { dateStr }) ?? await _priceRepo.GetPriceForDateAsync(dateStr);
 
         // Cumulative blocks, txs, fees up to targetBlock
         const string cumBlockSql = "SELECT COUNT(*) FROM blocks_with_tx WHERE number <= @targetBlock";

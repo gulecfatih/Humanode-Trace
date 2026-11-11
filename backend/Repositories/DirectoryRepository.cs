@@ -13,6 +13,7 @@ public interface IDirectoryRepository
 public class DirectoryRepository : IDirectoryRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
     private static object? _cached;
     private static DateTime _cacheTime = DateTime.MinValue;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
@@ -49,9 +50,10 @@ public class DirectoryRepository : IDirectoryRepository
         new("0x34e99be9defa90351b91532a517a593d34d2abac", "PORTX (ChainPort Bridge)", "bridge", "#ec4899", "ChainPort Çapraz Zincir Köprü Sözleşmesi / Token", 0)
     };
 
-    public DirectoryRepository(IDbConnectionFactory dbFactory)
+    public DirectoryRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<object> GetMajorWalletsDirectoryAsync()
@@ -69,7 +71,7 @@ public class DirectoryRepository : IDirectoryRepository
             .ToDictionary(k => k.address, v => v.balance_hmnd, StringComparer.OrdinalIgnoreCase);
 
         var items = new List<MajorWalletDto>();
-        const double curPrice = 0.045;
+        var curPrice = await _priceRepo.GetLatestPriceAsync();
 
         foreach (var entry in CuratedAddresses)
         {

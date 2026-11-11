@@ -181,12 +181,12 @@ export default function DexDepthTab() {
 
         <KpiStatCard
           title={t('dexdepth_spotAmmPrice')}
-          value={`$${(depthData?.spotPriceUsd || 0.045).toFixed(4)}`}
+          value={`$${Number(depthData?.spotPriceUsd || 0).toFixed(4)}`}
           color="yellow"
           icon={IconCoins}
           badge="x · y = k"
           badgeColor="yellow"
-          subtext={`1 HMND = $${(depthData?.spotPriceUsd || 0.045).toFixed(4)} USDC`}
+          subtext={`1 HMND = $${Number(depthData?.spotPriceUsd || 0).toFixed(4)} USDC`}
         />
       </SimpleGrid>
 

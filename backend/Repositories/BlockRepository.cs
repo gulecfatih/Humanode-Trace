@@ -37,7 +37,7 @@ public class BlockDetailDto
     public long Timestamp { get; set; }
 
     [JsonPropertyName("price_usd")]
-    public double PriceUsd { get; set; } = 0.045;
+    public double PriceUsd { get; set; } = 0.0;
 
     [JsonPropertyName("total_tx_count")]
     public int TxCount { get; set; }
@@ -137,11 +137,13 @@ public class BlockRepository : IBlockRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
     private readonly ITransactionRepository _txRepo;
+    private readonly IPriceRepository _priceRepo;
 
-    public BlockRepository(IDbConnectionFactory dbFactory, ITransactionRepository txRepo)
+    public BlockRepository(IDbConnectionFactory dbFactory, ITransactionRepository txRepo, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
         _txRepo = txRepo;
+        _priceRepo = priceRepo;
     }
 
     public async Task<BlockDetailDto> GetBlockDetailsAsync(long blockNumber)
@@ -205,12 +207,15 @@ public class BlockRepository : IBlockRepository
         var ts = allTxs[0].Timestamp;
         var totalFees = Math.Round(allTxs.Sum(t => t.FeeHmnd), 6);
         var totalVol = Math.Round(allTxs.Sum(t => t.ValueHmnd), 4);
+        var dateStr = DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime.ToString("yyyy-MM-dd");
+        var price = await _priceRepo.GetPriceForDateAsync(dateStr);
 
         return new BlockDetailDto
         {
             Found = true,
             BlockNumber = blockNumber,
             Timestamp = ts,
+            PriceUsd = price,
             TxCount = allTxs.Count,
             EvmCount = evmTxs.Count,
             SubstrateCount = subTxs.Count,

@@ -20,10 +20,12 @@ public interface IWalletRepository
 public class WalletRepository : IWalletRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
 
-    public WalletRepository(IDbConnectionFactory dbFactory)
+    public WalletRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<object?> GetAddressSummaryAsync(string address)
@@ -76,7 +78,7 @@ public class WalletRepository : IWalletRepository
         var totalOut = Math.Round(sentVol, 4);
         var totalFees = Math.Round(sentFee, 6);
         var netBalance = liveBal ?? Math.Max(0, Math.Round(totalIn - totalOut - totalFees, 4));
-        const double priceUsd = 0.045;
+        var priceUsd = await _priceRepo.GetLatestPriceAsync();
         var valueUsd = Math.Round(netBalance * priceUsd, 2);
 
         var isValidator = authoredCount > 0 || bioauthCount > 0;
@@ -246,7 +248,7 @@ public class WalletRepository : IWalletRepository
                 }
                 else
                 {
-                    tokenPrice = 0.05;
+                    tokenPrice = 0.0;
                     color = "grape";
                 }
 

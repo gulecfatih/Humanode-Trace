@@ -19,7 +19,7 @@ public class DexDepthDto
     public double ReserveToken1 { get; set; }
     public string Symbol1 { get; set; } = "USDC";
     public double ConstantProductK { get; set; }
-    public double SpotPriceUsd { get; set; } = 0.045;
+    public double SpotPriceUsd { get; set; } = 0.0;
     public double TotalTvlUsd { get; set; }
     public double Volume24hHmnd { get; set; }
     public double Volume24hUsd { get; set; }
@@ -59,10 +59,12 @@ public class DexPoolOverviewDto
 public class DexRepository : IDexRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
 
-    public DexRepository(IDbConnectionFactory dbFactory)
+    public DexRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<DexDepthDto> GetDexPoolDepthAsync(string poolAddress = "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2")
@@ -123,7 +125,8 @@ public class DexRepository : IDexRepository
         }
 
         double k = reserveHmnd * reserveUsd;
-        double spotPrice = sym1 == "USDC" ? (reserveUsd / reserveHmnd) : 0.045;
+        var defaultPrice = await _priceRepo.GetLatestPriceAsync();
+        double spotPrice = (sym1 == "USDC" && reserveHmnd > 0) ? (reserveUsd / reserveHmnd) : defaultPrice;
         double tvlUsd = (reserveHmnd * spotPrice) + (sym1 == "USDC" ? reserveUsd : (reserveUsd * (sym1 == "WETH" ? 2650.0 : 68000.0)));
 
         // 24h volume

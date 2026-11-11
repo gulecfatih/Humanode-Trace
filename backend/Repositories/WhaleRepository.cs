@@ -13,10 +13,12 @@ public interface IWhaleRepository
 public class WhaleRepository : IWhaleRepository
 {
     private readonly IDbConnectionFactory _dbFactory;
+    private readonly IPriceRepository _priceRepo;
 
-    public WhaleRepository(IDbConnectionFactory dbFactory)
+    public WhaleRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
+        _priceRepo = priceRepo;
     }
 
     public async Task<List<WhaleTransactionDto>> GetWhaleTransactionsAsync(double minHmnd = 50000, int limit = 60, string asset = "hmnd")
@@ -167,15 +169,23 @@ public class WhaleRepository : IWhaleRepository
         }
 
         // 3. Compute USD, tier and tag
+        var priceMap = await _priceRepo.GetPriceMapAsync();
+        var latestPrice = await _priceRepo.GetLatestPriceAsync();
+
         foreach (var item in results)
         {
             var sym = item.Symbol ?? (item.Layer == "EVM_TOKEN" ? item.Method : "HMND");
+            var itemDate = item.Timestamp > 0
+                ? DateTimeOffset.FromUnixTimeSeconds(item.Timestamp).UtcDateTime.ToString("yyyy-MM-dd")
+                : "";
+            var dayHmndPrice = (!string.IsNullOrEmpty(itemDate) && priceMap.TryGetValue(itemDate, out var hp)) ? hp : latestPrice;
+
             double priceUsd = sym switch
             {
                 "USDC" or "USDT" => 1.0,
                 "WETH" => 2650.0,
                 "WBTC" => 68000.0,
-                _ => 0.045
+                _ => dayHmndPrice
             };
 
             item.PriceUsd = priceUsd;

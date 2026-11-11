@@ -42,11 +42,12 @@ public class EqualityController : ControllerBase
         [FromQuery] double? price = null,
         [FromQuery] double? vps = null)
     {
+        var baseline = _equalityRepo.GetSimulationBaseline();
         var input = new SimulationInputDto
         {
             ValidatorCount = validators ?? 48,
             VolumeMultiplier = volume ?? 1.0,
-            HmndPriceUsd = price ?? 0.045,
+            HmndPriceUsd = price ?? baseline.BaselinePriceUsd,
             VpsCostPerMonth = vps ?? 15.0
         };
 

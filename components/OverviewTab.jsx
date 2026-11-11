@@ -1058,7 +1058,7 @@ export default function OverviewTab({
                       const subCount = block.substrate_count ?? block.substrateCount ?? 0;
                       const vol = block.total_volume_hmnd ?? block.totalVolumeHmnd ?? 0;
                       const fee = block.total_fees_hmnd ?? block.totalFeesHmnd ?? 0;
-                      const price = block.price_usd || 0.045;
+                      const price = Number(block.price_usd ?? block.priceUsd ?? 0);
                       const volUsd = vol * price;
                       const pallets = block.pallets ? block.pallets.split(',').filter(Boolean) : [];
 
