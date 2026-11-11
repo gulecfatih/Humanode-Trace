@@ -447,8 +447,27 @@ export default function UnlocksTab({
             </Text>
           </Group>
         }
-        size="lg"
+        size="min(760px, 94vw)"
         centered
+        styles={{
+          content: {
+            maxWidth: '760px',
+            width: '94vw',
+            border: '1px solid rgba(56, 189, 248, 0.28)',
+            borderRadius: 14,
+            background: '#0d1117',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+          },
+          header: {
+            background: '#161b22',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            padding: '14px 20px',
+          },
+          body: {
+            background: '#0d1117',
+            padding: '20px',
+          },
+        }}
       >
         {selectedExtrinsic && (
           <Stack gap="sm">

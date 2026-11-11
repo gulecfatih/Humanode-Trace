@@ -79,6 +79,7 @@ export default function BlockDetailModal({
     <Modal
       opened={opened}
       onClose={onClose}
+      centered
       title={
         <Group gap={8}>
           <IconCube size={22} color="#38bdf8" />
@@ -96,11 +97,24 @@ export default function BlockDetailModal({
           </CopyButton>
         </Group>
       }
-      size="xl"
+      size="min(1240px, 96vw)"
       styles={{
         content: {
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 12,
+          maxWidth: '1240px',
+          width: '96vw',
+          border: '1px solid rgba(56, 189, 248, 0.28)',
+          borderRadius: 14,
+          background: '#0d1117',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+        },
+        header: {
+          background: '#161b22',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '14px 20px',
+        },
+        body: {
+          background: '#0d1117',
+          padding: '20px',
         },
       }}
     >
@@ -133,7 +147,7 @@ export default function BlockDetailModal({
                 <Badge size="xs" color="cyan" variant="light">
                   {blockData.evm_count || 0} EVM
                 </Badge>
-                <Badge size="xs" color="green" variant="light">
+                <Badge size="xs" color="teal" variant="light">
                   {blockData.substrate_count || 0} Substrate
                 </Badge>
               </Group>
@@ -148,7 +162,7 @@ export default function BlockDetailModal({
               </Text>
               {blockData.price_usd > 0 && Number(blockData.total_fees_hmnd || 0) > 0 && (
                 <Text size="11px" c="dimmed">
-                  ≈ {formatUSD((Number(blockData.total_fees_hmnd) || 0) * blockData.price_usd, null, 4)} USD
+                  ≈ {formatUSD((Number(blockData.total_fees_hmnd) || 0) * blockData.price_usd, lang, 4)}
                 </Text>
               )}
             </Paper>
@@ -169,17 +183,17 @@ export default function BlockDetailModal({
               </Text>
             </Group>
 
-            <Box style={{ overflowX: 'auto', maxHeight: 420 }}>
-              <Table striped highlightOnHover verticalSpacing="xs">
+            <Box style={{ overflowX: 'auto', maxHeight: 460 }}>
+              <Table striped highlightOnHover verticalSpacing="sm" style={{ minWidth: 960 }}>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
-                    <Table.Th style={{ width: 130, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
-                    <Table.Th style={{ minWidth: 220, whiteSpace: 'nowrap' }}>{t('overview_fromTo')}</Table.Th>
-                    <Table.Th style={{ width: 120, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
+                    <Table.Th style={{ width: 150, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
+                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
+                    <Table.Th style={{ minWidth: 260, whiteSpace: 'nowrap' }}>{t('overview_fromTo')}</Table.Th>
+                    <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
                     <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colFee')}</Table.Th>
-                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
-                    <Table.Th style={{ width: 70, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
+                    <Table.Th style={{ minWidth: 150, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
+                    <Table.Th style={{ width: 80, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -187,7 +201,10 @@ export default function BlockDetailModal({
                     blockData.transactions.map((tx, idx) => {
                       const fromAddr = tx.from_address || tx.signer || tx.sender;
                       const toAddr = tx.to_address || tx.target;
-                      const isEvm = tx.layer === 'EVM' || tx.hash?.startsWith('0x');
+                      const isEvm = (tx.layer || '').toUpperCase() === 'EVM' || (!tx.layer && (fromAddr?.startsWith('0x') && fromAddr?.length === 42));
+                      const layerLabel = isEvm
+                        ? (tx.method ? `EVM: ${tx.method}` : 'EVM')
+                        : (tx.pallet ? `${tx.pallet}:${tx.method || ''}` : 'SUBSTRATE');
                       return (
                         <Table.Tr key={tx.hash || idx}>
                           <Table.Td className="font-mono" style={{ whiteSpace: 'nowrap' }}>
@@ -215,8 +232,8 @@ export default function BlockDetailModal({
                           </Table.Td>
 
                           <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                            <Badge size="xs" color={isEvm ? 'cyan' : 'green'} variant="light" style={{ whiteSpace: 'nowrap' }}>
-                              {isEvm ? (tx.method ? `EVM: ${tx.method}` : 'EVM') : (tx.pallet ? `${tx.pallet}:${tx.method}` : 'Substrate')}
+                            <Badge size="xs" color={isEvm ? 'cyan' : 'teal'} variant="light" style={{ whiteSpace: 'nowrap' }}>
+                              {layerLabel}
                             </Badge>
                           </Table.Td>
 
@@ -229,18 +246,18 @@ export default function BlockDetailModal({
                                   c="cyan"
                                   onClick={() => fromAddr && onSelectAddress?.(fromAddr)}
                                 >
-                                  {shortAddr(fromAddr, 6, 4)}
+                                  {shortAddr(fromAddr, 7, 5)}
                                 </Text>
                               </Tooltip>
                               <Text size="xs" c="dimmed">➔</Text>
                               <Tooltip label={toAddr || (t('overview_systemContract'))} withArrow position="top">
                                 <Text
                                   size="xs"
-                                  style={{ cursor: 'pointer', textDecoration: toAddr ? 'underline' : 'none' }}
+                                  style={{ cursor: toAddr ? 'pointer' : 'default', textDecoration: toAddr ? 'underline' : 'none' }}
                                   c={toAddr ? 'teal' : 'dimmed'}
                                   onClick={() => toAddr && onSelectAddress?.(toAddr)}
                                 >
-                                  {toAddr ? shortAddr(toAddr, 6, 4) : (t('overview_contractSystem'))}
+                                  {toAddr ? shortAddr(toAddr, 7, 5) : (t('overview_contractSystem'))}
                                 </Text>
                               </Tooltip>
                             </Group>

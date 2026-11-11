@@ -55,13 +55,15 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
     <Modal
       opened={opened}
       onClose={onClose}
-      size="lg"
+      size="min(720px, 94vw)"
       withCloseButton={false}
       padding={0}
       radius="md"
       centered
       styles={{
         content: {
+          maxWidth: '720px',
+          width: '94vw',
           background: '#161b22',
           border: '1px solid rgba(56, 189, 248, 0.35)',
           boxShadow: '0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15)',

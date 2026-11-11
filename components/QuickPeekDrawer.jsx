@@ -35,7 +35,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
       opened={opened}
       onClose={onClose}
       position="right"
-      size="md"
+      size="480px"
       title={
         <Group gap="xs">
           <Badge color={isEvm ? 'cyan' : 'teal'} variant="light">

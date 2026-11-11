@@ -1823,3 +1823,41 @@ INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_imminentPayout', '即将分发');
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_pendingMultisig', '等待中');
 INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'feespot_multisigConfirmationPending', '轮次可能随时触发');
+
+
+-- Transaction & Block Modal status keys
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'txLayerEvm', 'EVM Katmanı');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'txLayerSub', 'Substrate Katmanı');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'txSuccess', 'BAŞARILI');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'txFailed', 'BAŞARISIZ');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('tr', 'colBlockNumber', 'Blok Numarası');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'txLayerEvm', 'EVM Layer');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'txLayerSub', 'Substrate Layer');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'txSuccess', 'SUCCESS');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'txFailed', 'FAILED');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('en', 'colBlockNumber', 'Block Number');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'txLayerEvm', 'EVM-Schicht');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'txLayerSub', 'Substrate-Schicht');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'txSuccess', 'ERFOLGREICH');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'txFailed', 'FEHLGESCHLAGEN');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('de', 'colBlockNumber', 'Blocknummer');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'txLayerEvm', 'Слой EVM');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'txLayerSub', 'Слой Substrate');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'txSuccess', 'УСПЕШНО');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'txFailed', 'ОШИБКА');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('ru', 'colBlockNumber', 'Номер блока');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'txLayerEvm', 'Capa EVM');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'txLayerSub', 'Capa Substrate');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'txSuccess', 'ÉXITO');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'txFailed', 'FALLIDO');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('es', 'colBlockNumber', 'Número de Bloque');
+
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'txLayerEvm', 'EVM 层');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'txLayerSub', 'Substrate 层');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'txSuccess', '成功');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'txFailed', '失败');
+INSERT OR REPLACE INTO app_translations (lang_code, translation_key, translation_value) VALUES ('zh', 'colBlockNumber', '区块编号');

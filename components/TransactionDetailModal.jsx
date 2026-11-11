@@ -54,9 +54,12 @@ export default function TransactionDetailModal({
       .then((res) => res.json())
       .then((data) => {
         if (data && data.found) {
+          const sender = data.tx?.from_address || data.tx?.signer || '';
+          const isEvm = (data.layer || data.tx?.layer || '').toUpperCase() === 'EVM' || (!data.layer && sender.startsWith('0x') && sender.length === 42);
+          const resolvedLayer = isEvm ? 'EVM' : 'SUBSTRATE';
           const txObj = data.tx
-            ? { ...data.tx, layer: data.layer || (data.tx.hash?.startsWith('0x') ? 'EVM' : 'SUBSTRATE') }
-            : data;
+            ? { ...data.tx, layer: resolvedLayer }
+            : { ...data, layer: resolvedLayer };
           if (data.tokenTransfers) txObj.tokenTransfers = data.tokenTransfers;
           setTxData(txObj);
         } else {
@@ -89,6 +92,7 @@ export default function TransactionDetailModal({
     <Modal
       opened={opened}
       onClose={onClose}
+      centered
       title={
         <Group gap={8}>
           <IconActivity size={22} color="#38bdf8" />
@@ -97,7 +101,26 @@ export default function TransactionDetailModal({
           </Title>
         </Group>
       }
-      size="xl"
+      size="min(1120px, 95vw)"
+      styles={{
+        content: {
+          maxWidth: '1120px',
+          width: '95vw',
+          border: '1px solid rgba(56, 189, 248, 0.28)',
+          borderRadius: 14,
+          background: '#0d1117',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+        },
+        header: {
+          background: '#161b22',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '14px 20px',
+        },
+        body: {
+          background: '#0d1117',
+          padding: '20px',
+        },
+      }}
     >
       {loading ? (
         <Center py="xl">
@@ -243,7 +266,7 @@ export default function TransactionDetailModal({
                 </Text>
                 {txData.price_usd > 0 && Number(txData.value_hmnd || 0) > 0 && (
                   <Text size="11px" c="dimmed">
-                    ≈ {formatUSD((Number(txData.value_hmnd || 0)) * txData.price_usd)} USD
+                    ≈ {formatUSD((Number(txData.value_hmnd || 0)) * txData.price_usd, lang)}
                   </Text>
                 )}
               </Box>
@@ -255,7 +278,7 @@ export default function TransactionDetailModal({
                 </Text>
                 {txData.price_usd > 0 && Number(txData.fee_hmnd || 0) > 0 && (
                   <Text size="11px" c="dimmed">
-                    ≈ {formatUSD((Number(txData.fee_hmnd || 0)) * txData.price_usd, null, 4)} USD
+                    ≈ {formatUSD((Number(txData.fee_hmnd || 0)) * txData.price_usd, lang, 4)}
                   </Text>
                 )}
               </Box>
@@ -367,18 +390,20 @@ export default function TransactionDetailModal({
 
           {/* Bottom Quick Action Buttons */}
           <Group justify="space-between" mt="xs">
-            <Button
-              size="xs"
-              variant="light"
-              color="blue"
-              leftSection={<IconCube size={14} />}
-              onClick={() => {
-                onClose();
-                onOpenBlock?.(txData.block_number);
-              }}
-            >
-              {t('inspectBlockNum', { number: txData?.block_number })}
-            </Button>
+            {Boolean(txData?.block_number) ? (
+              <Button
+                size="xs"
+                variant="light"
+                color="blue"
+                leftSection={<IconCube size={14} />}
+                onClick={() => {
+                  onClose();
+                  onOpenBlock?.(txData.block_number);
+                }}
+              >
+                {t('inspectBlockNum', { number: txData.block_number })}
+              </Button>
+            ) : <Box />}
 
             <Group gap="xs">
               {(txData.from_address || txData.signer) && (

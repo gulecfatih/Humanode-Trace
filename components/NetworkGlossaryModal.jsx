@@ -105,12 +105,21 @@ export default function NetworkGlossaryModal({ opened, onClose }) {
           </Box>
         </Group>
       }
-      size="xl"
+      size="min(1000px, 95vw)"
+      centered
       radius="md"
       styles={{
+        content: {
+          maxWidth: '1000px',
+          width: '95vw',
+          border: '1px solid rgba(56, 189, 248, 0.28)',
+          borderRadius: 14,
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+        },
         header: {
           backgroundColor: '#0d1117',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '16px 20px',
         },
         body: {
           backgroundColor: '#0a0d12',
