@@ -83,12 +83,15 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
   // Countdown calculation
   const nextTargetTs = data?.nextEstimatedTs || (1793211744 + 14 * 86400);
-  const diffSec = Math.max(0, nextTargetTs - nowSec);
-  const cdDays = Math.floor(diffSec / 86400);
-  const cdHours = Math.floor((diffSec % 86400) / 3600);
-  const cdMins = Math.floor((diffSec % 3600) / 60);
-  const cdSecs = diffSec % 60;
-  const countdownFormatted = `${cdDays}g ${String(cdHours).padStart(2, '0')}:${String(cdMins).padStart(2, '0')}:${String(cdSecs).padStart(2, '0')}`;
+  const diffSec = nextTargetTs - nowSec;
+  const isOverdue = diffSec <= 0;
+  const cdDays = Math.floor(Math.abs(diffSec) / 86400);
+  const cdHours = Math.floor((Math.abs(diffSec) % 86400) / 3600);
+  const cdMins = Math.floor((Math.abs(diffSec) % 3600) / 60);
+  const cdSecs = Math.abs(diffSec) % 60;
+  const countdownFormatted = isOverdue
+    ? (t('feespot_imminentPayout') || 'Dağıtım Eşiğinde')
+    : `${cdDays}g ${String(cdHours).padStart(2, '0')}:${String(cdMins).padStart(2, '0')}:${String(cdSecs).padStart(2, '0')}`;
 
   // Paginated payout batch history. TODO: Support CSV export of historic rounds
   const historyList = data?.history || [];
@@ -198,9 +201,13 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
           <KpiStatCard
             title={t('feespot_nextBatchCountdown')}
             value={countdownFormatted}
-            color="violet"
+            color={isOverdue ? 'teal' : 'violet'}
+            badge={isOverdue ? (t('feespot_pendingMultisig') || 'Bekleniyor') : null}
+            badgeColor={isOverdue ? 'teal' : 'violet'}
             icon={IconCalendar}
-            subtext={`~10-14 ${t('feespot_nov620HmndNode')}`}
+            subtext={isOverdue
+              ? `~10-14 ${t('feespot_nov620HmndNode')} • ${t('feespot_multisigConfirmationPending') || 'Tur her an tetiklenebilir'}`
+              : `~10-14 ${t('feespot_nov620HmndNode')}`}
             tooltip={t('feespot_estimatedNextPayoutBatch')}
           />
         </SimpleGrid>
