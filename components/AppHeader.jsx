@@ -77,7 +77,7 @@ export default function AppHeader({
             </Group>
 
             {/* Live Network Pulse Badge */}
-            <Tooltip label="Humanode Çift Katmanlı Ağ Durumu: Senkronize ve Canlı">
+            <Tooltip label={t('header_dualLayerStatusTooltip')}>
               <Badge
                 variant="light"
                 color="teal"
@@ -114,7 +114,7 @@ export default function AppHeader({
             <LanguageSwitcher size="xs" />
 
             {/* Network Guide & Terminology Glossary Button */}
-            <Tooltip label="Ağ Kılavuzu & Terimler Sözlüğü">
+            <Tooltip label={t('header_glossaryTooltip')}>
               <ActionIcon
                 variant="default"
                 size="md"

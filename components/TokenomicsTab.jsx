@@ -486,40 +486,40 @@ export default function TokenomicsTab({
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #ef4444' }}>
               <Group justify="space-between">
                 <Text size="xs" fw={700} c="white">🐋 {t('tokenomics_whale100kHmnd')}</Text>
-                <Badge size="xs" color="red" variant="light">Borsalar & Kasalar</Badge>
+                <Badge size="xs" color="red" variant="light">{t('tokenomics_exchangesAndTreasuries')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                KuCoin, BitMart, Vakıf Hazine Kasası ve ilk tohum yatırımcıları.
+                {t('tokenomics_whaleDesc')}
               </Text>
             </Paper>
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b' }}>
               <Group justify="space-between">
                 <Text size="xs" fw={700} c="white">🦈 {t('tokenomics_shark10k100kHmnd')}</Text>
-                <Badge size="xs" color="yellow" variant="light">Düğüm Sahipleri</Badge>
+                <Badge size="xs" color="yellow" variant="light">{t('tokenomics_nodeOperators')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                Uzun vadeli validatör işletmecileri ve birikim yapan doğrulayıcılar.
+                {t('tokenomics_sharkDesc')}
               </Text>
             </Paper>
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #14b8a6' }}>
               <Group justify="space-between">
                 <Text size="xs" fw={700} c="white">🐬 {t('tokenomics_dolphin1k10kHmnd')}</Text>
-                <Badge size="xs" color="teal" variant="light">DeFi Katılımcıları</Badge>
+                <Badge size="xs" color="teal" variant="light">{t('tokenomics_defiParticipants')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                Impossible Finance LP sağlayıcıları ve aktif token takası yapanlar.
+                {t('tokenomics_dolphinDesc')}
               </Text>
             </Paper>
 
             <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #06b6d4' }}>
               <Group justify="space-between">
                 <Text size="xs" fw={700} c="white">🦐 {t('tokenomics_shrimpFish1kHmnd')}</Text>
-                <Badge size="xs" color="cyan" variant="light">Topluluk</Badge>
+                <Badge size="xs" color="cyan" variant="light">{t('tokenomics_communityMembers')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                Biyometrik testnet katılımcıları, airdrop sahipleri ve mikro transferler.
+                {t('tokenomics_shrimpDesc')}
               </Text>
             </Paper>
           </Stack>

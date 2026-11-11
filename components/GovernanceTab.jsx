@@ -423,13 +423,13 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
             </Text>
             <Stack gap={8}>
               <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #ef4444' }}>
-                <Text size="xs" fw={700} c="white">Runtime Upgrade (Forksuz Güncelleme)</Text>
+                <Text size="xs" fw={700} c="white">{t('governance_runtimeUpgradeForkless')}</Text>
                 <Text size="11px" c="dimmed">
                   {t('governance_deploysOnChainWasm')}
                 </Text>
               </Paper>
               <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b' }}>
-                <Text size="xs" fw={700} c="white">Pallet & Modül Parametreleri</Text>
+                <Text size="xs" fw={700} c="white">{t('governance_palletModuleParameters')}</Text>
                 <Text size="11px" c="dimmed">
                   {t('governance_revisesBioauthDurationsAnd')}
                 </Text>
@@ -455,7 +455,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
                 </Text>
               </Paper>
               <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #06b6d4' }}>
-                <Text size="xs" fw={700} c="white">1.076 Başarılı Yürütme</Text>
+                <Text size="xs" fw={700} c="white">{t('governance_successfulExecutionsCount')}</Text>
                 <Text size="11px" c="dimmed">
                   {t('governance_allVaultTransfersHave')}
                 </Text>

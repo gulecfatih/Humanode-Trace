@@ -60,13 +60,13 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
             <TextInput
               label={t('compareAddrA')}
-              placeholder="0x... veya hm..."
+              placeholder={t('compare_addressPlaceholder')}
               value={addrA}
               onChange={(e) => setAddrA(e.target.value)}
             />
             <TextInput
               label={t('compareAddrB')}
-              placeholder="0x... veya hm..."
+              placeholder={t('compare_addressPlaceholder')}
               value={addrB}
               onChange={(e) => setAddrB(e.target.value)}
             />

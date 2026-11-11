@@ -377,7 +377,7 @@ export default function DexDepthTab() {
         <Stack gap="xs">
           <Group gap="xs">
             <TextInput
-              placeholder="0x... hex calldata veya 4-byte metot seçici girin"
+              placeholder={t('dex_calldataPlaceholder')}
               value={calldataInput}
               onChange={(e) => setCalldataInput(e.target.value)}
               style={{ flex: 1 }}
@@ -476,9 +476,9 @@ export default function DexDepthTab() {
                 <Table verticalSpacing="xs">
                   <Table.Thead>
                     <Table.Tr>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>Parametre</Table.Th>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>Tür (Type)</Table.Th>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>Ayrıştırılmış Değer (Decoded Value)</Table.Th>
+                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramName')}</Table.Th>
+                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramType')}</Table.Th>
+                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramDecodedValue')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>

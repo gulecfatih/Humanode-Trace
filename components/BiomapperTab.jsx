@@ -708,7 +708,7 @@ interface IBridgedBiomapperRead {
 
               <Stack gap="xs">
                 <TextInput
-                  placeholder="0x... cüzdan adresi girin"
+                  placeholder={t('biomapper_enterAddressPlaceholder')}
                   value={simAddress}
                   onChange={(e) => setSimAddress(e.target.value)}
                   size="xs"
@@ -721,21 +721,21 @@ interface IBridgedBiomapperRead {
                   <Paper p="xs" withBorder style={{ background: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.3)', borderRadius: 6 }} mt="xs">
                     <Stack gap={4}>
                       <Group justify="space-between">
-                        <Text size="xs" c="dimmed">Durum:</Text>
+                        <Text size="xs" c="dimmed">{t('biomapper_simStatus')}</Text>
                         <Badge size="xs" color={simResult.isUnique ? 'teal' : 'red'} variant="light">
-                          {simResult.isUnique ? '🟢 BİOMAPPED (TEKİL İNSAN)' : '🔴 DOĞRULANMAMIŞ'}
+                          {simResult.isUnique ? t('biomapper_simBiomappedUnique') : t('biomapper_simUnverified')}
                         </Badge>
                       </Group>
                       <Group justify="space-between">
-                        <Text size="xs" c="dimmed">Aktif Jenerasyon:</Text>
+                        <Text size="xs" c="dimmed">{t('biomapper_simActiveGen')}</Text>
                         <Text size="xs" fw={700} className="font-mono">Gen #{simResult.generation}</Text>
                       </Group>
                       <Group justify="space-between">
-                        <Text size="xs" c="dimmed">Enklav Doğrulaması:</Text>
+                        <Text size="xs" c="dimmed">{t('biomapper_simEnclaveAttestation')}</Text>
                         <Badge size="xs" color="blue" variant="outline">{simResult.cvmAttestation}</Badge>
                       </Group>
                       <Box>
-                        <Text size="10px" c="dimmed">Biomapping Pointer:</Text>
+                        <Text size="10px" c="dimmed">{t('biomapper_simPointer')}</Text>
                         <Text size="10px" className="font-mono" c="cyan" truncate>{simResult.pointer}</Text>
                       </Box>
                     </Stack>

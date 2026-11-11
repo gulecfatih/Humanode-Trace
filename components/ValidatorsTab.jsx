@@ -279,7 +279,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
               size="xs"
               style={{ width: 220 }}
             />
-            <Tooltip label="Filtrelenmiş validatör listesini CSV olarak indir">
+            <Tooltip label={t('validators_exportCsvTooltip')}>
               <Button
                 variant="default"
                 size="xs"

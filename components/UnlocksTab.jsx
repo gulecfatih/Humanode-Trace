@@ -172,7 +172,7 @@ export default function UnlocksTab({
 
           <Box style={{ cursor: 'pointer' }} onClick={() => { setCategory('tokenClaims'); setPage(1); }}>
             <KpiStatCard
-              title="Token Claims (Airdrop)"
+              title={t('unlocks_tokenClaimsTitle')}
               value={`${kpis?.tokenClaims?.toLocaleString(locStr) || 0}`}
               unit={t('unlocks_txs_3')}
               color="yellow"

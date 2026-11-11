@@ -1712,7 +1712,7 @@ export default function OverviewTab({
                   <Table striped highlightOnHover verticalSpacing="xs">
                     <Table.Thead>
                       <Table.Tr>
-                        <Table.Th>Token</Table.Th>
+                        <Table.Th>{t('colToken')}</Table.Th>
                         <Table.Th>{t('fromLabel')}</Table.Th>
                         <Table.Th>{t('toLabel')}</Table.Th>
                         <Table.Th>{t('colAmount')}</Table.Th>
