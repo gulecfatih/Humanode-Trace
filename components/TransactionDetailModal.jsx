@@ -28,7 +28,7 @@ import {
   IconBook,
   IconCoins,
 } from '@tabler/icons-react';
-import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
+import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD, formatNumber } from './formatters';
 import { useLanguage } from './LanguageContext';
 
 export default function TransactionDetailModal({
@@ -124,7 +124,7 @@ export default function TransactionDetailModal({
 
               {txData.price_usd > 0 && (
                 <Badge color="yellow" variant="light">
-                  {t('historicalRate', { rate: Number(txData.price_usd).toFixed(4) })}
+                  {t('historicalRate', { rate: formatNumber(txData.price_usd, { minDecimals: 4, maxDecimals: 6 }) })}
                 </Badge>
               )}
             </Group>
@@ -243,7 +243,7 @@ export default function TransactionDetailModal({
                 </Text>
                 {txData.price_usd > 0 && Number(txData.value_hmnd || 0) > 0 && (
                   <Text size="11px" c="dimmed">
-                    ≈ ${((Number(txData.value_hmnd || 0)) * txData.price_usd).toFixed(2)} USD
+                    ≈ {formatUSD((Number(txData.value_hmnd || 0)) * txData.price_usd)} USD
                   </Text>
                 )}
               </Box>
@@ -255,7 +255,7 @@ export default function TransactionDetailModal({
                 </Text>
                 {txData.price_usd > 0 && Number(txData.fee_hmnd || 0) > 0 && (
                   <Text size="11px" c="dimmed">
-                    ≈ ${((Number(txData.fee_hmnd || 0)) * txData.price_usd).toFixed(4)} USD
+                    ≈ {formatUSD((Number(txData.fee_hmnd || 0)) * txData.price_usd, null, 4)} USD
                   </Text>
                 )}
               </Box>

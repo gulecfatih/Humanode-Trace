@@ -1,5 +1,22 @@
 // Centralized Number, Currency, and Datetime Formatters for Humanode Tracker
 
+// Universal formatting policy:
+// - Comma (',') is used ONLY for decimal numbers.
+// - Dot ('.') is used for separating digits (thousands separator).
+export const NUMBER_LOCALE = 'de-DE';
+
+// Universal client-side patch for Number.prototype.toLocaleString so any component calling it adheres to the policy
+if (typeof window !== 'undefined') {
+  try {
+    const origToLocaleString = Number.prototype.toLocaleString;
+    Number.prototype.toLocaleString = function (locales, options) {
+      return origToLocaleString.call(this, NUMBER_LOCALE, options);
+    };
+  } catch (e) {
+    console.warn('Could not patch Number.prototype.toLocaleString:', e);
+  }
+}
+
 let currentLocale = '';
 
 export function setAppLocale(locale) {
@@ -14,6 +31,30 @@ export function getAppLocale() {
 
 function getLocaleString(locale) {
   return locale || currentLocale || undefined;
+}
+
+/**
+ * Format any number strictly adhering to:
+ * - '.' (dot) for separating digits (thousands separator)
+ * - ',' (comma) ONLY for decimal digits
+ *
+ * @param {number|string} value
+ * @param {object} [options]
+ * @param {number} [options.minDecimals=0]
+ * @param {number} [options.maxDecimals=2]
+ * @returns {string} e.g. '1.714.204,94' or '33.080'
+ */
+export function formatNumber(value, options = {}) {
+  const num = Number(value);
+  if (isNaN(num)) return '0';
+
+  const minDec = options.minDecimals !== undefined ? options.minDecimals : 0;
+  const maxDec = options.maxDecimals !== undefined ? options.maxDecimals : 2;
+
+  return num.toLocaleString(NUMBER_LOCALE, {
+    minimumFractionDigits: minDec,
+    maximumFractionDigits: maxDec,
+  });
 }
 
 /**
@@ -47,10 +88,9 @@ export function formatHMND(amount, options = {}) {
   }
   const minDec = options.minDecimals !== undefined ? options.minDecimals : 0;
 
-  const locStr = getLocaleString(options.locale);
-  const formatted = absVal.toLocaleString(locStr, {
-    minimumFractionDigits: minDec,
-    maximumFractionDigits: maxDec,
+  const formatted = formatNumber(absVal, {
+    minDecimals: minDec,
+    maxDecimals: maxDec,
   });
 
   const signStr = isNeg ? '-' : (options.sign ? '+' : '');
@@ -82,40 +122,41 @@ export function formatFee(fee, withSuffix = true, locale = null) {
     maxDec = 4;
   }
 
-  const locStr = getLocaleString(locale);
-  const formatted = val.toLocaleString(locStr, {
-    minimumFractionDigits: minDec,
-    maximumFractionDigits: maxDec,
+  const formatted = formatNumber(val, {
+    minDecimals: minDec,
+    maxDecimals: maxDec,
   });
 
   return withSuffix ? `${formatted} HMND` : `${formatted}`;
 }
 
 /**
- * Format USD currency amount without scale suffixes in parentheses.
+ * Format USD currency amount.
+ * Thousands separated with '.' and cents/decimals with ','.
  *
  * @param {number|string} amountUsd
  * @param {string} [locale]
+ * @param {number} [maxDecimals=2]
  */
-export function formatUSD(amountUsd, locale = null) {
+export function formatUSD(amountUsd, locale = null, maxDecimals = 2) {
   const val = Number(amountUsd);
   if (isNaN(val) || val === 0) return '$0';
 
-  const locStr = getLocaleString(locale);
   const absVal = Math.abs(val);
-
-  if (absVal >= 100) {
-    const formatted = Math.round(val).toLocaleString(locStr, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    return `$${formatted}`;
+  let minDec = 2;
+  let maxDec = maxDecimals !== undefined ? maxDecimals : 2;
+  if (absVal < 0.01 && absVal > 0) {
+    minDec = 4;
+    maxDec = 6;
   }
 
-  return `$${val.toLocaleString(locStr, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  const formatted = formatNumber(absVal, {
+    minDecimals: minDec,
+    maxDecimals: maxDec,
+  });
+
+  const sign = val < 0 ? '-' : '';
+  return `${sign}$${formatted}`;
 }
 
 export function formatHMNDWithUSD(amountHmnd, priceUsd = 0.0025, locale = null) {
@@ -124,7 +165,7 @@ export function formatHMNDWithUSD(amountHmnd, priceUsd = 0.0025, locale = null) 
   const usdVal = val * (Number(priceUsd) || 0);
 
   if (usdVal < 0.01 && usdVal > 0) {
-    return `${hmndStr} (≈ < $0.01)`;
+    return `${hmndStr} (≈ < $0,01)`;
   }
   if (usdVal <= 0) {
     return hmndStr;
@@ -136,19 +177,18 @@ export function formatCompact(amount, locale = null) {
   const val = Number(amount);
   if (isNaN(val) || val === 0) return '0';
 
-  const locStr = getLocaleString(locale);
   const absVal = Math.abs(val);
 
   if (absVal >= 100) {
-    return Math.round(val).toLocaleString(locStr, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+    return formatNumber(Math.round(val), {
+      minDecimals: 0,
+      maxDecimals: 0,
     });
   }
 
-  return val.toLocaleString(locStr, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+  return formatNumber(val, {
+    minDecimals: 0,
+    maxDecimals: 2,
   });
 }
 

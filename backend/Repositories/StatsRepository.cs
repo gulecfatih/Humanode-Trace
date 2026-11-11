@@ -311,40 +311,107 @@ public class StatsRepository : IStatsRepository
         var startOfYear = new DateTimeOffset(new DateTime(targetYear, 1, 1), TimeSpan.Zero).ToUnixTimeSeconds();
         var endOfYear = new DateTimeOffset(new DateTime(targetYear, 12, 31, 23, 59, 59), TimeSpan.Zero).ToUnixTimeSeconds();
 
-        var sql = @"
-            SELECT DATE(timestamp, 'unixepoch') as day, COUNT(*) as cnt 
+        const string sql = @"
+            SELECT 
+                DATE(timestamp, 'unixepoch') as day, 
+                COUNT(*) as cnt, 
+                ROUND(COALESCE(SUM(fee_hmnd), 0), 6) as fee
             FROM (
-                SELECT timestamp FROM transactions WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
+                SELECT timestamp, fee_hmnd FROM transactions WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
                 UNION ALL
-                SELECT timestamp FROM substrate_extrinsics WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
+                SELECT timestamp, fee_hmnd FROM substrate_extrinsics WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
             )
-            GROUP BY day";
+            WHERE timestamp > 0
+            GROUP BY day
+            ORDER BY day ASC";
 
-        var rows = (await conn.QueryAsync<(string day, int cnt)>(sql, new { startOfYear, endOfYear })).ToList();
-        var dayMap = new Dictionary<string, int>();
-        int maxCount = 0;
-        int totalOps = 0;
+        var rows = (await conn.QueryAsync<(string day, int cnt, double fee)>(sql, new { startOfYear, endOfYear })).ToList();
+        var activeDict = new Dictionary<string, (int count, double fee)>(StringComparer.OrdinalIgnoreCase);
+        int totalTxs = 0;
+        double totalFeesHmnd = 0;
+        string? peakGasDate = null;
+        double peakGasFee = 0;
+        int peakGasCount = 0;
+        string? peakCountDate = null;
+        int peakCount = 0;
 
         foreach (var r in rows)
         {
             if (!string.IsNullOrEmpty(r.day))
             {
-                dayMap[r.day] = r.cnt;
-                if (r.cnt > maxCount) maxCount = r.cnt;
-                totalOps += r.cnt;
+                activeDict[r.day] = (r.cnt, r.fee);
+                totalTxs += r.cnt;
+                totalFeesHmnd += r.fee;
+
+                if (r.fee > peakGasFee)
+                {
+                    peakGasFee = r.fee;
+                    peakGasDate = r.day;
+                    peakGasCount = r.cnt;
+                }
+
+                if (r.cnt > peakCount)
+                {
+                    peakCount = r.cnt;
+                    peakCountDate = r.day;
+                }
             }
         }
 
-        var availableYears = new List<int> { 2022, 2023, 2024, 2025, 2026 };
+        var allDaysList = new List<object>();
+        var dayMapForJs = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        var startDate = new DateTime(targetYear, 1, 1);
+        var endDate = new DateTime(targetYear, 12, 31);
+
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            var dayStr = dt.ToString("yyyy-MM-dd");
+            int cnt = 0;
+            double fee = 0;
+
+            if (activeDict.TryGetValue(dayStr, out var stat))
+            {
+                cnt = stat.count;
+                fee = stat.fee;
+            }
+
+            var dayObj = new
+            {
+                date = dayStr,
+                day = dayStr,
+                count = cnt,
+                tx_count = cnt,
+                fee = Math.Round(fee, 4),
+                total_fees = Math.Round(fee, 4)
+            };
+
+            allDaysList.Add(dayObj);
+            if (cnt > 0 || fee > 0)
+            {
+                dayMapForJs[dayStr] = dayObj;
+            }
+        }
+
+        var latestPrice = await _priceRepo.GetLatestPriceAsync();
+        double totalFeesUsd = Math.Round(totalFeesHmnd * latestPrice, 2);
+        var availableYears = new List<string> { "2026", "2025", "2024", "2023", "2022" };
 
         return new
         {
-            year = targetYear,
+            year = targetYear.ToString(),
+            years = availableYears,
             availableYears,
-            days = dayMap,
-            maxCount,
-            totalOps,
-            activeDaysCount = dayMap.Count
+            days = allDaysList,
+            dayMap = dayMapForJs,
+            totalTx = totalTxs,
+            totalFees = Math.Round(totalFeesHmnd, 4),
+            totalFeesUsd,
+            peakGasDay = peakGasDate != null ? new { date = peakGasDate, fee = Math.Round(peakGasFee, 4), count = peakGasCount } : null,
+            peakDay = peakCountDate != null ? new { date = peakCountDate, count = peakCount } : null,
+            activeDaysCount = activeDict.Count,
+            maxCount = peakCount,
+            totalOps = totalTxs
         };
     }
 }

@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Paper, Title, Text, Group, Box, SimpleGrid, Tooltip, Button } from '@mantine/core';
 import { IconFlame } from '@tabler/icons-react';
-import { formatHMND, formatUSD, formatFee } from './formatters';
+import { formatHMND, formatUSD, formatFee, formatNumber } from './formatters';
 import { useLanguage } from './LanguageContext';
 import { useModuleFields } from './ModuleLayout';
 
@@ -27,9 +27,9 @@ export default function HeatmapTab({ onSelectDate }) {
       });
   }, [year]);
 
-  const days = heatmapData?.dayMap
-    ? Object.values(heatmapData.dayMap)
-    : (Array.isArray(heatmapData?.days) ? heatmapData.days : []);
+  const days = Array.isArray(heatmapData?.days)
+    ? heatmapData.days
+    : (heatmapData?.dayMap ? Object.values(heatmapData.dayMap) : []);
 
   // Intensity determined by gas fees burned/collected, rather than raw transaction count
   const feeThresholds = useMemo(() => {
@@ -86,7 +86,7 @@ export default function HeatmapTab({ onSelectDate }) {
               {t('totalTxsYear', { year })}
             </Text>
             <Text size="lg" fw={800} c="orange" className="font-mono">
-              {heatmapData.totalTx?.toLocaleString(locStr) || 0}
+              {formatNumber(heatmapData.totalTx || 0)}
             </Text>
             <Text size="xs" c="dimmed">
               {t('heatmap_transactionsThroughoutTheYear')}
@@ -111,7 +111,7 @@ export default function HeatmapTab({ onSelectDate }) {
               {heatmapData.peakGasDay?.date || heatmapData.peakDay?.date || '-'}
             </Text>
             <Text size="xs" c="dimmed">
-              {heatmapData.peakGasDay?.fee ? `${formatFee(heatmapData.peakGasDay.fee, true, lang)} (${(heatmapData.peakGasDay.count || 0).toLocaleString(locStr)} ${t('heatmap_txs_2')})` : (heatmapData.peakDay?.count ? `${heatmapData.peakDay.count.toLocaleString(locStr)} ${t('heatmap_txs_2')}` : '-')}
+              {heatmapData.peakGasDay?.fee ? `${formatFee(heatmapData.peakGasDay.fee, true, lang)} (${formatNumber(heatmapData.peakGasDay.count || 0)} ${t('heatmap_txs_2')})` : (heatmapData.peakDay?.count ? `${formatNumber(heatmapData.peakDay.count)} ${t('heatmap_txs_2')}` : '-')}
             </Text>
           </Paper>
 
@@ -120,7 +120,7 @@ export default function HeatmapTab({ onSelectDate }) {
               {t('heatmap_activeDaysCount')}
             </Text>
             <Text size="lg" fw={800} c="green" className="font-mono">
-              {days.length || 0} {t('heatmap_days')}
+              {formatNumber(heatmapData.activeDaysCount ?? days.filter((d) => (d.count || 0) > 0).length)} {t('heatmap_days')}
             </Text>
             <Text size="xs" c="dimmed">
               {t('daysWithActivityInYear', { year })}
@@ -160,7 +160,7 @@ export default function HeatmapTab({ onSelectDate }) {
               const tip = t('heatmapTooltip', {
                 date: dateStr,
                 fee: formatFee(fees, true, lang),
-                count: count.toLocaleString(locStr)
+                count: formatNumber(count)
               });
 
               return (
@@ -192,10 +192,10 @@ export default function HeatmapTab({ onSelectDate }) {
         <Group justify="flex-end" align="center" gap="xs" mt="md">
           <Text size="xs" c="dimmed">{t('heatmap_lowGasFee')}</Text>
           <Box style={{ width: 14, height: 14, borderRadius: 3, background: 'rgba(255,255,255,0.05)' }} title="0 HMND" />
-          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#0e4429' }} title={`≤ ${feeThresholds.q1.toFixed(1)} HMND`} />
-          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#006d32' }} title={`≤ ${feeThresholds.q2.toFixed(1)} HMND`} />
-          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#26a641' }} title={`≤ ${feeThresholds.q3.toFixed(1)} HMND`} />
-          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#39d353' }} title={`> ${feeThresholds.q3.toFixed(1)} HMND (Zirve)`} />
+          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#0e4429' }} title={`≤ ${formatNumber(feeThresholds.q1, { minDecimals: 1, maxDecimals: 1 })} HMND`} />
+          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#006d32' }} title={`≤ ${formatNumber(feeThresholds.q2, { minDecimals: 1, maxDecimals: 1 })} HMND`} />
+          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#26a641' }} title={`≤ ${formatNumber(feeThresholds.q3, { minDecimals: 1, maxDecimals: 1 })} HMND`} />
+          <Box style={{ width: 14, height: 14, borderRadius: 3, background: '#39d353' }} title={`> ${formatNumber(feeThresholds.q3, { minDecimals: 1, maxDecimals: 1 })} HMND (Zirve)`} />
           <Text size="xs" c="dimmed">{t('heatmap_highGasFee')}</Text>
         </Group>
       </Paper>

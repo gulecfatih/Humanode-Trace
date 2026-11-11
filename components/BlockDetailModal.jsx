@@ -148,7 +148,7 @@ export default function BlockDetailModal({
               </Text>
               {blockData.price_usd > 0 && Number(blockData.total_fees_hmnd || 0) > 0 && (
                 <Text size="11px" c="dimmed">
-                  ≈ ${((Number(blockData.total_fees_hmnd) || 0) * blockData.price_usd).toFixed(4)} USD
+                  ≈ {formatUSD((Number(blockData.total_fees_hmnd) || 0) * blockData.price_usd, null, 4)} USD
                 </Text>
               )}
             </Paper>

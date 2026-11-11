@@ -53,6 +53,7 @@ import {
   formatTimestamp,
   timeAgo,
   shortAddr,
+  formatNumber,
 } from './formatters';
 import { useLanguage, LanguageSwitcher } from './LanguageContext';
 import { useModuleFields } from './ModuleLayout';
@@ -1369,7 +1370,7 @@ export default function OverviewTab({
                 </Text>
                 {selectedBlockModal.price_usd > 0 && Number(selectedBlockModal.total_fees_hmnd || 0) > 0 && (
                   <Text size="11px" c="dimmed">
-                    ≈ ${((Number(selectedBlockModal.total_fees_hmnd) || 0) * selectedBlockModal.price_usd).toFixed(4)} USD
+                    ≈ {formatUSD((Number(selectedBlockModal.total_fees_hmnd) || 0) * selectedBlockModal.price_usd, null, 4)} USD
                   </Text>
                 )}
               </Paper>
@@ -1547,7 +1548,7 @@ export default function OverviewTab({
 
                 {selectedTxModal.price_usd > 0 && (
                   <Badge color="yellow" variant="light">
-                    {t('historicalRate', { rate: Number(selectedTxModal.price_usd).toFixed(4) })}
+                    {t('historicalRate', { rate: formatNumber(selectedTxModal.price_usd, { minDecimals: 4, maxDecimals: 6 }) })}
                   </Badge>
                 )}
               </Group>
@@ -1628,7 +1629,7 @@ export default function OverviewTab({
                   </Text>
                   {selectedTxModal.price_usd > 0 && Number(selectedTxModal.value_hmnd || 0) > 0 && (
                     <Text size="xs" c="dimmed">
-                      ≈ ${((Number(selectedTxModal.value_hmnd || 0)) * selectedTxModal.price_usd).toFixed(2)} USD
+                      ≈ {formatUSD((Number(selectedTxModal.value_hmnd || 0)) * selectedTxModal.price_usd)} USD
                     </Text>
                   )}
                 </Box>
@@ -1640,7 +1641,7 @@ export default function OverviewTab({
                   </Text>
                   {selectedTxModal.price_usd > 0 && Number(selectedTxModal.fee_hmnd || 0) > 0 && (
                     <Text size="xs" c="dimmed">
-                      ≈ ${((Number(selectedTxModal.fee_hmnd || 0)) * selectedTxModal.price_usd).toFixed(4)} USD
+                      ≈ {formatUSD((Number(selectedTxModal.fee_hmnd || 0)) * selectedTxModal.price_usd, null, 4)} USD
                     </Text>
                   )}
                 </Box>

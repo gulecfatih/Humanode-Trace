@@ -30,7 +30,7 @@ import {
   IconCheck,
   IconSearch,
 } from '@tabler/icons-react';
-import { formatHMND, formatUSD } from './formatters';
+import { formatHMND, formatUSD, formatNumber } from './formatters';
 import { useLanguage } from './LanguageContext';
 import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
@@ -181,12 +181,12 @@ export default function DexDepthTab() {
 
         <KpiStatCard
           title={t('dexdepth_spotAmmPrice')}
-          value={`$${Number(depthData?.spotPriceUsd || 0).toFixed(4)}`}
+          value={formatUSD(depthData?.spotPriceUsd || 0, null, 4)}
           color="yellow"
           icon={IconCoins}
           badge="x · y = k"
           badgeColor="yellow"
-          subtext={`1 HMND = $${Number(depthData?.spotPriceUsd || 0).toFixed(4)} USDC`}
+          subtext={`1 HMND = ${formatUSD(depthData?.spotPriceUsd || 0, null, 4)} USDC`}
         />
       </SimpleGrid>
 
@@ -243,7 +243,7 @@ export default function DexDepthTab() {
                         }
                         variant="light"
                       >
-                        -%{impact.toFixed(2)}
+                        -%{formatNumber(impact, { minDecimals: 2, maxDecimals: 2 })}
                       </Badge>
                     </Table.Td>
                     <Table.Td>
@@ -253,7 +253,7 @@ export default function DexDepthTab() {
                     </Table.Td>
                     <Table.Td>
                       <Text size="xs" c="dimmed">
-                        ${effPrice.toFixed(4)}
+                        {formatUSD(effPrice, null, 4)}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -318,7 +318,7 @@ export default function DexDepthTab() {
                   }
                   variant="light"
                 >
-                  -%{(customSlippage?.priceImpactPct || 0).toFixed(2)}
+                  -%{formatNumber(customSlippage?.priceImpactPct || 0, { minDecimals: 2, maxDecimals: 2 })}
                 </Badge>
               </Group>
 
@@ -327,7 +327,7 @@ export default function DexDepthTab() {
                   {t('dexdepth_effectiveSwapPrice')}
                 </Text>
                 <Text size="xs" fw={700} c="white">
-                  ${(customSlippage?.effectivePrice || 0).toFixed(4)} / HMND
+                  {formatUSD(customSlippage?.effectivePrice || 0, null, 4)} / HMND
                 </Text>
               </Group>
             </Paper>

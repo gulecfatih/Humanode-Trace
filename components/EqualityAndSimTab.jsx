@@ -25,7 +25,7 @@ import {
   IconTrendingUp,
   IconDna,
 } from '@tabler/icons-react';
-import { formatHMND, formatUSD } from './formatters';
+import { formatHMND, formatUSD, formatNumber } from './formatters';
 import { useLanguage } from './LanguageContext';
 import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
@@ -168,7 +168,7 @@ export default function EqualityAndSimTab() {
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
         <KpiStatCard
           title={t('sim_giniCoefficient')}
-          value={equalityData?.giniCoefficient?.toFixed(2) || '0.84'}
+          value={equalityData?.giniCoefficient ? formatNumber(equalityData.giniCoefficient, { minDecimals: 2, maxDecimals: 2 }) : '0,84'}
           unit="/ 1.00"
           color="cyan"
           icon={IconScale}
@@ -192,7 +192,7 @@ export default function EqualityAndSimTab() {
 
         <KpiStatCard
           title={t('sim_totalTokenHolders')}
-          value={equalityData?.totalHoldersCount?.toLocaleString(locStr) || '15,822'}
+          value={equalityData?.totalHoldersCount ? formatNumber(equalityData.totalHoldersCount) : '15.822'}
           unit={t('whales_wallets')}
           color="violet"
           icon={IconUsers}

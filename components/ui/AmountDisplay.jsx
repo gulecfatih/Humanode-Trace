@@ -2,6 +2,7 @@
 import React from 'react';
 import { Group, Text, Tooltip } from '@mantine/core';
 import { useLanguage } from '../LanguageContext';
+import { formatNumber } from '../formatters';
 
 /**
  * AmountDisplay renders monetary and numeric amounts with:
@@ -48,7 +49,7 @@ export default function AmountDisplay({
   const rawVal = value ?? amount ?? 0;
   let formattedValue = rawVal;
   if (typeof rawVal === 'number') {
-    formattedValue = rawVal.toLocaleString(activeLocale, { maximumFractionDigits: 2 });
+    formattedValue = formatNumber(rawVal, { minDecimals: 0, maxDecimals: 2 });
   }
 
   const content = (
