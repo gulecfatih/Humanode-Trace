@@ -40,6 +40,8 @@ dotnet run --project backend
 - **📖 Interactive Network Glossary:** Built-in modal guide explaining Proof-of-Humanity mechanics, bioauth countdowns, FeesPot, and EVM precompiles for non-technical users.
 - **🔗 Shareable URLs & Deeplinking:** Browser query parameters sync in real-time (`?tab=validators`, `?tab=ledger&address=0x...`, `?block=628000`), allowing instant sharing across Telegram, Discord, and Twitter.
 - **🌍 SQL-Driven Multi-Language Engine:** Dynamic i18n localization engine (Turkish, English, German, Russian, Spanish, Chinese) powered directly by SQLite tables (`app_languages`, `app_translations`).
+- **📰 Financial Times Editorial Design (Theme 14):** Clean, high-contrast newspaper typography with serif headers, warm parchment palette, and ultra-readable data tables built for intensive financial reading.
+- **🔄 Zero-Config Auto-Bootstrapping DB:** Self-initializing SQLite database from `database_schema.sql` on first launch with 6,990 translations and complete configuration.
 - **⚡ Ultralight & Ultra-Fast:** Built with .NET 10 Kestrel (10,000+ req/sec capability, Dapper ORM) and Next.js 16 (React 19 + Mantine UI + Tabler Icons).
 
 ---
@@ -102,30 +104,55 @@ cd Humanode-Trace
 
 ---
 
-### Step 2: Database Setup (Choose Option A or B)
+### Step 2: Database Setup (Choose Your Method)
 
-Because the on-chain historical database contains over **628,000+ blocks** and **2.4M+ extrinsics** (~1.35 GB), it is hosted separately via **GitHub Releases** to comply with Git repository limits.
+The on-chain historical database contains over **630,000+ blocks**, **2.4M+ extrinsics**, and **33,000+ validator payout distributions** (~1.42 GB uncompressed). Because GitHub repositories limit individual file commits to 100 MB, the full database is distributed as an optimized, verified ZIP snapshot (~363 MB) via **GitHub Releases**.
 
-#### 🌟 Option A: Download Full Historical Snapshot (Recommended)
+Choose one of the following 3 options depending on your needs:
 
-Run the automated download script to fetch and extract the verified snapshot:
+---
 
+#### 🌟 Option A: Download Full Historical Snapshot (~363 MB) — *Recommended*
+
+This gives you the complete historical blockchain archive from Genesis (Block #0) to the present, enabling instant analytics, deep ledger audits, and forensic graphs without waiting for indexing:
+
+**Automated Downloader Script:**
 ```bash
 python scripts/download_db.py
 ```
+*This downloads `humanode_tracker_snapshot.zip` directly from the latest GitHub Release and automatically unzips `humanode_tracker.db` into the project root directory.*
 
-*Note: You can also manually download `humanode_tracker_snapshot.zip` from the [Releases tab](https://github.com/gulecfatih/Humanode-Trace/releases) and extract `humanode_tracker.db` into the project root directory.*
+**Manual Download Alternative:**
+1. Navigate to the [Releases Page](https://github.com/gulecfatih/Humanode-Trace/releases).
+2. Download `humanode_tracker_snapshot.zip`.
+3. Extract `humanode_tracker.db` directly into the root folder of this repository.
 
-#### Option B: Initialize an Empty Database from Schema
+---
 
-If you prefer to start with a blank database and sync blocks yourself via the built-in background indexer:
+#### ⚡ Option B: Zero-Config Automatic Bootstrap — *Instant Start*
 
-**Cross-Platform (Python - Recommended for Windows/macOS/Linux):**
+If you don't need historical data immediately, you don't even need to download anything!
+
+Simply launch the backend server:
+```bash
+dotnet run --project backend
+```
+- The backend's `SqliteConnectionFactory` automatically detects that `humanode_tracker.db` is missing.
+- It automatically executes `database_schema.sql` in under **2 seconds**, creating all **19 tables**, **49 indexes**, **7 views**, and seeding all **6,990 multilingual translations** (TR, EN, DE, RU, ES, ZH), token metadata, and Biomapper cross-chain definitions.
+- The built-in `BlockchainIndexerService` immediately begins syncing recent blocks live from the Humanode RPC sidecar!
+
+---
+
+#### 🛠️ Option C: Manual Schema Initialization via SQL
+
+If you prefer to initialize the database manually before starting the backend:
+
+**Cross-Platform (Python):**
 ```bash
 python -c "import sqlite3; conn = sqlite3.connect('humanode_tracker.db'); conn.executescript(open('database_schema.sql', encoding='utf-8').read()); print('✅ Database initialized successfully!')"
 ```
 
-*Or via SQLite CLI (if installed):*
+**SQLite CLI:**
 ```bash
 # Windows PowerShell
 sqlite3 humanode_tracker.db ".read database_schema.sql"
