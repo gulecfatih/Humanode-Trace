@@ -4,34 +4,30 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IStatsRepository
+public class StatsRepository
 {
-    Task<StatsDto> GetStatsAsync(string layer = "all", string filter = "all", string startDate = "", string endDate = "", string q = "", string pallet = "", bool hideZeroFee = false);
-    Task<List<DailyStatsDto>> GetDailyStatsAsync(string layer = "all", string filter = "all", string startDate = "", string endDate = "", string q = "", string pallet = "", string interval = "day", bool hideZeroFee = false);
-    Task<object> GetYearlyHeatmapAsync(string? year = null);
-    Task<List<string>> GetDistinctPalletsAsync();
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly SystemConfigRepository _configRepo;
 
-public class StatsRepository : IStatsRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
-
-    public StatsRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
+    public StatsRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
+        _configRepo = configRepo;
     }
 
-    public async Task<StatsDto> GetStatsAsync(
-        string layer = "all",
-        string filter = "all",
-        string startDate = "",
-        string endDate = "",
-        string q = "",
-        string pallet = "",
-        bool hideZeroFee = false)
+    public async Task<StatsDto> GetStatsAsync(StatsQueryRequest req)
     {
+        req ??= new StatsQueryRequest();
+        var layer = req.Layer;
+        var filter = req.Filter;
+        var startDate = req.StartDate;
+        var endDate = req.EndDate;
+        var q = !string.IsNullOrEmpty(req.Q) ? req.Q : req.Search;
+        var pallet = req.Pallet;
+        var hideZeroFee = req.HideZeroFee == "1" || req.HideZeroFee == "true";
+
         using var conn = _dbFactory.CreateConnection();
 
         long? startTs = null;
@@ -109,7 +105,7 @@ public class StatsRepository : IStatsRepository
         if (includeEvm)
         {
             var evmRow = await conn.QueryFirstOrDefaultAsync<(long cnt, double? fees, double? vol)>(
-                $"SELECT COUNT(*) as cnt, COALESCE(SUM(fee_hmnd), 0) as fees, COALESCE(SUM(value_hmnd), 0) as vol FROM transactions {evmWhere}", param);
+                $"{StoredProcedures.GetEvmStatsSummaryBase} {evmWhere}", param);
             evmCount = evmRow.cnt;
             evmFees = evmRow.fees ?? 0;
             evmVol = evmRow.vol ?? 0;
@@ -122,36 +118,30 @@ public class StatsRepository : IStatsRepository
         if (includeSub)
         {
             var subRow = await conn.QueryFirstOrDefaultAsync<(long cnt, double? fees, double? vol)>(
-                $"SELECT COUNT(*) as cnt, COALESCE(SUM(fee_hmnd), 0) as fees, COALESCE(SUM(value_hmnd), 0) as vol FROM substrate_extrinsics {subWhere}", param);
+                $"{StoredProcedures.GetSubstrateStatsSummaryBase} {subWhere}", param);
             subCount = subRow.cnt;
             subFees = subRow.fees ?? 0;
             subVol = subRow.vol ?? 0;
         }
 
-        var bridgeSql = "SELECT COUNT(*) as cnt, COALESCE(SUM(value_hmnd), 0) as vol FROM substrate_extrinsics WHERE pallet = 'nativeToEvmSwap' AND status = 1";
+        var bridgeSql = StoredProcedures.GetBridgeNativeToEvmSwapsKpi;
         if (startTs.HasValue) bridgeSql += " AND timestamp >= @startTs";
         if (endTs.HasValue) bridgeSql += " AND timestamp <= @endTs";
         var bridgeRow = await conn.QueryFirstOrDefaultAsync<(long cnt, double? vol)>(bridgeSql, param);
 
-        var tokenCount = await conn.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM token_transfers");
-        var blockCount = await conn.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM blocks_with_tx");
+        var tokenCount = await conn.ExecuteScalarAsync<long>(StoredProcedures.GetTokenTransfersCount);
+        var blockCount = await conn.ExecuteScalarAsync<long>(StoredProcedures.GetBlocksCount);
 
-        var lastBlock = await conn.QueryFirstOrDefaultAsync<(long? number, long? timestamp)>(@"
-            SELECT number, timestamp FROM blocks_with_tx ORDER BY number DESC LIMIT 1");
+        var lastBlock = await conn.QueryFirstOrDefaultAsync<(long? number, long? timestamp)>(StoredProcedures.GetLatestBlockHeader);
 
         var totalFeesHmnd = evmFees + subFees;
         var totalVolumeHmnd = evmVol + subVol;
 
-        var activeTokens = await conn.ExecuteScalarAsync<int>("SELECT COUNT(DISTINCT token_address) FROM token_transfers");
+        var activeTokens = await conn.ExecuteScalarAsync<int>(StoredProcedures.GetActiveTokensCount);
 
         var maxTs = lastBlock.timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var thirtyDaysBefore = maxTs - 2592000;
-        var activeValidators = await conn.ExecuteScalarAsync<int>(@"
-            SELECT COUNT(DISTINCT addr) FROM (
-                SELECT author_id as addr FROM blocks_with_tx WHERE timestamp >= @thirtyDaysBefore AND author_id > ''
-                UNION
-                SELECT signer as addr FROM substrate_extrinsics WHERE pallet IN ('session', 'bioauth') AND timestamp >= @thirtyDaysBefore AND signer > ''
-            )", new { thirtyDaysBefore });
+        var activeValidators = await conn.ExecuteScalarAsync<int>(StoredProcedures.GetActiveValidatorsCount);
         if (activeValidators == 0) activeValidators = 89;
 
         var priceUsd = await _priceRepo.GetLatestPriceAsync();
@@ -171,7 +161,7 @@ public class StatsRepository : IStatsRepository
             LastBlockTime = lastBlock.timestamp ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             ChainStatus = "healthy",
             HmndPriceUsd = priceUsd,
-            CirculatingSupply = 285970432.10,
+            CirculatingSupply = await _configRepo.GetDoubleConfigAsync("circulating_supply_baseline"),
             BridgeSwapVolumeHmnd = Math.Round(bridgeRow.vol ?? 0, 2),
             BridgeSwapCount = bridgeRow.cnt,
             EvmFeesHmnd = Math.Round(evmFees, 4),
@@ -181,16 +171,18 @@ public class StatsRepository : IStatsRepository
         };
     }
 
-    public async Task<List<DailyStatsDto>> GetDailyStatsAsync(
-        string layer = "all",
-        string filter = "all",
-        string startDate = "",
-        string endDate = "",
-        string q = "",
-        string pallet = "",
-        string interval = "day",
-        bool hideZeroFee = false)
+    public async Task<List<DailyStatsDto>> GetDailyStatsAsync(DailyStatsQueryRequest req)
     {
+        req ??= new DailyStatsQueryRequest();
+        var layer = req.Layer;
+        var filter = req.Filter;
+        var startDate = req.StartDate;
+        var endDate = req.EndDate;
+        var q = !string.IsNullOrEmpty(req.Q) ? req.Q : req.Search;
+        var pallet = req.Pallet;
+        var interval = req.Interval;
+        var hideZeroFee = req.HideZeroFee == "1" || req.HideZeroFee == "true";
+
         using var conn = _dbFactory.CreateConnection();
 
         long? startTs = null;
@@ -251,31 +243,17 @@ public class StatsRepository : IStatsRepository
         var unions = new List<string>();
         if (includeEvm)
         {
-            unions.Add($"SELECT 'EVM' as layer, timestamp, fee_hmnd as fee, value_hmnd as val FROM transactions {evmWhere}");
+            unions.Add($"{StoredProcedures.GetChartUnionEvmBase} {evmWhere}");
         }
         if (includeSub)
         {
-            unions.Add($"SELECT 'SUB' as layer, timestamp, fee_hmnd as fee, value_hmnd as val FROM substrate_extrinsics {subWhere}");
+            unions.Add($"{StoredProcedures.GetChartUnionSubstrateBase} {subWhere}");
         }
 
         if (unions.Count == 0) return new List<DailyStatsDto>();
 
         var innerSql = string.Join(" UNION ALL ", unions);
-
-        var sql = $@"
-            SELECT 
-                {grpExpr} as Day,
-                {grpExpr} as Period,
-                MIN(timestamp) as Timestamp,
-                SUM(CASE WHEN layer = 'EVM' THEN 1 ELSE 0 END) as TxCount,
-                SUM(CASE WHEN layer = 'SUB' THEN 1 ELSE 0 END) as ExtrinsicsCount,
-                ROUND(COALESCE(SUM(fee), 0), 4) as TotalFeesHmnd,
-                ROUND(COALESCE(SUM(val), 0), 2) as TotalVolumeHmnd
-            FROM (
-                {innerSql}
-            )
-            GROUP BY Day
-            ORDER BY Day ASC";
+        var sql = string.Format(StoredProcedures.GetUnifiedChartGroupTemplate, grpExpr, innerSql);
 
         var param = new { startTs, endTs, pallet };
         var list = (await conn.QueryAsync<DailyStatsDto>(sql, param)).ToList();
@@ -284,7 +262,8 @@ public class StatsRepository : IStatsRepository
         foreach (var d in list)
         {
             d.Period = d.Day;
-            var dayPrice = (!string.IsNullOrEmpty(d.Day) && priceMap.TryGetValue(d.Day, out var p)) ? p : latestPrice;
+            var priceMatch = priceMap.FirstOrDefault(x => x.Date.Equals(d.Day, StringComparison.OrdinalIgnoreCase));
+            var dayPrice = priceMatch != null ? priceMatch.PriceUsd : latestPrice;
             d.PriceUsd = dayPrice;
             d.FeesUsd = Math.Round(d.TotalFeesHmnd * dayPrice, 2);
             d.TotalFeesUsd = d.FeesUsd;
@@ -295,7 +274,7 @@ public class StatsRepository : IStatsRepository
     public async Task<List<string>> GetDistinctPalletsAsync()
     {
         using var conn = _dbFactory.CreateConnection();
-        var pallets = (await conn.QueryAsync<string>("SELECT DISTINCT pallet FROM substrate_extrinsics WHERE pallet > '' ORDER BY pallet ASC")).ToList();
+        var pallets = (await conn.QueryAsync<string>(StoredProcedures.GetDistinctPallets)).ToList();
         if (!pallets.Contains("Ethereum", StringComparer.OrdinalIgnoreCase))
         {
             pallets.Insert(0, "Ethereum");
@@ -311,22 +290,7 @@ public class StatsRepository : IStatsRepository
         var startOfYear = new DateTimeOffset(new DateTime(targetYear, 1, 1), TimeSpan.Zero).ToUnixTimeSeconds();
         var endOfYear = new DateTimeOffset(new DateTime(targetYear, 12, 31, 23, 59, 59), TimeSpan.Zero).ToUnixTimeSeconds();
 
-        const string sql = @"
-            SELECT 
-                DATE(timestamp, 'unixepoch') as day, 
-                COUNT(*) as cnt, 
-                ROUND(COALESCE(SUM(fee_hmnd), 0), 6) as fee
-            FROM (
-                SELECT timestamp, fee_hmnd FROM transactions WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
-                UNION ALL
-                SELECT timestamp, fee_hmnd FROM substrate_extrinsics WHERE timestamp >= @startOfYear AND timestamp <= @endOfYear
-            )
-            WHERE timestamp > 0
-            GROUP BY day
-            ORDER BY day ASC";
-
-        var rows = (await conn.QueryAsync<(string day, int cnt, double fee)>(sql, new { startOfYear, endOfYear })).ToList();
-        var activeDict = new Dictionary<string, (int count, double fee)>(StringComparer.OrdinalIgnoreCase);
+        var rows = (await conn.QueryAsync<(string day, int cnt, double fee)>(StoredProcedures.GetYearlyHeatmap, new { startOfYear, endOfYear })).ToList();
         int totalTxs = 0;
         double totalFeesHmnd = 0;
         string? peakGasDate = null;
@@ -339,7 +303,6 @@ public class StatsRepository : IStatsRepository
         {
             if (!string.IsNullOrEmpty(r.day))
             {
-                activeDict[r.day] = (r.cnt, r.fee);
                 totalTxs += r.cnt;
                 totalFeesHmnd += r.fee;
 
@@ -359,7 +322,7 @@ public class StatsRepository : IStatsRepository
         }
 
         var allDaysList = new List<object>();
-        var dayMapForJs = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        var activeDaysList = new List<object>();
 
         var startDate = new DateTime(targetYear, 1, 1);
         var endDate = new DateTime(targetYear, 12, 31);
@@ -370,9 +333,10 @@ public class StatsRepository : IStatsRepository
             int cnt = 0;
             double fee = 0;
 
-            if (activeDict.TryGetValue(dayStr, out var stat))
+            var stat = rows.FirstOrDefault(r => r.day.Equals(dayStr, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(stat.day))
             {
-                cnt = stat.count;
+                cnt = stat.cnt;
                 fee = stat.fee;
             }
 
@@ -389,7 +353,7 @@ public class StatsRepository : IStatsRepository
             allDaysList.Add(dayObj);
             if (cnt > 0 || fee > 0)
             {
-                dayMapForJs[dayStr] = dayObj;
+                activeDaysList.Add(dayObj);
             }
         }
 
@@ -403,13 +367,13 @@ public class StatsRepository : IStatsRepository
             years = availableYears,
             availableYears,
             days = allDaysList,
-            dayMap = dayMapForJs,
+            dayMap = activeDaysList,
             totalTx = totalTxs,
             totalFees = Math.Round(totalFeesHmnd, 4),
             totalFeesUsd,
             peakGasDay = peakGasDate != null ? new { date = peakGasDate, fee = Math.Round(peakGasFee, 4), count = peakGasCount } : null,
             peakDay = peakCountDate != null ? new { date = peakCountDate, count = peakCount } : null,
-            activeDaysCount = activeDict.Count,
+            activeDaysCount = rows.Count,
             maxCount = peakCount,
             totalOps = totalTxs
         };

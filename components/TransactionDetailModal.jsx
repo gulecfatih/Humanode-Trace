@@ -28,7 +28,7 @@ import {
   IconBook,
   IconCoins,
 } from '@tabler/icons-react';
-import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD, formatNumber } from './formatters';
+import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD, formatNumber, formatExtrinsicDetails, formatActionSummary } from './formatters';
 import { useLanguage } from './LanguageContext';
 
 export default function TransactionDetailModal({
@@ -88,6 +88,21 @@ export default function TransactionDetailModal({
 
   const loc = lang || undefined;
 
+  const isEvm = (txData?.layer || '').toUpperCase() === 'EVM' || (!txData?.layer && (txData?.from_address?.startsWith('0x') && txData?.from_address?.length === 42));
+  const senderAddr = (txData?.from_address || txData?.signer || '').toLowerCase();
+  const soldTransfer = txData?.tokenTransfers?.find((tt) => tt.from_address?.toLowerCase() === senderAddr);
+  const boughtTransfer = txData?.tokenTransfers?.find((tt) => tt.to_address?.toLowerCase() === senderAddr);
+  const isSwap = Boolean(isEvm && soldTransfer && boughtTransfer);
+  const swapDetails = isSwap
+    ? {
+        soldAmount: formatNumber(soldTransfer.amount, { minDecimals: 0, maxDecimals: 4 }),
+        soldSymbol: soldTransfer.token_symbol || 'TOKEN',
+        boughtAmount: formatNumber(boughtTransfer.amount, { minDecimals: 0, maxDecimals: 6 }),
+        boughtSymbol: boughtTransfer.token_symbol || 'TOKEN',
+      }
+    : null;
+  const actionSummary = formatActionSummary(txData, t, lang);
+
   return (
     <Modal
       opened={opened}
@@ -106,49 +121,147 @@ export default function TransactionDetailModal({
         content: {
           maxWidth: '1120px',
           width: '95vw',
-          border: '1px solid rgba(56, 189, 248, 0.28)',
-          borderRadius: 14,
-          background: '#0d1117',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+          border: '2px solid #111111',
+          borderRadius: 0,
+          background: '#fff1e5',
+          boxShadow: '0 10px 35px rgba(0,0,0,0.15)',
+          color: '#111111',
         },
         header: {
-          background: '#161b22',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#f5e6d8',
+          borderBottom: '2px solid #111111',
           padding: '14px 20px',
+          color: '#111111',
         },
         body: {
-          background: '#0d1117',
+          background: '#fff1e5',
           padding: '20px',
+          color: '#111111',
         },
       }}
     >
       {loading ? (
         <Center py="xl">
-          <Loader size="md" color="cyan" />
+          <Loader size="md" color="dark" />
         </Center>
       ) : txData ? (
         <Stack gap="md">
+          {/* Prominent Action Summary Banner */}
+          <Paper
+            p="md"
+            style={{
+              background: '#f5e6d8',
+              border: '1px solid #d9cbbe',
+              borderTop: '2px solid #111111',
+              borderRadius: 0,
+              color: '#111111',
+            }}
+          >
+            <Group justify="space-between" mb="xs" align="center">
+              <Group gap={8}>
+                <IconActivity size={20} color="#111111" stroke={2} />
+                <Title order={5} style={{ color: '#111111', fontSize: 15, fontWeight: 800 }}>
+                  {t('tx_actionSummaryTitle')}
+                </Title>
+              </Group>
+              {txData.to_label && (
+                <span
+                  className="neo-pill"
+                  style={{
+                    backgroundColor: '#e2d3c5',
+                    color: '#111111',
+                    border: '1px solid #c9b9aa',
+                  }}
+                >
+                  {txData.to_label}
+                </span>
+              )}
+            </Group>
+
+            <Text size="sm" c="#111111" fw={700} style={{ lineHeight: 1.6 }}>
+              {actionSummary || (txData.pallet ? `${txData.pallet}:${txData.method}` : txData.hash)}
+            </Text>
+
+            {/* Visual Swap Flow if it is a swap */}
+            {isSwap && swapDetails && (
+              <Paper mt="sm" p="xs" bg="#fff1e5" style={{ borderRadius: 0, border: '1px solid #d9cbbe' }}>
+                <Group justify="space-around" align="center" wrap="wrap">
+                  <Box style={{ textAlign: 'center' }}>
+                    <Text size="11px" c="#666059" fw={600}>{t('tx_soldAmount')}</Text>
+                    <Text size="sm" fw={800} c="#111111" className="font-mono">
+                      {swapDetails.soldAmount} {swapDetails.soldSymbol}
+                    </Text>
+                  </Box>
+                  <Text size="lg" c="#111111" fw={800}>➔</Text>
+                  <Box style={{ textAlign: 'center' }}>
+                    <Text size="11px" c="#666059" fw={600}>{txData.to_label || t('tx_dexRouter')}</Text>
+                    <span className="neo-pill" style={{ background: '#f5e6d8', color: '#111', border: '1px solid #c9b9aa' }}>DEX Router</span>
+                  </Box>
+                  <Text size="lg" c="#111111" fw={800}>➔</Text>
+                  <Box style={{ textAlign: 'center' }}>
+                    <Text size="11px" c="#666059" fw={600}>{t('tx_boughtAmount')}</Text>
+                    <Text size="sm" fw={800} c="#111111" className="font-mono">
+                      {swapDetails.boughtAmount} {swapDetails.boughtSymbol}
+                    </Text>
+                  </Box>
+                </Group>
+              </Paper>
+            )}
+          </Paper>
+
           {/* Top Information Card */}
-          <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
+          <Paper p="sm" bg="#fff1e5" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
             <Group justify="space-between" align="center" wrap="wrap" mb="xs">
               <Group gap="xs">
-                <Badge color={txData.layer === 'EVM' ? 'cyan' : 'teal'} variant="light">
+                <span
+                  className="neo-pill"
+                  style={{
+                    backgroundColor: txData.layer === 'EVM' ? '#bfdbfe' : '#fed7aa',
+                    color: '#000000',
+                    border: '1.5px solid #000000',
+                    boxShadow: '2px 2px 0px #000000',
+                  }}
+                >
                   {txData.layer === 'EVM' ? t('txLayerEvm') : t('txLayerSub')}
-                </Badge>
-                <Badge color={txData.status === 1 || txData.status === 'success' ? 'teal' : 'red'}>
+                </span>
+                <span
+                  className="neo-pill"
+                  style={{
+                    backgroundColor: txData.status === 1 || txData.status === 'success' ? '#bbf7d0' : '#fecaca',
+                    color: '#000000',
+                    border: '1.5px solid #000000',
+                    boxShadow: '2px 2px 0px #000000',
+                  }}
+                >
                   {txData.status === 1 || txData.status === 'success' ? t('txSuccess') : t('txFailed')}
-                </Badge>
+                </span>
                 {txData.pallet && (
-                  <Badge color="violet" variant="outline">
+                  <span
+                    className="neo-pill"
+                    style={{
+                      backgroundColor: '#e9d5ff',
+                      color: '#000000',
+                      border: '1.5px solid #000000',
+                      boxShadow: '2px 2px 0px #000000',
+                    }}
+                  >
                     {txData.pallet}:{txData.method}
-                  </Badge>
+                  </span>
                 )}
               </Group>
 
               {txData.price_usd > 0 && (
-                <Badge color="yellow" variant="light">
+                <span
+                  className="neo-pill"
+                  style={{
+                    backgroundColor: '#fef08a',
+                    color: '#000000',
+                    border: '1.5px solid #000000',
+                    boxShadow: '2px 2px 0px #000000',
+                  }}
+                >
                   {t('historicalRate', { rate: formatNumber(txData.price_usd, { minDecimals: 4, maxDecimals: 6 }) })}
-                </Badge>
+                </span>
               )}
             </Group>
 
@@ -210,7 +323,12 @@ export default function TransactionDetailModal({
 
               <Box>
                 <Text size="xs" c="dimmed">{t('tx_senderFromSigner')}</Text>
-                <Group gap={4} wrap="nowrap">
+                <Group gap={6} wrap="nowrap" align="center">
+                  {txData.from_label && (
+                    <Badge size="xs" color="cyan" variant="outline" style={{ maxWidth: 160 }} lineClamp={1}>
+                      {txData.from_label}
+                    </Badge>
+                  )}
                   <Text
                     size="xs"
                     fw={600}
@@ -233,7 +351,12 @@ export default function TransactionDetailModal({
 
               <Box>
                 <Text size="xs" c="dimmed">{t('tx_targetRecipientTo')}</Text>
-                <Group gap={4} wrap="nowrap">
+                <Group gap={6} wrap="nowrap" align="center">
+                  {txData.to_label && (
+                    <Badge size="xs" color="teal" variant="light" style={{ maxWidth: 200 }} lineClamp={1}>
+                      {txData.to_label}
+                    </Badge>
+                  )}
                   <Text
                     size="xs"
                     fw={600}
@@ -319,7 +442,7 @@ export default function TransactionDetailModal({
                   border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
-                {txData.details || `${txData.pallet}:${txData.method} işlemi çağrıldı.`}
+                {formatExtrinsicDetails(txData, t) || txData.details || t('tx_actionCalled', { pallet: txData.pallet, method: txData.method })}
               </Text>
             </Paper>
           )}

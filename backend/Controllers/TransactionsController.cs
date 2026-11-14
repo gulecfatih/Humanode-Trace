@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,86 +8,50 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class TransactionsController : ControllerBase
 {
-    private readonly ITransactionRepository _txRepo;
-    private readonly IBlockRepository _blockRepo;
+    private readonly TransactionRepository _txRepo;
+    private readonly BlockRepository _blockRepo;
 
-    public TransactionsController(ITransactionRepository txRepo, IBlockRepository blockRepo)
+    public TransactionsController(TransactionRepository txRepo, BlockRepository blockRepo)
     {
         _txRepo = txRepo;
         _blockRepo = blockRepo;
     }
 
     [HttpGet("transactions")]
-    public async Task<IActionResult> GetTransactions(
-        [FromQuery] string? hash = null,
-        [FromQuery] string layer = "all",
-        [FromQuery] string filter = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50,
-        [FromQuery] string? hideZeroFee = null)
+    public async Task<IActionResult> GetTransactions([FromQuery] TransactionQueryRequest request)
     {
-        if (!string.IsNullOrWhiteSpace(hash))
+        request ??= new TransactionQueryRequest();
+        if (!string.IsNullOrWhiteSpace(request.Hash))
         {
-            var details = await _txRepo.GetTransactionDetailsAsync(hash.Trim());
+            var details = await _txRepo.GetTransactionDetailsAsync(request.Hash.Trim());
             return Ok(details ?? new TransactionDetailsResultDto { Found = false });
         }
 
-        bool hide = hideZeroFee != "0" && hideZeroFee != "false";
-        var result = await _txRepo.SearchActivitiesAsync(
-            layer: layer,
-            filter: filter,
-            page: page,
-            limit: limit,
-            hideZeroFee: hide);
+        var result = await _txRepo.SearchActivitiesAsync(new SearchActivitiesRequest
+        {
+            Layer = request.Layer,
+            Filter = request.Filter,
+            Page = request.Page,
+            Limit = request.Limit,
+            HideZeroFee = request.HideZeroFee
+        });
 
         return Ok(result);
     }
 
     [HttpGet("search")]
     [HttpGet("blocks")]
-    public async Task<IActionResult> Search(
-        [FromQuery] string q = "",
-        [FromQuery] string layer = "all",
-        [FromQuery] string pallet = "",
-        [FromQuery] string startDate = "",
-        [FromQuery] string endDate = "",
-        [FromQuery] string filter = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50,
-        [FromQuery] string? hideZeroFee = null,
-        [FromQuery] bool whaleOnly = false,
-        [FromQuery] string viewMode = "block")
+    public async Task<IActionResult> Search([FromQuery] SearchActivitiesRequest request)
     {
-        bool hide = hideZeroFee != "0" && hideZeroFee != "false";
+        request ??= new SearchActivitiesRequest();
 
-        if (viewMode.Equals("block", StringComparison.OrdinalIgnoreCase))
+        if (request.ViewMode.Equals("block", StringComparison.OrdinalIgnoreCase))
         {
-            var blockResult = await _blockRepo.SearchBlocksAsync(
-                q: q,
-                layer: layer,
-                pallet: pallet,
-                startDate: startDate,
-                endDate: endDate,
-                filter: filter,
-                page: page,
-                limit: limit,
-                hideZeroFee: hide,
-                whaleOnly: whaleOnly);
+            var blockResult = await _blockRepo.SearchBlocksAsync(request);
             return Ok(blockResult);
         }
 
-        var searchResult = await _txRepo.SearchActivitiesAsync(
-            q: q,
-            layer: layer,
-            pallet: pallet,
-            startDate: startDate,
-            endDate: endDate,
-            filter: filter,
-            page: page,
-            limit: limit,
-            hideZeroFee: hide,
-            whaleOnly: whaleOnly);
-
+        var searchResult = await _txRepo.SearchActivitiesAsync(request);
         return Ok(searchResult);
     }
 
@@ -96,7 +61,7 @@ public class TransactionsController : ControllerBase
         var raw = number ?? block ?? id;
         if (string.IsNullOrWhiteSpace(raw) || !long.TryParse(raw.Replace("#", "").Trim(), out var blockNum))
         {
-            return BadRequest(new { error = "Geçerli bir blok numarası gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_block_required", MessageKey = "err_block_required" });
         }
 
         var details = await _blockRepo.GetBlockDetailsAsync(blockNum);
@@ -110,7 +75,7 @@ public class TransactionsController : ControllerBase
         var targetHash = hash ?? queryHash;
         if (string.IsNullOrWhiteSpace(targetHash))
         {
-            return BadRequest(new { error = "Hash parametresi zorunludur." });
+            return BadRequest(new ApiErrorDto { Error = "err_hash_required", MessageKey = "err_hash_required" });
         }
 
         var details = await _txRepo.GetTransactionDetailsAsync(targetHash.Trim());

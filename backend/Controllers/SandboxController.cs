@@ -1,20 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using HumanodeTracker.Repositories;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Controllers;
-
-public class QuerySandboxRequestDto
-{
-    public string Sql { get; set; } = "";
-}
 
 [ApiController]
 [Route("api")]
 public class SandboxController : ControllerBase
 {
-    private readonly IQuerySandboxRepository _sandboxRepo;
+    private readonly QuerySandboxRepository _sandboxRepo;
 
-    public SandboxController(IQuerySandboxRepository sandboxRepo)
+    public SandboxController(QuerySandboxRepository sandboxRepo)
     {
         _sandboxRepo = sandboxRepo;
     }
@@ -31,7 +27,7 @@ public class SandboxController : ControllerBase
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Sql))
         {
-            return BadRequest(new { success = false, error = "Sorgu parametresi boş olamaz." });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_query_empty", MessageKey = "err_query_empty" });
         }
 
         var result = await _sandboxRepo.ExecuteQueryAsync(request.Sql);

@@ -1,43 +1,34 @@
 using System.Data;
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IPriceRepository
+public class PriceRepository
 {
-    Task<object> GetDailyPricesMapAsync();
-    Task<object> GetHistoricalRatesListAsync(string year = "all", string search = "", bool onlySwaps = false, int page = 1, int limit = 50);
-    Task<double> GetLatestPriceAsync();
-    Task<double> GetPriceForDateAsync(string dateStr);
-    Task<Dictionary<string, double>> GetPriceMapAsync();
-}
-
-public class PriceRepository : IPriceRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private static Dictionary<string, double>? _priceMap;
+    private readonly SqliteConnectionFactory _dbFactory;
+    private static List<DailyPriceDto>? _priceList;
     private static double _latestPrice = 0.0;
     private static DateTime _cacheTime = DateTime.MinValue;
 
-    public PriceRepository(IDbConnectionFactory dbFactory)
+    public PriceRepository(SqliteConnectionFactory dbFactory)
     {
         _dbFactory = dbFactory;
     }
 
     private async Task EnsureLoadedAsync()
     {
-        if (_priceMap != null && DateTime.UtcNow - _cacheTime < TimeSpan.FromMinutes(10))
+        if (_priceList != null && DateTime.UtcNow - _cacheTime < TimeSpan.FromMinutes(10))
             return;
 
         using var connection = _dbFactory.CreateConnection();
-        const string sql = "SELECT day, price_usd FROM hmnd_daily_prices ORDER BY day ASC";
-        var rows = (await connection.QueryAsync<(string day, double price_usd)>(sql)).ToList();
+        var rows = (await connection.QueryAsync<(string day, double price_usd)>(StoredProcedures.GetDailyPrices)).ToList();
 
-        var dict = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var list = new List<DailyPriceDto>();
         foreach (var r in rows)
         {
-            dict[r.day] = r.price_usd;
+            list.Add(new DailyPriceDto { Date = r.day, PriceUsd = r.price_usd });
         }
 
         if (rows.Count > 0)
@@ -45,7 +36,7 @@ public class PriceRepository : IPriceRepository
             _latestPrice = rows[^1].price_usd;
         }
 
-        _priceMap = dict;
+        _priceList = list;
         _cacheTime = DateTime.UtcNow;
     }
 
@@ -59,15 +50,16 @@ public class PriceRepository : IPriceRepository
     {
         await EnsureLoadedAsync();
         if (string.IsNullOrWhiteSpace(dateStr)) return _latestPrice;
-        if (_priceMap != null && _priceMap.TryGetValue(dateStr.Trim(), out var p))
-            return p;
+        var clean = dateStr.Trim();
+        var match = _priceList?.FirstOrDefault(x => x.Date.Equals(clean, StringComparison.OrdinalIgnoreCase));
+        if (match != null) return match.PriceUsd;
         return _latestPrice;
     }
 
-    public async Task<Dictionary<string, double>> GetPriceMapAsync()
+    public async Task<List<DailyPriceDto>> GetPriceMapAsync()
     {
         await EnsureLoadedAsync();
-        return _priceMap ?? new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        return _priceList ?? new List<DailyPriceDto>();
     }
 
     public async Task<object> GetDailyPricesMapAsync()
@@ -75,71 +67,57 @@ public class PriceRepository : IPriceRepository
         await EnsureLoadedAsync();
         return new
         {
-            prices = _priceMap ?? new Dictionary<string, double>(),
+            prices = _priceList ?? new List<DailyPriceDto>(),
             latestPrice = _latestPrice
         };
     }
 
-    public async Task<object> GetHistoricalRatesListAsync(string year = "all", string search = "", bool onlySwaps = false, int page = 1, int limit = 50)
+    public async Task<object> GetHistoricalRatesListAsync(HistoricalRatesQueryRequest request)
     {
+        request ??= new HistoricalRatesQueryRequest();
         await EnsureLoadedAsync();
-        var safeLimit = Math.Clamp(limit, 1, 200);
-        var safePage = Math.Max(1, page);
+        var safeLimit = Math.Clamp(request.Limit, 1, 200);
+        var safePage = Math.Max(1, request.Page);
         var offset = (safePage - 1) * safeLimit;
+        var s = !string.IsNullOrEmpty(request.Search) ? request.Search : request.Q;
 
         using var connection = _dbFactory.CreateConnection();
         var p = new DynamicParameters();
         var where = "WHERE 1=1";
 
-        if (!string.IsNullOrEmpty(year) && year != "all")
+        if (!string.IsNullOrEmpty(request.Year) && request.Year != "all")
         {
             where += " AND day LIKE @year";
-            p.Add("year", $"{year}-%");
+            p.Add("year", $"{request.Year}-%");
         }
 
-        if (!string.IsNullOrEmpty(search))
+        if (!string.IsNullOrEmpty(s))
         {
             where += " AND day LIKE @search";
-            p.Add("search", $"%{search.Trim()}%");
+            p.Add("search", $"%{s.Trim()}%");
         }
 
-        if (onlySwaps)
+        if (request.OnlySwaps)
         {
             where += " AND source = 'COINGECKO'";
         }
 
-        var totalCount = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM hmnd_daily_prices {where}", p);
+        var countSql = $"{StoredProcedures.GetDailyPricesCountBase} {where}";
+        var totalCount = await connection.ExecuteScalarAsync<long>(countSql, p);
         var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit));
 
         p.Add("safeLimit", safeLimit);
         p.Add("offset", offset);
 
-        string sql = $@"
-            WITH rated AS (
-                SELECT
-                    day, price_usd, swaps_count, source,
-                    LAG(price_usd) OVER (ORDER BY day ASC) AS prev_price
-                FROM hmnd_daily_prices
-                {(onlySwaps ? "WHERE source = 'COINGECKO'" : "")}
-            )
-            SELECT
-                day, price_usd, swaps_count, source,
-                CASE
-                    WHEN prev_price IS NOT NULL AND prev_price > 0
-                    THEN ((price_usd - prev_price) / prev_price) * 100
-                    ELSE 0
-                END AS change_pct
-            FROM rated
-            {where}
-            ORDER BY day DESC
-            LIMIT @safeLimit OFFSET @offset";
+        var swapFilter = request.OnlySwaps ? "WHERE source = 'COINGECKO'" : "";
+        var sql = string.Format(StoredProcedures.GetDailyPricesRatedBase, swapFilter, where);
 
         var rows = (await connection.QueryAsync<dynamic>(sql, p)).ToList();
 
-        var ath = await connection.QueryFirstOrDefaultAsync<dynamic>("SELECT day, price_usd FROM hmnd_daily_prices WHERE source = 'COINGECKO' ORDER BY price_usd DESC LIMIT 1");
-        var atl = await connection.QueryFirstOrDefaultAsync<dynamic>("SELECT day, price_usd FROM hmnd_daily_prices WHERE source = 'COINGECKO' ORDER BY price_usd ASC LIMIT 1");
-        var totalDays = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM hmnd_daily_prices");
-        var swapDays = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM hmnd_daily_prices WHERE source = 'COINGECKO'");
+        var ath = await connection.QueryFirstOrDefaultAsync<dynamic>(StoredProcedures.GetCoingeckoAthPrice);
+        var atl = await connection.QueryFirstOrDefaultAsync<dynamic>(StoredProcedures.GetCoingeckoAtlPrice);
+        var totalDays = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetDailyPricesTotalDays);
+        var swapDays = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetCoingeckoSwapDays);
 
         return new
         {

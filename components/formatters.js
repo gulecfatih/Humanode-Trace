@@ -307,3 +307,128 @@ export function exportToCsv(filename, rows, columns) {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Dynamic localized translation for Substrate extrinsics and calls.
+ * Ensures zero hardcoding even if database contains legacy Turkish strings.
+ */
+export function formatExtrinsicDetails(tx, t) {
+  if (!tx) return '';
+  const pallet = tx.pallet || '';
+  const method = tx.method || '';
+
+  if (pallet === 'bioauth' || method === 'authenticate') {
+    return t ? t('extrinsic_bioauth') : 'Proof-of-Humanity';
+  }
+  if (pallet === 'imOnline' || method === 'heartbeat') {
+    return t ? t('extrinsic_imOnline') : 'imOnline:heartbeat';
+  }
+  if (pallet === 'balances') {
+    return t ? t('extrinsic_transfer', { method }) : `balances:${method}`;
+  }
+  if (pallet === 'session') {
+    return t ? t('extrinsic_sessionKeys', { method }) : `session:${method}`;
+  }
+  if (pallet === 'vesting') {
+    return t ? t('extrinsic_vestingUnlock', { method }) : `vesting:${method}`;
+  }
+  if (pallet === 'tokenClaims') {
+    return t ? t('extrinsic_tokenClaims', { method }) : `tokenClaims:${method}`;
+  }
+  if (pallet === 'currencySwap') {
+    return t ? t('extrinsic_currencySwap', { method }) : `currencySwap:${method}`;
+  }
+  if (pallet === 'nativeToEvmSwap') {
+    return t ? t('extrinsic_bridgeSwap', { method, target: tx.to_label || tx.to_address || tx.target || '-' }) : `nativeToEvmSwap:${method}`;
+  }
+  if (pallet === 'multisig') {
+    return t ? t('extrinsic_multisig', { method }) : `multisig:${method}`;
+  }
+  if (pallet === 'sudo') {
+    return t ? t('extrinsic_sudo') : 'sudo';
+  }
+  if (pallet === 'grandpa' || pallet === 'babe') {
+    return t ? t('extrinsic_equivocation') : `${pallet}:equivocation`;
+  }
+  if (pallet && method) {
+    return t ? t('extrinsic_moduleCall', { pallet, method }) : `${pallet}:${method}`;
+  }
+  return tx.details || '';
+}
+
+/**
+ * Universal Action Summary Formatter for any EVM or Substrate transaction.
+ * Fully localized with zero hardcoding.
+ */
+export function formatActionSummary(tx, t, lang = null) {
+  if (!tx || !t) return '';
+  const isEvm = (tx.layer || '').toUpperCase() === 'EVM' || (!tx.layer && (tx.from_address?.startsWith('0x') && tx.from_address?.length === 42));
+
+  if (isEvm) {
+    // 1. Check for DEX swaps or token transfers
+    if (tx.tokenTransfers && tx.tokenTransfers.length > 0) {
+      const sender = (tx.from_address || tx.signer || '').toLowerCase();
+      const sold = tx.tokenTransfers.find((tt) => tt.from_address?.toLowerCase() === sender);
+      const bought = tx.tokenTransfers.find((tt) => tt.to_address?.toLowerCase() === sender);
+
+      if (sold && bought) {
+        const soldAmount = formatNumber(sold.amount, { minDecimals: 0, maxDecimals: 4 });
+        const boughtAmount = formatNumber(bought.amount, { minDecimals: 0, maxDecimals: 6 });
+        const router = tx.to_label || t('tx_dexRouter');
+        return t('tx_action_dexSwap', {
+          soldAmount,
+          soldSymbol: sold.token_symbol || 'TOKEN',
+          boughtAmount,
+          boughtSymbol: bought.token_symbol || 'TOKEN',
+          router,
+        });
+      }
+
+      const primary = sold || bought || tx.tokenTransfers[0];
+      if (primary) {
+        const amount = formatNumber(primary.amount, { minDecimals: 0, maxDecimals: 4 });
+        return t('tx_action_tokenTransfer', {
+          amount,
+          symbol: primary.token_symbol || 'TOKEN',
+        });
+      }
+    }
+
+    // 2. Native EVM HMND transfer
+    if (Number(tx.value_hmnd || tx.amount || 0) > 0) {
+      const amount = formatHMND(tx.value_hmnd || tx.amount || 0, { locale: lang, showScale: false });
+      return t('tx_action_nativeTransfer', { amount });
+    }
+
+    // 3. Known contract interaction
+    if (tx.to_label) {
+      return t('tx_action_contractInteraction', { label: tx.to_label });
+    }
+
+    // 4. Generic EVM contract call
+    return t('tx_action_contractCall', { method: tx.method || 'transact' });
+  }
+
+  // Substrate Extrinsic
+  return formatExtrinsicDetails(tx, t);
+}
+
+/**
+ * Dynamic localized translation for Token categories.
+ */
+export function formatTokenCategory(category, t) {
+  if (!category) return t ? t('token_cat_contract') : 'ERC-20';
+  const c = String(category).toLowerCase();
+  if (c === 'stablecoin' || c.includes('sabit') || c.includes('stable')) return t ? t('token_cat_stablecoin') : 'Stablecoin';
+  if (c === 'wrapped' || c.includes('sarılmış') || c.includes('wrapped')) return t ? t('token_cat_wrapped') : 'Wrapped';
+  if (c === 'dex_lp' || c.includes('havuz') || c.includes('lp')) return t ? t('token_cat_dex_lp') : 'DEX LP';
+  if (c === 'meme' || c.includes('meme')) return t ? t('token_cat_meme') : 'Meme';
+  if (c === 'gamefi' || c.includes('game')) return t ? t('token_cat_gamefi') : 'GameFi';
+  if (c === 'ai_bot' || c.includes('yapay') || c.includes('bot')) return t ? t('token_cat_ai_bot') : 'AI / Bot';
+  if (c === 'cross_dex' || c.includes('çapraz') || c.includes('cross')) return t ? t('token_cat_cross_dex') : 'Cross-Chain DEX';
+  if (c === 'eco' || c.includes('ekosistem') || c.includes('ecosystem')) return t ? t('token_cat_eco') : 'Ecosystem';
+  if (c === 'utility' || c.includes('fayda') || c.includes('utility')) return t ? t('token_cat_utility') : 'Utility';
+  if (c === 'staking' || c.includes('staking')) return t ? t('token_cat_staking') : 'Staking';
+  return category;
+}
+

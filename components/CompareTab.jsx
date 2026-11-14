@@ -113,9 +113,9 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                 </Text>
               </Paper>
 
-              <Paper p="xs" bg="rgba(0,0,0,0.3)">
+              <Paper p="xs" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
                 <Text size="xs" c="dimmed">{t('compare_mutualCounterparties')}</Text>
-                <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
+                <Text size="sm" fw={700} style={{ color: '#0d7680' }} className="font-mono mt-1">
                   {rel?.mutualCounterpartiesCount || 0} {t('compare_sharedAddresses')}
                 </Text>
               </Paper>
@@ -125,14 +125,14 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
           {/* Side-by-Side Comparison Cards */}
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             {/* Wallet A Card */}
-            <Paper p="md" style={{ borderTop: '3px solid #38bdf8' }}>
+            <Paper p="md" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderTop: '3px solid #0d7680', borderRadius: 0 }}>
               <Group justify="space-between" mb="xs">
                 <Badge color={wA?.isEvm ? 'cyan' : 'green'}>{wA?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>
-                <Button size="xs" variant="light" color="cyan" onClick={() => onOpenLedger(wA?.address)}>
+                <Button size="xs" variant="light" color="teal" onClick={() => onOpenLedger(wA?.address)}>
                   {t('compare_openLedger_2')}
                 </Button>
               </Group>
-              <Text size="xs" fw={700} className="font-mono" c="cyan" mb="md" style={{ wordBreak: 'break-all' }}>
+              <Text size="xs" fw={700} className="font-mono" style={{ color: '#0d7680', wordBreak: 'break-all' }} mb="md">
                 {wA?.address}
               </Text>
 
@@ -152,7 +152,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                     value={formatHMND(wA?.totalVolumeIn, { suffix: false, locale: lang })}
                     unit="HMND"
                     sign="+"
-                    color="#38bdf8"
+                    color="#0d7680"
                     size="xs"
                   />
                 </Group>
@@ -162,7 +162,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                     value={formatHMND(wA?.totalVolumeOut, { suffix: false, locale: lang })}
                     unit="HMND"
                     sign="-"
-                    color="#f87171"
+                    color="#990f3d"
                     size="xs"
                   />
                 </Group>
@@ -171,7 +171,7 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
                   <AmountDisplay
                     value={formatFee(wA?.totalFeesPaid, false, lang)}
                     unit="HMND"
-                    color="#f59e0b"
+                    color="#b45309"
                     size="xs"
                   />
                 </Group>
@@ -185,14 +185,14 @@ export default function CompareTab({ initialA, initialB, onSelectAddress, onOpen
             </Paper>
 
             {/* Wallet B Card */}
-            <Paper p="md" className="glass-panel" style={{ borderTop: '3px solid #a855f7', borderRadius: 8 }}>
+            <Paper p="md" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderTop: '3px solid #b45309', borderRadius: 0 }}>
               <Group justify="space-between" mb="xs">
                 <Badge color={wB?.isEvm ? 'cyan' : 'green'}>{wB?.isEvm ? 'EVM (0x)' : 'Substrate'}</Badge>
-                <Button size="xs" variant="light" color="violet" onClick={() => onOpenLedger(wB?.address)}>
+                <Button size="xs" variant="light" color="orange" onClick={() => onOpenLedger(wB?.address)}>
                   {t('compare_openLedger_2')}
                 </Button>
               </Group>
-              <Text size="xs" fw={700} className="font-mono" c="violet" mb="md" style={{ wordBreak: 'break-all' }}>
+              <Text size="xs" fw={700} className="font-mono" style={{ color: '#b45309', wordBreak: 'break-all' }} mb="md">
                 {wB?.address}
               </Text>
 

@@ -7,24 +7,13 @@ using HumanodeTracker.Services;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IWalletRepository
+public class WalletRepository
 {
-    Task<object?> GetAddressSummaryAsync(string address);
-    Task<object> GetWalletLedgerAnalyticsAsync(string address, int ledgerPage = 1, int ledgerLimit = 50, string ledgerFlow = "all", bool hideBioauth = true);
-    Task<string> ExportWalletLedgerCsvAsync(string address, string flow = "all");
-    Task<object> GetCrossLayerIdentityAsync(string address);
-    Task<object> CompareWalletsAsync(string walletA, string walletB);
-    Task<object> GetWalletPersonaAsync(string address);
-    Task<object> GetMultiHopMoneyTrailAsync(string address, int depth = 2, int limitPerNode = 4);
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly HumanodeSidecarClient _sidecarClient;
 
-public class WalletRepository : IWalletRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
-    private readonly IHumanodeSidecarClient _sidecarClient;
-
-    public WalletRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo, IHumanodeSidecarClient sidecarClient)
+    public WalletRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, HumanodeSidecarClient sidecarClient)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
@@ -48,34 +37,26 @@ public class WalletRepository : IWalletRepository
         if (isEvm)
         {
             var lower = clean.ToLowerInvariant();
-            const string evmSentSql = "SELECT COUNT(*) as c, COALESCE(SUM(fee_hmnd), 0) as f, COALESCE(SUM(value_hmnd), 0) as v FROM transactions WHERE LOWER(from_address) = @lower";
-            var s = await connection.QueryFirstOrDefaultAsync<(long c, double f, double v)>(evmSentSql, new { lower });
+            var s = await connection.QueryFirstOrDefaultAsync<(long c, double f, double v)>(StoredProcedures.GetWalletEvmSent, new { lower });
             sentCount = s.c; sentFee = s.f; sentVol = s.v;
 
-            const string evmRecvSql = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as v FROM transactions WHERE LOWER(to_address) = @lower";
-            var r = await connection.QueryFirstOrDefaultAsync<(long c, double v)>(evmRecvSql, new { lower });
+            var r = await connection.QueryFirstOrDefaultAsync<(long c, double v)>(StoredProcedures.GetWalletEvmRecv, new { lower });
             recvCount = r.c; recvVol = r.v;
         }
 
         if (isSub)
         {
-            const string subSignedSql = "SELECT COUNT(*) as c, COALESCE(SUM(fee_hmnd), 0) as f, COALESCE(SUM(value_hmnd), 0) as v FROM substrate_extrinsics WHERE signer = @clean";
-            var s = await connection.QueryFirstOrDefaultAsync<(long c, double f, double v)>(subSignedSql, new { clean });
+            var s = await connection.QueryFirstOrDefaultAsync<(long c, double f, double v)>(StoredProcedures.GetWalletSubSigned, new { clean });
             sentCount = s.c; sentFee = s.f; sentVol = s.v;
 
-            const string subTargetSql = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as v FROM substrate_extrinsics WHERE target = @clean";
-            var r = await connection.QueryFirstOrDefaultAsync<(long c, double v)>(subTargetSql, new { clean });
+            var r = await connection.QueryFirstOrDefaultAsync<(long c, double v)>(StoredProcedures.GetWalletSubTarget, new { clean });
             recvCount = r.c; recvVol = r.v;
 
-            const string authSql = "SELECT COUNT(*) FROM blocks_with_tx WHERE author_id = @clean";
-            authoredCount = await connection.ExecuteScalarAsync<long>(authSql, new { clean });
-
-            const string bioSql = "SELECT COUNT(*) FROM substrate_extrinsics WHERE signer = @clean AND pallet = 'bioauth'";
-            bioauthCount = await connection.ExecuteScalarAsync<long>(bioSql, new { clean });
+            authoredCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetWalletAuthoredCount, new { clean });
+            bioauthCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetWalletBioauthCount, new { clean });
         }
 
-        const string cacheSql = "SELECT balance_hmnd FROM wallet_balances_cache WHERE LOWER(address) = LOWER(@clean)";
-        var liveBal = await connection.QueryFirstOrDefaultAsync<double?>(cacheSql, new { clean });
+        var liveBal = await connection.QueryFirstOrDefaultAsync<double?>(StoredProcedures.GetWalletBalanceCache, new { clean });
 
         if (!liveBal.HasValue)
         {
@@ -87,7 +68,7 @@ public class WalletRepository : IWalletRepository
                     liveBal = onChainBal.Value;
                     var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     await connection.ExecuteAsync(
-                        "INSERT OR REPLACE INTO wallet_balances_cache (address, balance_hmnd, updated_at) VALUES (@clean, @liveBal, @now)",
+                        StoredProcedures.UpsertWalletBalanceCache,
                         new { clean, liveBal = liveBal.Value, now });
                 }
             }
@@ -105,7 +86,15 @@ public class WalletRepository : IWalletRepository
         var crossLayer = await GetCrossLayerIdentityAsync(clean);
 
         var totalHmndTxs = isEvm ? (sentCount + recvCount) : (sentCount + recvCount);
-        var (tokenList, totalPortfolioUsd) = await GetWalletTokensAsync(connection, clean, netBalance, priceUsd, totalIn, totalOut, totalHmndTxs);
+        var (tokenList, totalPortfolioUsd) = await GetWalletTokensAsync(connection, new WalletTokensContext
+        {
+            Address = clean,
+            NetBalance = netBalance,
+            PriceUsd = priceUsd,
+            TotalIn = totalIn,
+            TotalOut = totalOut,
+            TotalHmndTxs = (int)totalHmndTxs
+        });
 
         return new
         {
@@ -121,6 +110,11 @@ public class WalletRepository : IWalletRepository
             totalVolumeIn = totalIn,
             totalVolumeOut = totalOut,
             totalFeesPaid = totalFees,
+            totalInHmnd = totalIn,
+            totalOutHmnd = totalOut,
+            totalFeesHmnd = totalFees,
+            totalInCount = recvCount,
+            totalOutCount = sentCount,
             isValidator,
             validatorStats = new
             {
@@ -149,19 +143,14 @@ public class WalletRepository : IWalletRepository
 
     private async Task<(List<object> tokens, double totalPortfolioUsd)> GetWalletTokensAsync(
         IDbConnection connection, 
-        string address, 
-        double netBalanceHmnd, 
-        double priceUsd,
-        double hmndIn = 0,
-        double hmndOut = 0,
-        long hmndTxs = 0)
+        WalletTokensContext ctx)
     {
-        var cleanLower = address.Trim().ToLowerInvariant();
+        var cleanLower = ctx.Address.Trim().ToLowerInvariant();
         var isEvm = cleanLower.StartsWith("0x");
 
         var tokenList = new List<object>();
 
-        if (netBalanceHmnd > 0.000001 || !isEvm)
+        if (ctx.NetBalance > 0.000001 || !isEvm)
         {
             tokenList.Add(new
             {
@@ -169,27 +158,28 @@ public class WalletRepository : IWalletRepository
                 token_address = "NATIVE",
                 symbol = "HMND",
                 name = "Humanode Yerel Kripto Para (Native)",
-                balance = Math.Round(netBalanceHmnd, 4),
-                netBalance = Math.Round(netBalanceHmnd, 4),
-                totalIn = Math.Round(hmndIn, 4),
-                totalInflow = Math.Round(hmndIn, 4),
-                totalOut = Math.Round(hmndOut, 4),
-                totalOutflow = Math.Round(hmndOut, 4),
-                usd_value = Math.Round(netBalanceHmnd * priceUsd, 2),
-                valueUsd = Math.Round(netBalanceHmnd * priceUsd, 2),
-                price_usd = priceUsd,
-                priceUsd = priceUsd,
-                txCount = hmndTxs,
-                transferCount = hmndTxs,
-                transfer_count = hmndTxs,
-                transfers_count = hmndTxs,
+                balance = Math.Round(ctx.NetBalance, 4),
+                netBalance = Math.Round(ctx.NetBalance, 4),
+                totalIn = Math.Round(ctx.TotalIn, 4),
+                totalInflow = Math.Round(ctx.TotalIn, 4),
+                totalOut = Math.Round(ctx.TotalOut, 4),
+                totalOutflow = Math.Round(ctx.TotalOut, 4),
+                usd_value = Math.Round(ctx.NetBalance * ctx.PriceUsd, 2),
+                valueUsd = Math.Round(ctx.NetBalance * ctx.PriceUsd, 2),
+                price_usd = ctx.PriceUsd,
+                priceUsd = ctx.PriceUsd,
+                txCount = ctx.TotalHmndTxs,
+                transferCount = ctx.TotalHmndTxs,
+                transfer_count = ctx.TotalHmndTxs,
+                transfers_count = ctx.TotalHmndTxs,
                 isNative = true,
-                category = "Yerel Kripto Para (Native)",
+                category = "native",
+                categoryKey = "token_category_native",
                 color = "#38bdf8"
             });
         }
 
-        double portfolioUsd = Math.Round(netBalanceHmnd * priceUsd, 2);
+        double portfolioUsd = Math.Round(ctx.NetBalance * ctx.PriceUsd, 2);
 
         string? evmTarget = isEvm ? cleanLower : null;
         if (!isEvm)
@@ -197,8 +187,8 @@ public class WalletRepository : IWalletRepository
             try
             {
                 evmTarget = await connection.QueryFirstOrDefaultAsync<string>(
-                    "SELECT evm_address FROM cross_layer_links WHERE substrate_address = @address LIMIT 1",
-                    new { address = address.Trim() });
+                    StoredProcedures.GetCrossLayerLinkEvm,
+                    new { address = ctx.Address.Trim() });
                 if (!string.IsNullOrEmpty(evmTarget)) evmTarget = evmTarget.ToLowerInvariant();
             }
             catch { }
@@ -206,22 +196,12 @@ public class WalletRepository : IWalletRepository
 
         if (!string.IsNullOrEmpty(evmTarget))
         {
-            const string tokenSql = @"
-                SELECT 
-                    tt.token_address as TokenAddress,
-                    COALESCE(tc.symbol, tt.token_symbol, 'TOKEN') as Symbol,
-                    COALESCE(tc.name, tt.token_symbol, 'ERC-20 Token') as Name,
-                    COALESCE(tc.decimals, 18) as Decimals,
-                    COALESCE(SUM(CASE WHEN LOWER(tt.to_address) = @evmTarget THEN tt.amount ELSE 0 END), 0) as TotalIn,
-                    COALESCE(SUM(CASE WHEN LOWER(tt.from_address) = @evmTarget THEN tt.amount ELSE 0 END), 0) as TotalOut,
-                    COUNT(*) as TransferCount
-                FROM token_transfers tt
-                LEFT JOIN tokens_cache tc ON LOWER(tc.address) = LOWER(tt.token_address)
-                WHERE LOWER(tt.from_address) = @evmTarget OR LOWER(tt.to_address) = @evmTarget
-                GROUP BY tt.token_address
-                ORDER BY TotalIn DESC";
+            var configs = (await connection.QueryAsync<SystemConfigEntry>(StoredProcedures.GetAllSystemConfigs)).ToList();
+            var refWeth = double.TryParse(configs.FirstOrDefault(c => c.Key == "price_ref_weth")?.Value, out var v1) ? v1 : 0.0;
+            var refWbtc = double.TryParse(configs.FirstOrDefault(c => c.Key == "price_ref_wbtc")?.Value, out var v2) ? v2 : 0.0;
+            var refUsdc = double.TryParse(configs.FirstOrDefault(c => c.Key == "price_ref_usdc")?.Value, out var v3) ? v3 : 0.0;
 
-            var rows = (await connection.QueryAsync<dynamic>(tokenSql, new { evmTarget })).ToList();
+            var rows = (await connection.QueryAsync<dynamic>(StoredProcedures.GetWalletTokenTransfers, new { evmTarget })).ToList();
             foreach (var r in rows)
             {
                 string tokenAddr = r.TokenAddress ?? "";
@@ -256,37 +236,43 @@ public class WalletRepository : IWalletRepository
                 }
 
                 double tokenPrice = 0.0;
-                string category = "ERC-20 Akıllı Sözleşme";
+                string category = "contract";
+                string categoryKey = "token_category_contract";
                 string color = "violet";
 
                 var symUpper = symbol.ToUpperInvariant();
                 if (symUpper is "USDC" or "USDT")
                 {
-                    tokenPrice = 1.0;
-                    category = "Sabit Kripto (Stablecoin)";
+                    tokenPrice = refUsdc;
+                    category = "stablecoin";
+                    categoryKey = "token_category_stablecoin";
                     color = "blue";
                 }
                 else if (symUpper.Contains("HMND"))
                 {
-                    tokenPrice = priceUsd;
-                    category = "Wrapped Native Token";
+                    tokenPrice = ctx.PriceUsd;
+                    category = "wrapped";
+                    categoryKey = "token_category_wrapped";
                     color = "teal";
                 }
                 else if (symUpper is "WETH" or "ETH")
                 {
-                    tokenPrice = 2800.0;
-                    category = "Wrapped Ether";
+                    tokenPrice = refWeth;
+                    category = "wrapped";
+                    categoryKey = "token_category_wrapped";
                     color = "indigo";
                 }
                 else if (symUpper is "WBTC" or "BTC")
                 {
-                    tokenPrice = 68000.0;
-                    category = "Wrapped Bitcoin";
+                    tokenPrice = refWbtc;
+                    category = "wrapped";
+                    categoryKey = "token_category_wrapped";
                     color = "orange";
                 }
                 else
                 {
                     tokenPrice = 0.0;
+                    categoryKey = "token_category_contract";
                     color = "grape";
                 }
 
@@ -315,6 +301,7 @@ public class WalletRepository : IWalletRepository
                     transfers_count = transferCount,
                     isNative = false,
                     category,
+                    categoryKey,
                     color
                 });
             }
@@ -323,20 +310,24 @@ public class WalletRepository : IWalletRepository
         return (tokenList, Math.Round(portfolioUsd, 2));
     }
 
-    public async Task<object> GetWalletLedgerAnalyticsAsync(string address, int ledgerPage = 1, int ledgerLimit = 50, string ledgerFlow = "all", bool hideBioauth = true)
+    public async Task<object> GetWalletLedgerAnalyticsAsync(WalletLedgerQueryRequest req)
     {
-        if (string.IsNullOrWhiteSpace(address))
+        req ??= new WalletLedgerQueryRequest();
+        var addr = !string.IsNullOrEmpty(req.Address) ? req.Address : req.Addr;
+        if (string.IsNullOrWhiteSpace(addr))
         {
-            return new { found = false, error = "Cüzdan adresi girilmelidir." };
+            return new { found = false, error = "Wallet address is required." };
         }
-        var clean = address.Trim();
+        var clean = addr.Trim();
         var isEvm = clean.StartsWith("0x", StringComparison.OrdinalIgnoreCase);
 
         using var connection = _dbFactory.CreateConnection();
         var summary = await GetAddressSummaryAsync(clean);
+        var priceUsd = await _priceRepo.GetLatestPriceAsync();
+        var lower = clean.ToLowerInvariant();
 
         const int safeLimit = 50;
-        var safePage = Math.Max(1, ledgerPage);
+        var safePage = Math.Max(1, req.LedgerPage);
         var offset = (safePage - 1) * safeLimit;
 
         // Fetch recent ledger activities for this address
@@ -345,32 +336,13 @@ public class WalletRepository : IWalletRepository
 
         if (isEvm)
         {
-            var lower = clean.ToLowerInvariant();
-            const string countSql = "SELECT COUNT(*) FROM transactions WHERE LOWER(from_address) = @lower OR LOWER(to_address) = @lower";
-            totalCount = await connection.ExecuteScalarAsync<long>(countSql, new { lower });
-
-            const string listSql = @"
-                SELECT
-                    'EVM' as Layer,
-                    hash as Hash,
-                    block_number as BlockNumber,
-                    timestamp as Timestamp,
-                    from_address as FromAddress,
-                    to_address as ToAddress,
-                    value_hmnd as ValueHmnd,
-                    fee_hmnd as FeeHmnd,
-                    status as Status,
-                    'Ethereum' as Pallet,
-                    'transact' as Method
-                FROM transactions
-                WHERE LOWER(from_address) = @lower OR LOWER(to_address) = @lower
-                ORDER BY timestamp DESC
-                LIMIT @safeLimit OFFSET @offset";
-
-            var rows = (await connection.QueryAsync<TransactionDto>(listSql, new { lower, safeLimit, offset })).ToList();
+            totalCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetWalletLedgerEvmCount, new { lower });
+            var rows = (await connection.QueryAsync<TransactionDto>(StoredProcedures.GetWalletLedgerEvmPaged, new { lower, safeLimit, offset })).ToList();
             foreach (var r in rows)
             {
                 var isIncoming = r.ToAddress.Equals(clean, StringComparison.OrdinalIgnoreCase);
+                var amt = r.ValueHmnd;
+                var fee = isIncoming ? 0 : r.FeeHmnd;
                 activities.Add(new
                 {
                     layer = "EVM",
@@ -379,8 +351,12 @@ public class WalletRepository : IWalletRepository
                     timestamp = r.Timestamp,
                     direction = isIncoming ? "in" : "out",
                     counterparty = isIncoming ? r.FromAddress : r.ToAddress,
-                    amount_hmnd = r.ValueHmnd,
-                    fee_hmnd = isIncoming ? 0 : r.FeeHmnd,
+                    amount = amt,
+                    amount_hmnd = amt,
+                    fee = fee,
+                    fee_hmnd = fee,
+                    value_usd = Math.Round(amt * priceUsd, 2),
+                    usd_value = Math.Round(amt * priceUsd, 2),
                     pallet = r.Pallet,
                     method = r.Method
                 });
@@ -388,31 +364,13 @@ public class WalletRepository : IWalletRepository
         }
         else
         {
-            const string countSql = "SELECT COUNT(*) FROM substrate_extrinsics WHERE signer = @clean OR target = @clean";
-            totalCount = await connection.ExecuteScalarAsync<long>(countSql, new { clean });
-
-            const string listSql = @"
-                SELECT
-                    'SUBSTRATE' as Layer,
-                    hash as Hash,
-                    block_number as BlockNumber,
-                    timestamp as Timestamp,
-                    signer as FromAddress,
-                    target as ToAddress,
-                    value_hmnd as ValueHmnd,
-                    fee_hmnd as FeeHmnd,
-                    status as Status,
-                    pallet as Pallet,
-                    method as Method
-                FROM substrate_extrinsics
-                WHERE signer = @clean OR target = @clean
-                ORDER BY timestamp DESC
-                LIMIT @safeLimit OFFSET @offset";
-
-            var rows = (await connection.QueryAsync<TransactionDto>(listSql, new { clean, safeLimit, offset })).ToList();
+            totalCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetWalletLedgerSubCount, new { clean });
+            var rows = (await connection.QueryAsync<TransactionDto>(StoredProcedures.GetWalletLedgerSubPaged, new { clean, safeLimit, offset })).ToList();
             foreach (var r in rows)
             {
                 var isIncoming = r.ToAddress.Equals(clean, StringComparison.OrdinalIgnoreCase);
+                var amt = r.ValueHmnd;
+                var fee = isIncoming ? 0 : r.FeeHmnd;
                 activities.Add(new
                 {
                     layer = "SUBSTRATE",
@@ -421,13 +379,80 @@ public class WalletRepository : IWalletRepository
                     timestamp = r.Timestamp,
                     direction = isIncoming ? "in" : "out",
                     counterparty = isIncoming ? r.FromAddress : r.ToAddress,
-                    amount_hmnd = r.ValueHmnd,
-                    fee_hmnd = isIncoming ? 0 : r.FeeHmnd,
+                    amount = amt,
+                    amount_hmnd = amt,
+                    fee = fee,
+                    fee_hmnd = fee,
+                    value_usd = Math.Round(amt * priceUsd, 2),
+                    usd_value = Math.Round(amt * priceUsd, 2),
                     pallet = r.Pallet,
                     method = r.Method
                 });
             }
         }
+
+        // Top Sources (inflow)
+        var srcList = new List<object>();
+        if (isEvm)
+        {
+            var srcRows = await connection.QueryAsync<dynamic>(StoredProcedures.GetWalletTopSourcesEvm, new { lower });
+            foreach (var r in srcRows)
+            {
+                srcList.Add(new {
+                    counterparty = (string)r.counterparty,
+                    tx_count = (long)r.tx_count,
+                    total_amount = (double)r.total_amount
+                });
+            }
+        }
+        else
+        {
+            var srcRows = await connection.QueryAsync<dynamic>(StoredProcedures.GetWalletTopSourcesSub, new { clean });
+            foreach (var r in srcRows)
+            {
+                srcList.Add(new {
+                    counterparty = (string)r.counterparty,
+                    tx_count = (long)r.tx_count,
+                    total_amount = (double)r.total_amount
+                });
+            }
+        }
+
+        // Top Destinations (outflow)
+        var dstList = new List<object>();
+        if (isEvm)
+        {
+            var dstRows = await connection.QueryAsync<dynamic>(StoredProcedures.GetWalletTopDestsEvm, new { lower });
+            foreach (var r in dstRows)
+            {
+                dstList.Add(new {
+                    counterparty = (string)r.counterparty,
+                    tx_count = (long)r.tx_count,
+                    total_amount = (double)r.total_amount
+                });
+            }
+        }
+        else
+        {
+            var dstRows = await connection.QueryAsync<dynamic>(StoredProcedures.GetWalletTopDestsSub, new { clean });
+            foreach (var r in dstRows)
+            {
+                dstList.Add(new {
+                    counterparty = (string)r.counterparty,
+                    tx_count = (long)r.tx_count,
+                    total_amount = (double)r.total_amount
+                });
+            }
+        }
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit));
+        var pag = new
+        {
+            page = safePage,
+            limit = safeLimit,
+            totalCount,
+            totalPages
+        };
 
         return new
         {
@@ -436,20 +461,23 @@ public class WalletRepository : IWalletRepository
             addressType = isEvm ? "EVM" : "SUBSTRATE",
             summary,
             tokens = (summary as dynamic)?.tokens ?? new List<object>(),
-            ledger = activities,
-            pagination = new
+            // Both object with items/pagination and direct list for 100% backward compatibility
+            ledger = new
             {
-                page = safePage,
-                limit = safeLimit,
-                totalCount,
-                totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit))
-            }
+                items = activities,
+                pagination = pag
+            },
+            activities,
+            pagination = pag,
+            sources = new { items = srcList },
+            destinations = new { items = dstList },
+            priceUsd
         };
     }
 
     public async Task<string> ExportWalletLedgerCsvAsync(string address, string flow = "all")
     {
-        var result = await GetWalletLedgerAnalyticsAsync(address, 1, 200, flow);
+        var result = await GetWalletLedgerAnalyticsAsync(new WalletLedgerQueryRequest { Address = address, LedgerPage = 1, LedgerLimit = 200, Flow = flow });
         var sb = new StringBuilder();
         sb.AppendLine("Address,Layer,BlockNumber,Timestamp,Direction,Counterparty,Amount_HMND,Fee_HMND,Hash");
         return sb.ToString();
@@ -467,8 +495,8 @@ public class WalletRepository : IWalletRepository
 
         using var connection = _dbFactory.CreateConnection();
         string sql = isSub
-            ? "SELECT * FROM cross_layer_links WHERE substrate_address = @clean ORDER BY total_swapped_hmnd DESC"
-            : "SELECT * FROM cross_layer_links WHERE LOWER(evm_address) = LOWER(@clean) ORDER BY total_swapped_hmnd DESC";
+            ? StoredProcedures.GetCrossLayerLinksBySub
+            : StoredProcedures.GetCrossLayerLinksByEvm;
 
         var rows = (await connection.QueryAsync<dynamic>(sql, new { clean })).ToList();
         if (rows.Count == 0)
@@ -533,7 +561,7 @@ public class WalletRepository : IWalletRepository
         var summary = await GetAddressSummaryAsync(address);
         var badges = new List<object>
         {
-            new { id = "standard", label = "Bireysel Kullanıcı", icon = "👤", color = "#94a3b8", desc = "Standart cüzdan hareketleri" }
+            new { id = "standard", label = "Individual Account", icon = "👤", color = "#94a3b8", desc = "Standard wallet activity" }
         };
 
         return new
@@ -555,14 +583,23 @@ public class WalletRepository : IWalletRepository
         }
 
         using var connection = _dbFactory.CreateConnection();
-        var nodesMap = new Dictionary<string, (string id, string label, string shortAddr, string layer, bool isRoot, int depth, double balance)>(StringComparer.OrdinalIgnoreCase);
+        var nodesList = new List<WalletNodeDto>();
         var edgesList = new List<(string id, string source, string target, double amount, int count)>();
         var queue = new Queue<(string addr, int currentDepth)>();
-        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visited = new List<string>();
 
         bool isEvmRoot = clean.StartsWith("0x", StringComparison.OrdinalIgnoreCase);
         string shortRoot = clean.Length > 16 ? $"{clean[..6]}...{clean[^4..]}" : clean;
-        nodesMap[clean] = (clean, shortRoot, shortRoot, isEvmRoot ? "EVM" : "Substrate", true, 0, 0);
+        nodesList.Add(new WalletNodeDto
+        {
+            Id = clean,
+            Label = shortRoot,
+            ShortAddr = shortRoot,
+            Layer = isEvmRoot ? "EVM" : "Substrate",
+            IsRoot = true,
+            Depth = 0,
+            Balance = 0
+        });
         queue.Enqueue((clean, 0));
         visited.Add(clean);
 
@@ -577,22 +614,18 @@ public class WalletRepository : IWalletRepository
             if (isEvm)
             {
                 var lower = curr.ToLowerInvariant();
-                const string outSql = "SELECT to_address as peer, SUM(value_hmnd) as val, COUNT(*) as cnt FROM transactions WHERE from_address = @lower AND to_address > '' GROUP BY to_address ORDER BY val DESC LIMIT 4";
-                var outRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(outSql, new { lower })).Select(r => (r.peer, r.val, r.cnt, true));
+                var outRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(StoredProcedures.GetMoneyTrailEvmOut, new { lower })).Select(r => (r.peer, r.val, r.cnt, true));
                 transfers.AddRange(outRows);
 
-                const string inSql = "SELECT from_address as peer, SUM(value_hmnd) as val, COUNT(*) as cnt FROM transactions WHERE to_address = @lower AND from_address > '' GROUP BY from_address ORDER BY val DESC LIMIT 4";
-                var inRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(inSql, new { lower })).Select(r => (r.peer, r.val, r.cnt, false));
+                var inRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(StoredProcedures.GetMoneyTrailEvmIn, new { lower })).Select(r => (r.peer, r.val, r.cnt, false));
                 transfers.AddRange(inRows);
             }
             else
             {
-                const string outSql = "SELECT target as peer, SUM(value_hmnd) as val, COUNT(*) as cnt FROM substrate_extrinsics WHERE signer = @curr AND target > '' GROUP BY target ORDER BY val DESC LIMIT 4";
-                var outRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(outSql, new { curr })).Select(r => (r.peer, r.val, r.cnt, true));
+                var outRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(StoredProcedures.GetMoneyTrailSubOut, new { curr })).Select(r => (r.peer, r.val, r.cnt, true));
                 transfers.AddRange(outRows);
 
-                const string inSql = "SELECT signer as peer, SUM(value_hmnd) as val, COUNT(*) as cnt FROM substrate_extrinsics WHERE target = @curr AND signer > '' GROUP BY signer ORDER BY val DESC LIMIT 4";
-                var inRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(inSql, new { curr })).Select(r => (r.peer, r.val, r.cnt, false));
+                var inRows = (await connection.QueryAsync<(string peer, double val, int cnt)>(StoredProcedures.GetMoneyTrailSubIn, new { curr })).Select(r => (r.peer, r.val, r.cnt, false));
                 transfers.AddRange(inRows);
             }
 
@@ -601,13 +634,22 @@ public class WalletRepository : IWalletRepository
                 var peerAddr = t.peer.Trim();
                 if (string.Equals(peerAddr, curr, StringComparison.OrdinalIgnoreCase)) continue;
 
-                if (!nodesMap.ContainsKey(peerAddr))
+                if (!nodesList.Any(n => n.Id.Equals(peerAddr, StringComparison.OrdinalIgnoreCase)))
                 {
                     bool isPeerEvm = peerAddr.StartsWith("0x", StringComparison.OrdinalIgnoreCase);
                     string shortPeer = peerAddr.Length > 16 ? $"{peerAddr[..6]}...{peerAddr[^4..]}" : peerAddr;
-                    nodesMap[peerAddr] = (peerAddr, shortPeer, shortPeer, isPeerEvm ? "EVM" : "Substrate", false, d + 1, Math.Round(t.val, 2));
+                    nodesList.Add(new WalletNodeDto
+                    {
+                        Id = peerAddr,
+                        Label = shortPeer,
+                        ShortAddr = shortPeer,
+                        Layer = isPeerEvm ? "EVM" : "Substrate",
+                        IsRoot = false,
+                        Depth = d + 1,
+                        Balance = Math.Round(t.val, 2)
+                    });
 
-                    if (!visited.Contains(peerAddr) && d + 1 < depth)
+                    if (!visited.Contains(peerAddr, StringComparer.OrdinalIgnoreCase) && d + 1 < depth)
                     {
                         visited.Add(peerAddr);
                         queue.Enqueue((peerAddr, d + 1));
@@ -625,17 +667,17 @@ public class WalletRepository : IWalletRepository
             }
         }
 
-        var cytoNodes = nodesMap.Values.Select(n => new
+        var cytoNodes = nodesList.Select(n => new
         {
             data = new
             {
-                id = n.id,
-                label = n.label,
-                shortAddress = n.shortAddr,
-                layer = n.layer,
-                isRoot = n.isRoot,
-                depth = n.depth,
-                balance = n.balance
+                id = n.Id,
+                label = n.Label,
+                shortAddress = n.ShortAddr,
+                layer = n.Layer,
+                isRoot = n.IsRoot,
+                depth = n.Depth,
+                balance = n.Balance
             }
         }).ToList();
 
@@ -647,6 +689,7 @@ public class WalletRepository : IWalletRepository
                 source = e.source,
                 target = e.target,
                 amount = e.amount,
+                valueHmnd = e.amount,
                 formattedAmount = $"{e.amount:N0} HMND",
                 txCount = e.count
             }

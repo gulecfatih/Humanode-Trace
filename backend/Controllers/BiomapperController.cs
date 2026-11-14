@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,22 +8,17 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class BiomapperController : ControllerBase
 {
-    private readonly IBiomapperRepository _biomapperRepo;
+    private readonly BiomapperRepository _biomapperRepo;
 
-    public BiomapperController(IBiomapperRepository biomapperRepo)
+    public BiomapperController(BiomapperRepository biomapperRepo)
     {
         _biomapperRepo = biomapperRepo;
     }
 
     [HttpGet("biomapper")]
-    public async Task<IActionResult> GetBiomapper(
-        [FromQuery] string networkType = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 25,
-        [FromQuery] string q = "",
-        [FromQuery] string feedNetwork = "all")
+    public async Task<IActionResult> GetBiomapper([FromQuery] BiomapperQueryRequest request)
     {
-        var result = await _biomapperRepo.GetBiomapperAnalyticsAsync(networkType, page, limit, q, feedNetwork);
+        var result = await _biomapperRepo.GetBiomapperAnalyticsAsync(request);
         return Ok(result);
     }
 }

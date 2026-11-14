@@ -138,19 +138,20 @@ export default function EqualityAndSimTab() {
       {/* Header */}
       <Paper
         p="md"
-        radius="md"
         style={{
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.08) 100%)',
-          border: '1px solid rgba(56, 189, 248, 0.2)',
+          background: '#f5e6d8',
+          border: '1px solid #d9cbbe',
+          borderTop: '2px solid #111111',
+          borderRadius: 0,
         }}
       >
         <Group justify="space-between" align="center">
           <Group gap="sm">
-            <ThemeIcon size={38} radius="md" color="teal" variant="light">
+            <ThemeIcon size={38} radius="xs" color="teal" variant="light">
               <IconScale size={22} />
             </ThemeIcon>
             <div>
-              <Title order={3} fw={700} c="white">
+              <Title order={3} fw={700} c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('sim_biometricEqualityDistributionIndex')}
               </Title>
               <Text size="xs" c="dimmed">
@@ -172,9 +173,9 @@ export default function EqualityAndSimTab() {
           unit="/ 1.00"
           color="cyan"
           icon={IconScale}
-          badge={equalityData?.giniRating || 'Konsantrasyon'}
-          badgeColor="yellow"
-          subtext={equalityData?.giniDescription || (t('sim_wealthDistributionMeasure'))}
+          badge={t(`gini_rating_${equalityData?.giniRatingCode || 'moderate'}`) || equalityData?.giniRating}
+          badgeColor={equalityData?.giniRatingCode === 'high_equality' ? 'teal' : equalityData?.giniRatingCode === 'high_concentration' ? 'red' : 'yellow'}
+          subtext={t(`gini_desc_${equalityData?.giniRatingCode || 'moderate'}`) || equalityData?.giniDescription || t('sim_wealthDistributionMeasure')}
         />
 
         <KpiStatCard
@@ -216,13 +217,12 @@ export default function EqualityAndSimTab() {
         {/* Lorenz Curve SVG Chart */}
         <Paper
           p="md"
-          radius="md"
-          style={{ background: '#121824', border: '1px solid rgba(255, 255, 255, 0.07)' }}
+          style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}
         >
           <Group justify="space-between" mb="xs">
             <Group gap="xs">
-              <IconScale size={18} color="#38bdf8" />
-              <Text fw={700} size="sm" c="white">
+              <IconScale size={18} color="#0d7680" />
+              <Text fw={700} size="sm" c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('sim_lorenzCurveWealthEquality')}
               </Text>
             </Group>
@@ -230,7 +230,7 @@ export default function EqualityAndSimTab() {
               <Badge size="xs" color="gray" variant="outline">
                 --- {t('sim_perfectEquality45')}
               </Badge>
-              <Badge size="xs" color="cyan" variant="filled">
+              <Badge size="xs" color="teal" variant="filled">
                 — {t('sim_actualHumanodeCurve')}
               </Badge>
             </Group>
@@ -242,11 +242,11 @@ export default function EqualityAndSimTab() {
               style={{ width: '100%', height: '100%', overflow: 'visible' }}
             >
               {/* Grid Lines */}
-              <line x1="40" y1="260" x2="360" y2="260" stroke="#334155" strokeWidth="1" />
-              <line x1="40" y1="40" x2="40" y2="260" stroke="#334155" strokeWidth="1" />
-              <line x1="40" y1="150" x2="360" y2="150" stroke="#1e293b" strokeDasharray="4 4" strokeWidth="1" />
-              <line x1="200" y1="40" x2="200" y2="260" stroke="#1e293b" strokeDasharray="4 4" strokeWidth="1" />
-              <line x1="360" y1="40" x2="360" y2="260" stroke="#1e293b" strokeDasharray="4 4" strokeWidth="1" />
+              <line x1="40" y1="260" x2="360" y2="260" stroke="#d9cbbe" strokeWidth="1" />
+              <line x1="40" y1="40" x2="40" y2="260" stroke="#d9cbbe" strokeWidth="1" />
+              <line x1="40" y1="150" x2="360" y2="150" stroke="#ecdcd0" strokeDasharray="4 4" strokeWidth="1" />
+              <line x1="200" y1="40" x2="200" y2="260" stroke="#ecdcd0" strokeDasharray="4 4" strokeWidth="1" />
+              <line x1="360" y1="40" x2="360" y2="260" stroke="#ecdcd0" strokeDasharray="4 4" strokeWidth="1" />
 
               {/* 45 Degree Line of Perfect Equality */}
               <line
@@ -254,7 +254,7 @@ export default function EqualityAndSimTab() {
                 y1="260"
                 x2="360"
                 y2="40"
-                stroke="#64748b"
+                stroke="#666059"
                 strokeWidth="1.5"
                 strokeDasharray="5 5"
               />
@@ -263,7 +263,7 @@ export default function EqualityAndSimTab() {
               {lorenzPoints.length > 0 && (
                 <path
                   d={`${svgPath} L 360 260 L 40 260 Z`}
-                  fill="rgba(56, 189, 248, 0.12)"
+                  fill="rgba(13, 118, 128, 0.12)"
                 />
               )}
 
@@ -272,7 +272,7 @@ export default function EqualityAndSimTab() {
                 <path
                   d={svgPath}
                   fill="none"
-                  stroke="#38bdf8"
+                  stroke="#0d7680"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />
@@ -288,21 +288,21 @@ export default function EqualityAndSimTab() {
                     cx={cx}
                     cy={cy}
                     r={3}
-                    fill="#38bdf8"
-                    stroke="#0b0f17"
+                    fill="#0d7680"
+                    stroke="#fff1e5"
                     strokeWidth="1.5"
                   />
                 );
               })}
 
               {/* Axis Labels */}
-              <text x="200" y="278" fill="#64748b" fontSize="10" textAnchor="middle">
+              <text x="200" y="278" fill="#554f47" fontSize="10" textAnchor="middle">
                 {t('sim_cumulativeOfWallets0')}
               </text>
               <text
                 x="-150"
                 y="14"
-                fill="#64748b"
+                fill="#554f47"
                 fontSize="10"
                 textAnchor="middle"
                 transform="rotate(-90)"
@@ -316,33 +316,37 @@ export default function EqualityAndSimTab() {
         {/* Wealth Concentration Slices */}
         <Paper
           p="md"
-          radius="md"
-          style={{ background: '#121824', border: '1px solid rgba(255, 255, 255, 0.07)' }}
+          style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}
         >
           <Group justify="space-between" mb="xs">
             <Group gap="xs">
-              <IconCoins size={18} color="#eab308" />
-              <Text fw={700} size="sm" c="white">
+              <IconCoins size={18} color="#b45309" />
+              <Text fw={700} size="sm" c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('sim_wealthConcentrationBrackets')}
               </Text>
             </Group>
             <Badge size="xs" color="yellow" variant="light">
-              15.822 Cüzdan
+              {t('equality_walletCount', { count: (15822).toLocaleString(locStr) })}
             </Badge>
           </Group>
 
           <Table verticalSpacing="xs" highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_tier')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_holders')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_totalHmnd')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('sim_share')}</Table.Th>
+            <Table.Thead
+              style={{
+                backgroundColor: '#f5e6d8',
+                borderBottom: '2px solid #111111',
+              }}
+            >
+              <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('sim_tier')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('sim_holders')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('sim_totalHmnd')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('sim_share')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {slices.map((slice, idx) => (
-                <Table.Tr key={idx}>
+                <Table.Tr key={idx} style={{ borderBottom: '1px solid #d9cbbe' }}>
                   <Table.Td>
                     <Group gap={6}>
                       <Badge

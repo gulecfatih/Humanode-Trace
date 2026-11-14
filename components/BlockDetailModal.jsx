@@ -19,7 +19,7 @@ import {
   Center,
 } from '@mantine/core';
 import { IconCube, IconCheck, IconCopy, IconEye, IconArrowRight, IconActivity } from '@tabler/icons-react';
-import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD } from './formatters';
+import { formatHMND, formatFee, formatTimestamp, timeAgo, shortAddr, formatUSD, formatActionSummary } from './formatters';
 import { useLanguage } from './LanguageContext';
 
 export default function BlockDetailModal({
@@ -75,6 +75,33 @@ export default function BlockDetailModal({
   const loc = lang || undefined;
   const cleanNum = blockNumber ? parseInt(String(blockNumber).replace('#', ''), 10) : '';
 
+  const activityCounts = (blockData?.transactions || []).reduce(
+    (acc, tx) => {
+      const isEvm = (tx.layer || '').toUpperCase() === 'EVM' || (!tx.layer && (tx.from_address?.startsWith('0x') && tx.from_address?.length === 42));
+      if (isEvm) {
+        if (tx.tokenTransfers && tx.tokenTransfers.length > 0) {
+          const sender = (tx.from_address || tx.signer || '').toLowerCase();
+          const sold = tx.tokenTransfers.find((tt) => tt.from_address?.toLowerCase() === sender);
+          const bought = tx.tokenTransfers.find((tt) => tt.to_address?.toLowerCase() === sender);
+          if (sold && bought) acc.swaps += 1;
+          else acc.transfers += 1;
+        } else if (Number(tx.value_hmnd || tx.amount || 0) > 0) {
+          acc.transfers += 1;
+        } else {
+          acc.contracts += 1;
+        }
+      } else {
+        const p = (tx.pallet || '').toLowerCase();
+        if (p === 'bioauth') acc.bioauth += 1;
+        else if (p === 'imonline') acc.heartbeats += 1;
+        else if (p === 'balances') acc.transfers += 1;
+        else acc.contracts += 1;
+      }
+      return acc;
+    },
+    { swaps: 0, transfers: 0, heartbeats: 0, bioauth: 0, contracts: 0 }
+  );
+
   return (
     <Modal
       opened={opened}
@@ -102,76 +129,115 @@ export default function BlockDetailModal({
         content: {
           maxWidth: '1240px',
           width: '96vw',
-          border: '1px solid rgba(56, 189, 248, 0.28)',
-          borderRadius: 14,
-          background: '#0d1117',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+          border: '2px solid #111111',
+          borderRadius: 0,
+          background: '#fff1e5',
+          boxShadow: '0 10px 35px rgba(0,0,0,0.15)',
+          color: '#111111',
         },
         header: {
-          background: '#161b22',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#f5e6d8',
+          borderBottom: '2px solid #111111',
           padding: '14px 20px',
+          color: '#111111',
         },
         body: {
-          background: '#0d1117',
+          background: '#fff1e5',
           padding: '20px',
+          color: '#111111',
         },
       }}
     >
       {loading ? (
         <Center py="xl">
-          <Loader size="md" color="cyan" />
+          <Loader size="md" color="dark" />
         </Center>
       ) : blockData ? (
         <Stack gap="md">
-          {/* 3-Column Summary Cards */}
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
-            <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #38bdf8', borderRadius: 8 }}>
-              <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
+          {/* 4-Column Summary Cards */}
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">
+            <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+              <Text size="11px" c="#666059" tt="uppercase" fw={800} style={{ fontFamily: "var(--font-sans), 'Inter', sans-serif" }}>
                 📅 {t('colTimestamp')}
               </Text>
-              <Text size="sm" fw={700} className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
+              <Text size="sm" fw={800} c="#111111" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
                 {formatTimestamp(blockData.timestamp, lang)}
               </Text>
-              <Text size="11px" c="dimmed">{timeAgo(blockData.timestamp, lang)}</Text>
+              <Text size="11px" c="#666059">{timeAgo(blockData.timestamp, lang)}</Text>
             </Paper>
 
-            <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #10b981', borderRadius: 8 }}>
-              <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
+            <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+              <Text size="11px" c="#666059" tt="uppercase" fw={800} style={{ fontFamily: "var(--font-sans), 'Inter', sans-serif" }}>
                 ⚡ {t('colTxCount')}
               </Text>
-              <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
+              <Text size="sm" fw={800} c="#111111" className="font-mono mt-1">
                 {blockData.tx_count || blockData.transactions?.length || 0} {t('unlocks_txs_3')}
               </Text>
               <Group gap={4} mt={3}>
-                <Badge size="xs" color="cyan" variant="light">
+                <Badge size="xs" style={{ background: '#e2d3c5', color: '#4a453e', border: '1px solid #c9b9aa', borderRadius: 2 }}>
                   {blockData.evm_count || 0} EVM
                 </Badge>
-                <Badge size="xs" color="teal" variant="light">
+                <Badge size="xs" style={{ background: '#d1ded6', color: '#173f2a', border: '1px solid #b5ccbf', borderRadius: 2 }}>
                   {blockData.substrate_count || 0} Substrate
                 </Badge>
               </Group>
             </Paper>
 
-            <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b', borderRadius: 8 }}>
-              <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
+            <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+              <Text size="11px" c="#666059" tt="uppercase" fw={800} style={{ fontFamily: "var(--font-sans), 'Inter', sans-serif" }}>
                 🔥 {t('colBlockFee')}
               </Text>
-              <Text size="sm" fw={800} c="yellow" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
+              <Text size="sm" fw={800} c="#111111" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
                 {formatFee(blockData.total_fees_hmnd, true, lang, false)}
               </Text>
               {blockData.price_usd > 0 && Number(blockData.total_fees_hmnd || 0) > 0 && (
-                <Text size="11px" c="dimmed">
+                <Text size="11px" c="#666059">
                   ≈ {formatUSD((Number(blockData.total_fees_hmnd) || 0) * blockData.price_usd, lang, 4)}
                 </Text>
               )}
+            </Paper>
+
+            <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+              <Text size="11px" c="#666059" tt="uppercase" fw={800} style={{ fontFamily: "var(--font-sans), 'Inter', sans-serif" }}>
+                🎯 {t('block_activitySummary')}
+              </Text>
+              <Group gap={4} mt={4} wrap="wrap">
+                {activityCounts.swaps > 0 && (
+                  <Badge size="xs" style={{ background: '#f5e6d8', color: '#111', border: '1px solid #c9b9aa', borderRadius: 2 }}>
+                    🔄 {t('block_activitySwaps', { count: activityCounts.swaps })}
+                  </Badge>
+                )}
+                {activityCounts.transfers > 0 && (
+                  <Badge size="xs" style={{ background: '#d1ded6', color: '#173f2a', border: '1px solid #b5ccbf', borderRadius: 2 }}>
+                    💸 {t('block_activityTransfers', { count: activityCounts.transfers })}
+                  </Badge>
+                )}
+                {activityCounts.heartbeats > 0 && (
+                  <Badge size="xs" style={{ background: '#f5e6d8', color: '#990f3d', border: '1px solid #c9b9aa', borderRadius: 2 }}>
+                    💓 {t('block_activityHeartbeats', { count: activityCounts.heartbeats })}
+                  </Badge>
+                )}
+                {activityCounts.bioauth > 0 && (
+                  <Badge size="xs" style={{ background: '#e0f0ef', color: '#0d7680', border: '1px solid #0d7680', borderRadius: 2 }}>
+                    👤 {t('block_activityBioauth', { count: activityCounts.bioauth })}
+                  </Badge>
+                )}
+                {activityCounts.contracts > 0 && (
+                  <Badge size="xs" color="gray" variant="outline" style={{ borderRadius: 2 }}>
+                    📜 {t('block_activityContractCalls', { count: activityCounts.contracts })}
+                  </Badge>
+                )}
+                {activityCounts.swaps === 0 && activityCounts.transfers === 0 && activityCounts.heartbeats === 0 && activityCounts.bioauth === 0 && activityCounts.contracts === 0 && (
+                  <Text size="xs" c="dimmed">-</Text>
+                )}
+              </Group>
             </Paper>
           </SimpleGrid>
 
           <div>
             <Group justify="space-between" mb="xs" align="center">
               <Group gap={6} align="center">
-                <Text size="sm" fw={700} c="white">
+                <Text size="sm" fw={700} c="#111111">
                   {t('overview_allTransactionsInThis')}
                 </Text>
                 <Badge size="sm" color="cyan" variant="light" className="font-mono">
@@ -187,13 +253,13 @@ export default function BlockDetailModal({
               <Table striped highlightOnHover verticalSpacing="sm" style={{ minWidth: 960 }}>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th style={{ width: 150, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
-                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
+                    <Table.Th style={{ width: 140, whiteSpace: 'nowrap' }}>{t('colTxHash')}</Table.Th>
+                    <Table.Th style={{ width: 130, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
                     <Table.Th style={{ minWidth: 260, whiteSpace: 'nowrap' }}>{t('overview_fromTo')}</Table.Th>
-                    <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
-                    <Table.Th style={{ width: 130, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colFee')}</Table.Th>
-                    <Table.Th style={{ minWidth: 150, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
-                    <Table.Th style={{ width: 80, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
+                    <Table.Th style={{ width: 120, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colAmount')}</Table.Th>
+                    <Table.Th style={{ width: 120, whiteSpace: 'nowrap', textAlign: 'right' }}>{t('colFee')}</Table.Th>
+                    <Table.Th style={{ minWidth: 260, whiteSpace: 'nowrap' }}>{t('overview_detailsSwaps')}</Table.Th>
+                    <Table.Th style={{ width: 70, whiteSpace: 'nowrap', textAlign: 'center' }}>{t('colActions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -205,14 +271,14 @@ export default function BlockDetailModal({
                       const layerLabel = isEvm
                         ? (tx.method ? `EVM: ${tx.method}` : 'EVM')
                         : (tx.pallet ? `${tx.pallet}:${tx.method || ''}` : 'SUBSTRATE');
+                      const actionSummary = formatActionSummary(tx, t, lang);
                       return (
                         <Table.Tr key={tx.hash || idx}>
                           <Table.Td className="font-mono" style={{ whiteSpace: 'nowrap' }}>
                             <Group gap={4} wrap="nowrap">
                               <Text
                                 size="xs"
-                                c="cyan"
-                                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                                style={{ cursor: 'pointer', textDecoration: 'underline', color: '#0d7680' }}
                                 onClick={() => {
                                   onClose();
                                   onOpenTx?.(tx.hash);
@@ -232,7 +298,7 @@ export default function BlockDetailModal({
                           </Table.Td>
 
                           <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                            <Badge size="xs" color={isEvm ? 'cyan' : 'teal'} variant="light" style={{ whiteSpace: 'nowrap' }}>
+                            <Badge size="xs" color={isEvm ? 'dark' : 'teal'} variant="outline" style={{ whiteSpace: 'nowrap', borderRadius: 2 }}>
                               {layerLabel}
                             </Badge>
                           </Table.Td>
@@ -240,30 +306,42 @@ export default function BlockDetailModal({
                           <Table.Td className="font-mono" style={{ whiteSpace: 'nowrap' }}>
                             <Group gap={6} wrap="nowrap" align="center">
                               <Tooltip label={fromAddr} withArrow position="top">
-                                <Text
-                                  size="xs"
-                                  style={{ cursor: 'pointer', textDecoration: 'underline' }}
-                                  c="cyan"
-                                  onClick={() => fromAddr && onSelectAddress?.(fromAddr)}
-                                >
-                                  {shortAddr(fromAddr, 7, 5)}
-                                </Text>
+                                <Stack gap={1} align="flex-start">
+                                  {tx.from_label && (
+                                    <Badge size="xs" color="gray" variant="outline" style={{ maxWidth: 130, borderRadius: 2 }} lineClamp={1}>
+                                      {tx.from_label}
+                                    </Badge>
+                                  )}
+                                  <Text
+                                    size="xs"
+                                    style={{ cursor: 'pointer', textDecoration: 'underline', color: '#0d7680' }}
+                                    onClick={() => fromAddr && onSelectAddress?.(fromAddr)}
+                                  >
+                                    {shortAddr(fromAddr, 7, 5)}
+                                  </Text>
+                                </Stack>
                               </Tooltip>
                               <Text size="xs" c="dimmed">➔</Text>
                               <Tooltip label={toAddr || (t('overview_systemContract'))} withArrow position="top">
-                                <Text
-                                  size="xs"
-                                  style={{ cursor: toAddr ? 'pointer' : 'default', textDecoration: toAddr ? 'underline' : 'none' }}
-                                  c={toAddr ? 'teal' : 'dimmed'}
-                                  onClick={() => toAddr && onSelectAddress?.(toAddr)}
-                                >
-                                  {toAddr ? shortAddr(toAddr, 7, 5) : (t('overview_contractSystem'))}
-                                </Text>
+                                <Stack gap={1} align="flex-start">
+                                  {tx.to_label && (
+                                    <Badge size="xs" color="teal" variant="light" style={{ maxWidth: 170, borderRadius: 2 }} lineClamp={1}>
+                                      {tx.to_label}
+                                    </Badge>
+                                  )}
+                                  <Text
+                                    size="xs"
+                                    style={{ cursor: toAddr ? 'pointer' : 'default', textDecoration: toAddr ? 'underline' : 'none', color: toAddr ? '#0d7680' : '#666059' }}
+                                    onClick={() => toAddr && onSelectAddress?.(toAddr)}
+                                  >
+                                    {toAddr ? shortAddr(toAddr, 7, 5) : (t('overview_contractSystem'))}
+                                  </Text>
+                                </Stack>
                               </Tooltip>
                             </Group>
                           </Table.Td>
 
-                          <Table.Td className="font-mono" fw={700} c="green" style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
+                          <Table.Td className="font-mono" fw={700} style={{ whiteSpace: 'nowrap', textAlign: 'right', color: '#0d7680' }}>
                             {formatHMND(tx.value_hmnd || tx.amount || 0, { locale: lang, showScale: false })}
                           </Table.Td>
 
@@ -271,26 +349,23 @@ export default function BlockDetailModal({
                             {formatFee(tx.fee_hmnd, true, lang, false)}
                           </Table.Td>
 
-                          <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                            {tx.tokenTransfers && tx.tokenTransfers.length > 0 ? (
-                              <Badge size="xs" color="indigo" variant="light">
-                                🔄 {tx.tokenTransfers.length} {t('overview_tokenTransfer')}
-                              </Badge>
-                            ) : tx.details ? (
-                              <Text size="xs" c="dimmed" lineClamp={1}>
-                                {tx.details}
-                              </Text>
-                            ) : (
-                              <Text size="xs" c="dimmed">-</Text>
-                            )}
+                          <Table.Td style={{ minWidth: 260, maxWidth: 360 }}>
+                            <Text size="xs" c="#111111" fw={500} style={{ wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: 1.4 }}>
+                              {actionSummary || (tx.tokenTransfers && tx.tokenTransfers.length > 0 ? (
+                                <Badge size="xs" color="indigo" variant="light">
+                                  🔄 {tx.tokenTransfers.length} {t('overview_tokenTransfer')}
+                                </Badge>
+                              ) : tx.details ? tx.details : '-')}
+                            </Text>
                           </Table.Td>
 
                           <Table.Td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                             <Tooltip label={t('overview_viewTransactionDetails')} withArrow position="top">
                               <ActionIcon
                                 size="sm"
-                                variant="light"
-                                color="cyan"
+                                variant="outline"
+                                color="dark"
+                                style={{ borderRadius: 0, border: '1px solid #111' }}
                                 onClick={() => {
                                   onClose();
                                   onOpenTx?.(tx.hash);

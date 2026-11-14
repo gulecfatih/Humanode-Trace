@@ -420,9 +420,9 @@ export default function OverviewTab({
 
       {/* 1. Senkronizasyon İlerleme Çubuğu */}
       {progressData && (
-        <Paper p="sm" bg="rgba(22, 27, 34, 0.7)">
+        <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderRadius: 0 }}>
           <Group justify="space-between" mb={4}>
-            <Text size="xs" fw={700} c="cyan">
+            <Text size="xs" fw={700} c="#0d7680">
               {t('syncStatus')}: #{progressData.currentBlock?.toLocaleString(loc)} / #{(progressData.highestBlock ?? progressData.targetBlock)?.toLocaleString(loc)}
             </Text>
             <Group gap="xs">
@@ -433,8 +433,8 @@ export default function OverviewTab({
           <Progress
             value={parseFloat(progressData.percentage) || 100}
             size="sm"
-            color="cyan"
-            radius="xl"
+            color="#0d7680"
+            radius="xs"
             animated={progressData.percentage < 100}
           />
         </Paper>
@@ -449,7 +449,7 @@ export default function OverviewTab({
           color="cyan"
           icon={IconActivity}
           subtext={t('totalEvmTxSub')}
-          tooltip={`${evmTxCount.toLocaleString(loc)} toplam EVM tabanlı transfer ve akıllı sözleşme çağrısı`}
+          tooltip={t('overview_evmTooltip', { count: evmTxCount.toLocaleString(loc) })}
         />
 
         <KpiStatCard
@@ -459,7 +459,7 @@ export default function OverviewTab({
           color="teal"
           icon={IconCube}
           subtext={t('totalSubExtrinsicsSub')}
-          tooltip={`${subExtrinsicCount.toLocaleString(loc)} toplam Substrate extrinsic ve konsensüs çağrısı`}
+          tooltip={t('overview_substrateTooltip', { count: subExtrinsicCount.toLocaleString(loc) })}
         />
 
         <KpiStatCard
@@ -469,7 +469,7 @@ export default function OverviewTab({
           color="violet"
           icon={IconGitFork}
           subtext={`${t('bridgeTransfersSub')} (${(stats?.bridge_swap_count ?? stats?.bridgeSwapCount ?? 0).toLocaleString(loc)})`}
-          tooltip={`Köprü üzerinden taşınan toplam hacim: ${(stats?.bridge_swap_count ?? stats?.bridgeSwapCount ?? 0).toLocaleString(loc)} işlem`}
+          tooltip={t('overview_bridgeTooltip', { count: (stats?.bridge_swap_count ?? stats?.bridgeSwapCount ?? 0).toLocaleString(loc) })}
         />
 
         <KpiStatCard
@@ -477,22 +477,22 @@ export default function OverviewTab({
           value={formatFee(totalFeesHmnd, false, lang)}
           unit="HMND"
           color="yellow"
-          icon={IconFlame}
+          icon={IconGasStation}
           usdValue={formatUSD(stats?.total_network_fees_usd ?? stats?.totalFeesUsd ?? 0, lang)}
           subtext={`${t('totalBurnedGasSub')}`}
-          tooltip={`Ağ genelinde yakılan net gas komisyonu: ${totalFeesHmnd} HMND`}
+          tooltip={t('overview_burnedGasTooltip', { amount: totalFeesHmnd })}
         />
       </SimpleGrid>
 
       {/* 3. UNIFIED PRIMARY DASHBOARD (Filters, Gas Estimator, Chart & Blocks) */}
-      <Paper p="md" id="unifiedSection" style={{ border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      <Paper p="md" id="unifiedSection" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', background: '#fff1e5', borderRadius: 0 }}>
         <Stack gap="md">
           {/* Üst Başlık & Görünüm Seçimi */}
           <Group justify="space-between" align="center" wrap="wrap" gap="sm">
             <Group gap="xs" align="center">
-              <IconFlame size={22} color="#f59e0b" />
+              <IconGasStation size={22} color="#b45309" />
               <div>
-                <Title order={4} style={{ color: '#f0f6fc' }}>
+                <Title order={4} style={{ color: '#111111', fontFamily: "var(--font-serif), Georgia, serif", fontWeight: 700 }}>
                   {t('unifiedTitle')}
                 </Title>
                 <Text size="xs" c="dimmed">
@@ -503,10 +503,10 @@ export default function OverviewTab({
           </Group>
 
           {/* Filter and Date Range Ribbon */}
-          <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+          <Paper p="sm" bg="#f5e6d8" style={{ borderRadius: 0, border: '1px solid #d9cbbe' }}>
             <Stack gap="xs">
               <Group justify="space-between" align="center" wrap="wrap" gap="xs">
-                <Text size="xs" fw={700} c="cyan" tt="uppercase" style={{ letterSpacing: 0.5 }}>
+                <Text size="xs" fw={800} c="#111111" tt="uppercase" style={{ letterSpacing: 0.5, fontFamily: "var(--font-sans), 'Inter', sans-serif" }}>
                   {t('dateRangePresets')}
                 </Text>
 
@@ -657,15 +657,16 @@ export default function OverviewTab({
           <Paper
             p="md"
             style={{
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(6, 182, 212, 0.08))',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              borderRadius: 8,
+              background: '#f5e6d8',
+              border: '1px solid #d9cbbe',
+              borderTop: '2px solid #111111',
+              borderRadius: 0,
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" mb="xs">
               <Group gap={8}>
-                <IconFlame size={18} color="#f59e0b" />
-                <Title order={5} style={{ color: '#fbbf24' }}>
+                <IconGasStation size={18} color="#b45309" />
+                <Title order={5} style={{ color: '#111111', fontFamily: "var(--font-serif), Georgia, serif", fontWeight: 700 }}>
                   {t('kpiReportTitle')}
                 </Title>
                 <Badge color="orange" size="sm" variant="filled">
@@ -690,49 +691,49 @@ export default function OverviewTab({
               </Text>
             </Group>
 
-            <Divider my="xs" color="rgba(255, 255, 255, 0.08)" />
+            <Divider my="xs" color="#d9cbbe" />
 
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, lg: 5 }} spacing="sm">
               {/* 1. Burned Gas KPI Card */}
-              <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #f59e0b' }}>
+              <Box p="xs" style={{ background: '#fff1e5', borderRadius: 0, border: '1px solid #d9cbbe', borderLeft: '3px solid #b45309', minWidth: 0, overflow: 'hidden' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiBurnedGas')}</Text>
                 <Box my={3}>
                   <AmountDisplay
                     value={formatHMND(displayFeesHmnd, { suffix: false, locale: lang })}
                     unit="HMND"
-                    color="#f59e0b"
-                    size="md"
+                    color="#b45309"
+                    size="sm"
                     usdValue={formatUSD(displayFeesUsd, lang)}
                   />
                 </Box>
-                <Text size="10px" c="yellow.5" style={{ lineHeight: 1.3 }}>
+                <Text size="10px" c="#b45309" style={{ lineHeight: 1.3, fontWeight: 600 }}>
                   {t('kpiBurnedGasSub')}
                 </Text>
               </Box>
 
               {/* 2. Toplam Blok */}
-              <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #38bdf8' }}>
+              <Box p="xs" style={{ background: '#fff1e5', borderRadius: 0, border: '1px solid #d9cbbe', borderLeft: '3px solid #0d7680', minWidth: 0, overflow: 'hidden' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiTotalBlocks')}</Text>
                 <Box my={3}>
                   <AmountDisplay
                     value={totalCount.toLocaleString(loc)}
                     unit={t('overview_blocks')}
-                    color="#38bdf8"
-                    size="md"
+                    color="#0d7680"
+                    size="sm"
                   />
                 </Box>
                 <Text size="10px" c="dimmed" style={{ lineHeight: 1.3 }}>{t('kpiTotalBlocksSub')}</Text>
               </Box>
 
               {/* 3. Total Transactions KPI Card */}
-              <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #10b981' }}>
+              <Box p="xs" style={{ background: '#fff1e5', borderRadius: 0, border: '1px solid #d9cbbe', borderLeft: '3px solid #111111', minWidth: 0, overflow: 'hidden' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiTotalTxs')}</Text>
                 <Box my={3}>
                   <AmountDisplay
                     value={displayTxCount.toLocaleString(loc)}
                     unit={t('overview_txs_3')}
-                    color="#10b981"
-                    size="md"
+                    color="#111111"
+                    size="sm"
                   />
                 </Box>
                 <Text size="10px" c="dimmed" style={{ lineHeight: 1.3 }}>
@@ -741,28 +742,28 @@ export default function OverviewTab({
               </Box>
 
               {/* 4. Toplam Hacim */}
-              <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #14b8a6' }}>
+              <Box p="xs" style={{ background: '#fff1e5', borderRadius: 0, border: '1px solid #d9cbbe', borderLeft: '3px solid #0d7680', minWidth: 0, overflow: 'hidden' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiTotalVol')}</Text>
                 <Box my={3}>
                   <AmountDisplay
                     value={formatHMND(displayVolumeHmnd, { suffix: false, locale: lang })}
                     unit="HMND"
-                    color="#14b8a6"
-                    size="md"
+                    color="#0d7680"
+                    size="sm"
                   />
                 </Box>
                 <Text size="10px" c="dimmed" style={{ lineHeight: 1.3 }}>{t('kpiTotalVolSub')}</Text>
               </Box>
 
               {/* 5. Ortalama Gas / Blok */}
-              <Box p="xs" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 6, borderLeft: '3px solid #a855f7' }}>
+              <Box p="xs" style={{ background: '#fff1e5', borderRadius: 0, border: '1px solid #d9cbbe', borderLeft: '3px solid #990f3d', minWidth: 0, overflow: 'hidden' }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>{t('kpiAvgGas')}</Text>
                 <Box my={3}>
                   <AmountDisplay
                     value={formatFee(avgFeePerBlock, false, lang)}
                     unit="HMND"
-                    color="#a855f7"
-                    size="md"
+                    color="#990f3d"
+                    size="sm"
                   />
                 </Box>
                 <Text size="10px" c="dimmed" style={{ lineHeight: 1.3 }}>{t('kpiAvgGasSub')}</Text>
@@ -771,7 +772,7 @@ export default function OverviewTab({
           </Paper>
 
           {/* Interactive Bar Chart Visualization */}
-          <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <Paper p="sm" bg="#f5e6d8" style={{ borderRadius: 0, border: '1px solid #d9cbbe' }}>
             <Group justify="space-between" align="center" mb="xs" wrap="wrap" gap="xs">
               <Group gap="xs">
                 <IconTrendingUp size={16} color="#38bdf8" />
@@ -978,10 +979,10 @@ export default function OverviewTab({
           {/* Block / Extrinsic View Switcher and Table Header */}
           <Paper
             p="xs"
-            bg="rgba(15, 23, 42, 0.75)"
+            bg="#f5e6d8"
             style={{
-              borderRadius: 8,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 0,
+              border: '1px solid #d9cbbe',
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -1047,7 +1048,6 @@ export default function OverviewTab({
                     <Table.Th>{t('colBlock')}</Table.Th>
                     <Table.Th>{t('colTimestamp')}</Table.Th>
                     <Table.Th>{t('colTxCount')}</Table.Th>
-                    <Table.Th>{t('colPallets')}</Table.Th>
                     <Table.Th>{t('colBlockVol')}</Table.Th>
                     <Table.Th>{t('colBlockFee')}</Table.Th>
                     <Table.Th>{t('colActions')}</Table.Th>
@@ -1064,7 +1064,6 @@ export default function OverviewTab({
                       const fee = block.total_fees_hmnd ?? block.totalFeesHmnd ?? 0;
                       const price = Number(block.price_usd ?? block.priceUsd ?? 0);
                       const volUsd = vol * price;
-                      const pallets = block.pallets ? block.pallets.split(',').filter(Boolean) : [];
 
                       return (
                         <Table.Tr key={blockNum}>
@@ -1074,8 +1073,7 @@ export default function OverviewTab({
                                 size="sm"
                                 fw={700}
                                 className="font-mono"
-                                c="cyan"
-                                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                                style={{ cursor: 'pointer', textDecoration: 'underline', color: '#0d7680' }}
                                 onClick={() => handleOpenBlock(blockNum)}
                               >
                                 #{blockNum}
@@ -1113,16 +1111,6 @@ export default function OverviewTab({
                           </Table.Td>
 
                           <Table.Td>
-                            <Group gap={4}>
-                              {pallets.map((p) => (
-                                <Badge key={p} size="xs" color="gray" variant="light">
-                                  {p.toUpperCase()}
-                                </Badge>
-                              ))}
-                            </Group>
-                          </Table.Td>
-
-                          <Table.Td>
                             <Box>
                               <AmountDisplay
                                 value={formatHMND(vol, { suffix: false, locale: lang })}
@@ -1146,8 +1134,8 @@ export default function OverviewTab({
                           <Table.Td>
                             <Button
                               size="xs"
-                              variant="light"
-                              color="cyan"
+                              variant="default"
+                              className="neo-btn"
                               leftSection={<IconEye size={12} />}
                               onClick={() => handleOpenBlock(blockNum)}
                             >
@@ -1159,7 +1147,7 @@ export default function OverviewTab({
                     })
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
+                      <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
                         <Text size="sm" c="dimmed">
                           {loading ? (t('overview_scanningBlocksForSelected')) : (t('overview_noBlockRecordsFound'))}
                         </Text>
@@ -1331,18 +1319,18 @@ export default function OverviewTab({
           content: {
             maxWidth: '1240px',
             width: '96vw',
-            border: '1px solid rgba(56, 189, 248, 0.28)',
-            borderRadius: 14,
-            background: '#0d1117',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+            border: '2px solid #111111',
+            borderRadius: 0,
+            background: '#fff1e5',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
           },
           header: {
-            background: '#161b22',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: '#f5e6d8',
+            borderBottom: '2px solid #111111',
             padding: '14px 20px',
           },
           body: {
-            background: '#0d1117',
+            background: '#fff1e5',
             padding: '20px',
           },
         }}
@@ -1351,21 +1339,21 @@ export default function OverviewTab({
           <Stack gap="md">
             {/* 3-Column Summary Cards */}
             <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
-              <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #38bdf8', borderRadius: 8 }}>
+              <Paper p="sm" bg="#f5e6d8" style={{ borderLeft: '3px solid #0d7680', border: '1px solid #d9cbbe', borderRadius: 0 }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
                   📅 {t('colTimestamp')}
                 </Text>
-                <Text size="sm" fw={700} className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
+                <Text size="sm" fw={700} c="#111111" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
                   {formatTimestamp(selectedBlockModal.timestamp, lang)}
                 </Text>
                 <Text size="11px" c="dimmed">{timeAgo(selectedBlockModal.timestamp, lang)}</Text>
               </Paper>
 
-              <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #10b981', borderRadius: 8 }}>
+              <Paper p="sm" bg="#f5e6d8" style={{ borderLeft: '3px solid #111111', border: '1px solid #d9cbbe', borderRadius: 0 }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
                   ⚡ {t('colTxCount')}
                 </Text>
-                <Text size="sm" fw={700} c="cyan" className="font-mono mt-1">
+                <Text size="sm" fw={700} c="#111111" className="font-mono mt-1">
                   {selectedBlockModal.total_tx_count || selectedBlockModal.transactions?.length || 0} {t('unlocks_txs_3')}
                 </Text>
                 <Group gap={4} mt={3}>
@@ -1378,11 +1366,11 @@ export default function OverviewTab({
                 </Group>
               </Paper>
 
-              <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b', borderRadius: 8 }}>
+              <Paper p="sm" bg="#f5e6d8" style={{ borderLeft: '3px solid #b45309', border: '1px solid #d9cbbe', borderRadius: 0 }}>
                 <Text size="11px" c="dimmed" tt="uppercase" fw={700}>
                   🔥 {t('colBlockFee')}
                 </Text>
-                <Text size="sm" fw={800} c="yellow" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
+                <Text size="sm" fw={800} c="#b45309" className="font-mono mt-1" style={{ whiteSpace: 'nowrap' }}>
                   {formatFee(selectedBlockModal.total_fees_hmnd, true, lang, false)}
                 </Text>
                 {selectedBlockModal.price_usd > 0 && Number(selectedBlockModal.total_fees_hmnd || 0) > 0 && (
@@ -1551,18 +1539,18 @@ export default function OverviewTab({
           content: {
             maxWidth: '1120px',
             width: '95vw',
-            border: '1px solid rgba(56, 189, 248, 0.28)',
-            borderRadius: 14,
-            background: '#0d1117',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+            border: '2px solid #111111',
+            borderRadius: 0,
+            background: '#fff1e5',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
           },
           header: {
-            background: '#161b22',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: '#f5e6d8',
+            borderBottom: '2px solid #111111',
             padding: '14px 20px',
           },
           body: {
-            background: '#0d1117',
+            background: '#fff1e5',
             padding: '20px',
           },
         }}
@@ -1570,7 +1558,7 @@ export default function OverviewTab({
         {selectedTxModal && (
           <Stack gap="md">
             {/* Top Information Card */}
-            <Paper p="sm" bg="rgba(0,0,0,0.35)" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+            <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
               <Group justify="space-between" align="center" wrap="wrap" mb="xs">
                 <Group gap="xs">
                   <Badge color={selectedTxModal.layer === 'EVM' ? 'cyan' : 'green'} variant="filled">
@@ -1699,13 +1687,13 @@ export default function OverviewTab({
 
             {/* Internal Token Transfers & DEX Swap Steps */}
             {selectedTxModal.tokenTransfers && selectedTxModal.tokenTransfers.length > 0 && (
-              <Paper p="sm" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+              <Paper p="sm" bg="#f5e6d8" style={{ border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
                 <Group justify="space-between" mb="xs">
                   <Group gap={6}>
-                    <IconSparkles size={16} color="#38bdf8" />
-                    <Title order={6} c="cyan">{t('tokenTransfersTitle')}</Title>
+                    <IconSparkles size={16} color="#0d7680" />
+                    <Title order={6} c="#111111" style={{ fontFamily: "var(--font-serif)" }}>{t('tokenTransfersTitle')}</Title>
                   </Group>
-                  <Badge color="cyan" size="xs">{selectedTxModal.tokenTransfers.length} {t('tokenColTransfers')}</Badge>
+                  <Badge color="teal" size="xs">{selectedTxModal.tokenTransfers.length} {t('tokenColTransfers')}</Badge>
                 </Group>
 
                 <Box style={{ overflowX: 'auto' }}>

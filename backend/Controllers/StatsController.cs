@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 using HumanodeTracker.Services;
 
@@ -8,11 +9,11 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class StatsController : ControllerBase
 {
-    private readonly IStatsRepository _statsRepo;
-    private readonly ITransactionRepository _txRepo;
-    private readonly IIndexerService _indexerService;
+    private readonly StatsRepository _statsRepo;
+    private readonly TransactionRepository _txRepo;
+    private readonly BlockchainIndexerService _indexerService;
 
-    public StatsController(IStatsRepository statsRepo, ITransactionRepository txRepo, IIndexerService indexerService)
+    public StatsController(StatsRepository statsRepo, TransactionRepository txRepo, BlockchainIndexerService indexerService)
     {
         _statsRepo = statsRepo;
         _txRepo = txRepo;
@@ -26,17 +27,9 @@ public class StatsController : ControllerBase
     }
 
     [HttpGet("stats")]
-    public async Task<IActionResult> GetStats(
-        [FromQuery] string layer = "all",
-        [FromQuery] string filter = "all",
-        [FromQuery] string startDate = "",
-        [FromQuery] string endDate = "",
-        [FromQuery] string q = "",
-        [FromQuery] string pallet = "",
-        [FromQuery] string? hideZeroFee = null)
+    public async Task<IActionResult> GetStats([FromQuery] StatsQueryRequest request)
     {
-        bool hide = hideZeroFee != "0" && hideZeroFee != "false";
-        var stats = await _statsRepo.GetStatsAsync(layer, filter, startDate, endDate, q, pallet, hide);
+        var stats = await _statsRepo.GetStatsAsync(request);
         var progress = _indexerService.GetProgress();
 
         return Ok(new
@@ -93,18 +86,9 @@ public class StatsController : ControllerBase
     }
 
     [HttpGet("daily")]
-    public async Task<IActionResult> GetDaily(
-        [FromQuery] string layer = "all",
-        [FromQuery] string filter = "all",
-        [FromQuery] string startDate = "",
-        [FromQuery] string endDate = "",
-        [FromQuery] string q = "",
-        [FromQuery] string pallet = "",
-        [FromQuery] string interval = "day",
-        [FromQuery] string? hideZeroFee = null)
+    public async Task<IActionResult> GetDaily([FromQuery] DailyStatsQueryRequest request)
     {
-        bool hide = hideZeroFee != "0" && hideZeroFee != "false";
-        var daily = await _statsRepo.GetDailyStatsAsync(layer, filter, startDate, endDate, q, pallet, interval, hide);
+        var daily = await _statsRepo.GetDailyStatsAsync(request);
         return Ok(daily);
     }
 
@@ -123,18 +107,11 @@ public class StatsController : ControllerBase
     }
 
     [HttpGet("export")]
-    public async Task<IActionResult> Export(
-        [FromQuery] string layer = "all",
-        [FromQuery] string filter = "all",
-        [FromQuery] string startDate = "",
-        [FromQuery] string endDate = "",
-        [FromQuery] string q = "",
-        [FromQuery] string pallet = "",
-        [FromQuery] string? hideZeroFee = null)
+    public async Task<IActionResult> Export([FromQuery] ExportCsvRequest request)
     {
-        bool hide = hideZeroFee != "0" && hideZeroFee != "false";
-        var csv = await _txRepo.ExportCsvAsync(layer, filter, startDate, endDate, q, pallet, hide);
-        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=UTF-8", $"humanode_activities_{layer}_{filter}.csv");
+        request ??= new ExportCsvRequest();
+        var csv = await _txRepo.ExportCsvAsync(request);
+        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=UTF-8", $"humanode_activities_{request.Layer}_{request.Filter}.csv");
     }
 
     [HttpGet("integrity")]
@@ -143,9 +120,9 @@ public class StatsController : ControllerBase
         return Ok(new
         {
             ok = true,
-            status = "HEALTHY",
+            status = "status_healthy",
             verifiedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            message = "Blok zinciri sürekliliği tam ve doğrulandı."
+            message = "status_integrity_verified"
         });
     }
 }

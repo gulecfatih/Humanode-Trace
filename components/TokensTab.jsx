@@ -29,7 +29,7 @@ import {
   IconShieldLock,
   IconLayersLinked,
 } from '@tabler/icons-react';
-import { shortAddr } from './formatters';
+import { shortAddr, formatTokenCategory } from './formatters';
 import { useLanguage } from './LanguageContext';
 import { useModuleFields } from './ModuleLayout';
 import KpiStatCard from './ui/KpiStatCard';
@@ -241,11 +241,16 @@ export default function TokensTab({ onSelectAddress }) {
       </Paper>
 
       {/* Token Listesi Tablosu */}
-      <Paper p="md" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Box style={{ overflowX: 'auto', width: '100%' }}>
           <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 620, tableLayout: 'fixed' }}>
-            <Table.Thead>
-              <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <Table.Thead
+              style={{
+                backgroundColor: '#f5e6d8',
+                borderBottom: '2px solid #111111',
+              }}
+            >
+              <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                 <Table.Th style={{ width: '32%', minWidth: 170, padding: '10px 8px' }}>
                   {t('tokenColAsset') || (t('tokenColAsset'))}
                 </Table.Th>
@@ -282,7 +287,7 @@ export default function TokensTab({ onSelectAddress }) {
                 filteredTokens.map((tk, idx) => {
                   const sym = tk.symbol || tk.token_symbol || 'TOKEN';
                   const nm = tk.name || tk.token_name || `${sym} Token`;
-                  const cat = tk.category || (sym.startsWith('IF-LP:') ? (t('tokens_dexLpPool')) : 'ERC-20 Token');
+                  const cat = formatTokenCategory(tk.category || (sym.startsWith('IF-LP:') ? 'dex_lp' : 'contract'), t);
                   const badgeColor = tk.color || 'violet';
                   const vol = Number(tk.total_volume || 0);
 
@@ -290,8 +295,8 @@ export default function TokensTab({ onSelectAddress }) {
                     <Table.Tr
                       key={tk.token_address || idx}
                       style={{
-                        backgroundColor: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                        borderBottom: '1px solid #d9cbbe',
                       }}
                     >
                       {/* Asset (Symbol Badge + Name + Category) */}
@@ -311,16 +316,16 @@ export default function TokensTab({ onSelectAddress }) {
                               padding: '0 8px',
                               height: 22,
                               lineHeight: '22px',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              border: '1px solid #d9cbbe',
                             }}
                           >
                             {sym}
                           </Badge>
                           <Box style={{ minWidth: 0, overflow: 'hidden', flex: 1 }}>
-                            <Text size="xs" fw={700} c="white" truncate title={nm}>
+                            <Text size="xs" fw={700} c="#111111" truncate title={nm} style={{ fontFamily: "var(--font-serif)" }}>
                               {nm}
                             </Text>
-                            <Text size="10px" c="dimmed" truncate title={cat}>
+                            <Text size="10px" c="#554f47" truncate title={cat}>
                               {cat}
                             </Text>
                           </Box>
@@ -333,8 +338,7 @@ export default function TokensTab({ onSelectAddress }) {
                           <Text
                             size="xs"
                             className="font-mono"
-                            c="cyan"
-                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            style={{ cursor: 'pointer', textDecoration: 'underline', color: '#0d7680', fontWeight: 600 }}
                             onClick={() => onSelectAddress && onSelectAddress(tk.token_address)}
                             title={`${tk.token_address} - ${t('tokens_openAddressQuickPeek')}`}
                           >
@@ -379,10 +383,10 @@ export default function TokensTab({ onSelectAddress }) {
 
                       {/* Sender / Recipient Distribution */}
                       <Table.Td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '8px 8px' }}>
-                        <Text size="xs" className="font-mono" c="gray.2" fw={600}>
+                        <Text size="xs" className="font-mono" c="#111111" fw={700}>
                           {Number(tk.unique_senders || 0).toLocaleString(locStr)} / {Number(tk.unique_holders || 0).toLocaleString(locStr)}
                         </Text>
-                        <Text size="10px" c="dimmed">
+                        <Text size="10px" c="#554f47">
                           {t('tokens_sendersHolders')}
                         </Text>
                       </Table.Td>

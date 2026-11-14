@@ -1,48 +1,26 @@
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface ITimeMachineRepository
+public class TimeMachineRepository
 {
-    Task<TimeMachineSnapshotDto> GetSnapshotAsync(long? blockNumber = null, string? date = null);
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly SystemConfigRepository _configRepo;
 
-public class TimeMachineSnapshotDto
-{
-    public long BlockNumber { get; set; }
-    public long Timestamp { get; set; }
-    public string Date { get; set; } = "";
-    public double HmndPriceUsd { get; set; }
-    public long CumulativeBlocks { get; set; }
-    public long CumulativeTransactions { get; set; }
-    public double CumulativeGasFeesHmnd { get; set; }
-    public double CirculatingSupplyEstimate { get; set; }
-    public List<SnapshotHolderDto> TopHoldersAtSnapshot { get; set; } = new();
-}
-
-public class SnapshotHolderDto
-{
-    public string Address { get; set; } = "";
-    public string Layer { get; set; } = "Substrate";
-    public double BalanceHmnd { get; set; }
-    public double ValueUsd { get; set; }
-}
-
-public class TimeMachineRepository : ITimeMachineRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
-
-    public TimeMachineRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
+    public TimeMachineRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
+        _configRepo = configRepo;
     }
 
     public async Task<TimeMachineSnapshotDto> GetSnapshotAsync(long? blockNumber = null, string? date = null)
     {
         using var connection = _dbFactory.CreateConnection();
+        var circBaseline = await _configRepo.GetDoubleConfigAsync("circulating_supply_baseline");
 
         long targetBlock = blockNumber ?? 20485859;
         long targetTs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -50,53 +28,27 @@ public class TimeMachineRepository : ITimeMachineRepository
         if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out var parsedDate))
         {
             targetTs = new DateTimeOffset(parsedDate, TimeSpan.Zero).ToUnixTimeSeconds();
-            const string blkSql = "SELECT number FROM blocks_with_tx WHERE timestamp <= @targetTs ORDER BY number DESC LIMIT 1";
-            var foundBlk = await connection.ExecuteScalarAsync<long?>(blkSql, new { targetTs });
+            var foundBlk = await connection.ExecuteScalarAsync<long?>(StoredProcedures.GetSnapshotBlockByTimestamp, new { targetTs });
             if (foundBlk.HasValue) targetBlock = foundBlk.Value;
         }
         else if (blockNumber.HasValue)
         {
-            const string tsSql = "SELECT timestamp FROM blocks_with_tx WHERE number <= @targetBlock ORDER BY number DESC LIMIT 1";
-            var foundTs = await connection.ExecuteScalarAsync<long?>(tsSql, new { targetBlock });
+            var foundTs = await connection.ExecuteScalarAsync<long?>(StoredProcedures.GetSnapshotTimestampByBlock, new { targetBlock });
             if (foundTs.HasValue) targetTs = foundTs.Value;
         }
 
         var dateStr = DateTimeOffset.FromUnixTimeSeconds(targetTs).ToString("yyyy-MM-dd");
 
         // Price at snapshot date
-        const string priceSql = "SELECT price_usd FROM hmnd_daily_prices WHERE day <= @dateStr ORDER BY day DESC LIMIT 1";
-        var price = await connection.ExecuteScalarAsync<double?>(priceSql, new { dateStr }) ?? await _priceRepo.GetPriceForDateAsync(dateStr);
+        var price = await connection.ExecuteScalarAsync<double?>(StoredProcedures.GetSnapshotPriceByDate, new { dateStr }) ?? await _priceRepo.GetPriceForDateAsync(dateStr);
 
         // Cumulative blocks, txs, fees up to targetBlock
-        const string cumBlockSql = "SELECT COUNT(*) FROM blocks_with_tx WHERE number <= @targetBlock";
-        var cumBlocks = await connection.ExecuteScalarAsync<long>(cumBlockSql, new { targetBlock });
-
-        const string cumTxsSql = "SELECT (SELECT COUNT(*) FROM transactions WHERE block_number <= @targetBlock) + (SELECT COUNT(*) FROM substrate_extrinsics WHERE block_number <= @targetBlock)";
-        var cumTxs = await connection.ExecuteScalarAsync<long>(cumTxsSql, new { targetBlock });
-
-        const string cumFeesSql = "SELECT COALESCE(SUM(total_fees_hmnd), 0) FROM blocks_with_tx WHERE number <= @targetBlock";
-        var cumFees = await connection.ExecuteScalarAsync<double>(cumFeesSql, new { targetBlock });
+        var cumBlocks = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetSnapshotCumulativeBlocks, new { targetBlock });
+        var cumTxs = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetSnapshotCumulativeTxs, new { targetBlock });
+        var cumFees = await connection.ExecuteScalarAsync<double>(StoredProcedures.GetBurnedTotalFees);
 
         // Top holders up to that block
-        const string topHoldersSql = @"
-            SELECT address, 'Substrate' as layer, SUM(inflow - outflow) as bal
-            FROM (
-                SELECT target as address, SUM(value_hmnd) as inflow, 0.0 as outflow
-                FROM substrate_extrinsics
-                WHERE block_number <= @targetBlock AND target > '' AND status = 1
-                GROUP BY target
-                UNION ALL
-                SELECT signer as address, 0.0 as inflow, SUM(value_hmnd) as outflow
-                FROM substrate_extrinsics
-                WHERE block_number <= @targetBlock AND signer > '' AND status = 1
-                GROUP BY signer
-            )
-            GROUP BY address
-            HAVING bal > 1000
-            ORDER BY bal DESC
-            LIMIT 10";
-
-        var holders = (await connection.QueryAsync<(string address, string layer, double bal)>(topHoldersSql, new { targetBlock }))
+        var holders = (await connection.QueryAsync<(string address, string layer, double bal)>(StoredProcedures.GetSnapshotTopHolders, new { targetBlock }))
             .Select(h => new SnapshotHolderDto
             {
                 Address = h.address,
@@ -115,7 +67,7 @@ public class TimeMachineRepository : ITimeMachineRepository
             CumulativeBlocks = cumBlocks,
             CumulativeTransactions = cumTxs,
             CumulativeGasFeesHmnd = Math.Round(cumFees, 2),
-            CirculatingSupplyEstimate = Math.Round(Math.Min(285970432.0, 100000000.0 + (targetBlock * 9.0)), 2),
+            CirculatingSupplyEstimate = Math.Round(Math.Min(circBaseline, 100000000.0 + (targetBlock * 9.0)), 2),
             TopHoldersAtSnapshot = holders
         };
     }

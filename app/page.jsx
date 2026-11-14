@@ -138,17 +138,18 @@ function HomeContent() {
       padding="md"
       styles={{
         main: {
-          background: '#0a0d12',
+          background: '#fff1e5',
           minHeight: '100vh',
+          color: '#111111',
         },
         navbar: {
-          background: '#0d1117',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#fbf0e6',
+          borderRight: '1px solid #d9cbbe',
           transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         },
         header: {
-          background: '#0d1117',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#fff1e5',
+          borderBottom: '2px solid #111111',
         },
       }}
     >
@@ -314,23 +315,21 @@ function HomeContent() {
       <Affix position={{ bottom: 24, right: 24 }}>
         <Transition transition="slide-up" mounted={scroll.y > 180}>
           {(transitionStyles) => (
-            <Tooltip label={t('scrollToTop') || 'Yukarı Dön'} withArrow position="left">
+            <Tooltip label={t('scrollToTop')} withArrow position="left">
               <ActionIcon
-                size={40}
-                radius="xl"
+                size={36}
+                radius={0}
                 variant="filled"
-                color="cyan"
                 style={{
                   ...transitionStyles,
-                  backgroundColor: 'rgba(13, 17, 23, 0.85)',
-                  border: '1px solid rgba(56, 189, 248, 0.4)',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.25)',
-                  color: '#38bdf8',
+                  backgroundColor: '#0d7680',
+                  border: '1px solid #084c53',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  color: '#ffffff',
                 }}
                 onClick={() => scrollTo({ y: 0 })}
               >
-                <IconArrowUp size={20} stroke={2.2} />
+                <IconArrowUp size={18} stroke={2.2} />
               </ActionIcon>
             </Tooltip>
           )}

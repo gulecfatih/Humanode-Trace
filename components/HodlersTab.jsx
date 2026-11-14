@@ -131,14 +131,14 @@ export default function HodlersTab({
           />
 
           {/* Substrate Network */}
-          <Card p="sm" radius="md" style={{ background: 'rgba(20, 184, 166, 0.06)', border: '1px solid rgba(20, 184, 166, 0.25)' }}>
+          <Card p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="teal" variant="light" size="xs">
-                ⚡ Substrate Ağı (hm...)
+                {t('hodlers_substrateNetwork')}
               </Badge>
-              <IconNetwork size={16} color="#14b8a6" />
+              <IconNetwork size={16} color="#0d7680" />
             </Group>
-            <Text size="md" fw={800} c="teal" className="font-mono">
+            <Text size="md" fw={800} style={{ color: '#0d7680', fontFamily: 'var(--font-mono)' }}>
               {formatHMND(kpis?.substrate_balance_hmnd || 0, { locale: lang, showScale: false })}
             </Text>
             <Group justify="space-between" mt={4}>
@@ -152,14 +152,14 @@ export default function HodlersTab({
           </Card>
 
           {/* EVM Network */}
-          <Card p="sm" radius="md" style={{ background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+          <Card p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
             <Group justify="space-between" align="center" mb={6}>
               <Badge color="cyan" variant="light" size="xs">
-                🌐 EVM Ağı (0x...)
+                {t('hodlers_evmNetwork')}
               </Badge>
-              <IconBuildingBank size={16} color="#38bdf8" />
+              <IconBuildingBank size={16} color="#0d7680" />
             </Group>
-            <Text size="md" fw={800} c="cyan" className="font-mono">
+            <Text size="md" fw={800} style={{ color: '#0d7680', fontFamily: 'var(--font-mono)' }}>
               {formatHMND(kpis?.evm_balance_hmnd || 0, { locale: lang, showScale: false })}
             </Text>
             <Group justify="space-between" mt={4}>
@@ -184,19 +184,15 @@ export default function HodlersTab({
       </Paper>
 
       {/* 2. HODLERS TABLE AND STICKY SEARCH BAR */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Stack gap="sm">
-          {/* STICKY TOOLBAR */}
+          {/* TOOLBAR */}
           <Box
             p="xs"
             style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 15,
-              backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(13, 17, 23, 0.92)',
-              borderRadius: 6,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f5e6d8',
+              borderRadius: 0,
+              border: '1px solid #d9cbbe',
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -212,10 +208,10 @@ export default function HodlersTab({
                     { value: 'all', label: t('hodlers_all') },
                     { value: 'substrate', label: '⚡ Substrate (hm...)' },
                     { value: 'evm', label: '🌐 EVM (0x...)' },
-                    { value: 'cross_layer', label: '🔗 Çift Katman Eşleşmeli' },
+                    { value: 'cross_layer', label: t('hodlers_optCrossLayer') },
                   ]}
                   styles={{
-                    root: { background: 'rgba(255, 255, 255, 0.05)' },
+                    root: { background: '#ecdcd0', border: '1px solid #d9cbbe' },
                   }}
                 />
                 <Badge variant="light" color="teal" size="sm">
@@ -248,11 +244,11 @@ export default function HodlersTab({
                     setPage(1);
                   }}
                   data={[
-                    { value: '25', label: '25 / s.' },
-                    { value: '50', label: '50 / s.' },
-                    { value: '100', label: '100 / s.' },
+                    { value: '25', label: t('perPage', { count: 25 }) },
+                    { value: '50', label: t('perPage', { count: 50 }) },
+                    { value: '100', label: t('perPage', { count: 100 }) },
                   ]}
-                  style={{ width: 85 }}
+                  style={{ width: 105 }}
                 />
               </Group>
             </Group>
@@ -263,11 +259,8 @@ export default function HodlersTab({
             <Table highlightOnHover verticalSpacing="xs">
               <Table.Thead
                 style={{
-                  position: 'sticky',
-                  top: 50,
-                  zIndex: 10,
-                  backdropFilter: 'blur(10px)',
-                  backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                  backgroundColor: '#f5e6d8',
+                  borderBottom: '2px solid #111111',
                 }}
               >
                 <Table.Tr>
@@ -285,7 +278,7 @@ export default function HodlersTab({
                   <Table.Tr>
                     <Table.Td colSpan={7} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {t('loading') || 'Yükleniyor...'}
+                        {t('loading')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -349,8 +342,8 @@ export default function HodlersTab({
                             <Progress
                               value={Math.min(item.share_percent * 4, 100)}
                               size="xs"
-                              color={isSub ? 'teal' : 'cyan'}
-                              radius="xl"
+                              color="#0d7680"
+                              radius={0}
                             />
                           </Stack>
                         </Table.Td>
@@ -375,7 +368,7 @@ export default function HodlersTab({
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
-                                  color="cyan"
+                                  style={{ color: '#0d7680' }}
                                   onClick={() => onOpenLedger(item.address)}
                                 >
                                   <IconBook size={13} />
@@ -387,7 +380,7 @@ export default function HodlersTab({
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
-                                  color="teal"
+                                  style={{ color: '#0d7680' }}
                                   onClick={() => onOpenTrail(item.address)}
                                 >
                                   <IconGitFork size={13} />

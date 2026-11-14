@@ -1,48 +1,17 @@
 using System.Text.Json;
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface ITaxReportRepository
+public class TaxReportRepository
 {
-    Task<ValidatorTaxReportDto> GenerateTaxReportAsync(string address, int? year = null, double vpsMonthlyUsd = 15.0);
-    Task<string> GenerateTaxReportCsvAsync(string address, int? year = null, double vpsMonthlyUsd = 15.0);
-}
-
-public class ValidatorTaxReportDto
-{
-    public string Address { get; set; } = "";
-    public int TaxYear { get; set; }
-    public string Currency { get; set; } = "USD";
-    public double TotalEarnedHmnd { get; set; }
-    public double TotalGrossIncomeUsd { get; set; }
-    public double TotalVpsExpensesUsd { get; set; }
-    public double NetTaxableIncomeUsd { get; set; }
-    public int PayoutCount { get; set; }
-    public List<TaxPayoutItemDto> Payouts { get; set; } = new();
-}
-
-public class TaxPayoutItemDto
-{
-    public int BatchNumber { get; set; }
-    public long BlockNumber { get; set; }
-    public string Date { get; set; } = "";
-    public long Timestamp { get; set; }
-    public double AmountHmnd { get; set; }
-    public double PriceUsd { get; set; }
-    public double GrossIncomeUsd { get; set; }
-    public double DeductibleExpenseUsd { get; set; }
-    public double NetTaxableUsd { get; set; }
-}
-
-public class TaxReportRepository : ITaxReportRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
     private readonly string _payoutsPath;
 
-    public TaxReportRepository(IDbConnectionFactory dbFactory, IConfiguration config, IPriceRepository priceRepo)
+    public TaxReportRepository(SqliteConnectionFactory dbFactory, IConfiguration config, PriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
@@ -57,17 +26,55 @@ public class TaxReportRepository : ITaxReportRepository
             _payoutsPath = "Data/validator_payouts.json";
     }
 
-    public async Task<ValidatorTaxReportDto> GenerateTaxReportAsync(string address, int? year = null, double vpsMonthlyUsd = 15.0)
+    public async Task<ValidatorTaxReportDto> GenerateTaxReportAsync(ValidatorTaxReportRequest req)
     {
-        var clean = (address ?? "").Trim();
-        var targetYear = year ?? DateTime.UtcNow.Year;
+        req ??= new ValidatorTaxReportRequest();
+        var clean = (req.Address ?? "").Trim();
+        var targetYear = req.Year ?? DateTime.UtcNow.Year;
+        var vpsMonthlyUsd = req.VpsMonthly;
 
-        var priceMap = await _priceRepo.GetPriceMapAsync();
+        var priceList = await _priceRepo.GetPriceMapAsync();
         var latestPrice = await _priceRepo.GetLatestPriceAsync();
 
         var payouts = new List<TaxPayoutItemDto>();
 
-        if (File.Exists(_payoutsPath))
+        using var connection = _dbFactory.CreateConnection();
+        try
+        {
+            var rows = await connection.QueryAsync<(int BatchNumber, long BlockNumber, long Timestamp, double AmountHmnd)>(StoredProcedures.GetTaxReportPayouts, new { Clean = clean });
+            foreach (var r in rows)
+            {
+                var tsSec = r.Timestamp > 100_000_000_000 ? r.Timestamp / 1000 : r.Timestamp;
+                var dt = DateTimeOffset.FromUnixTimeSeconds(tsSec);
+                if (req.Year.HasValue && dt.Year != targetYear) continue;
+
+                var dateStr = dt.ToString("yyyy-MM-dd");
+                var priceMatch = priceList.FirstOrDefault(x => x.Date.Equals(dateStr, StringComparison.OrdinalIgnoreCase));
+                double price = priceMatch != null ? priceMatch.PriceUsd : latestPrice;
+                double gross = Math.Round(r.AmountHmnd * price, 2);
+                double expense = Math.Round(vpsMonthlyUsd / 2.14, 2);
+                double net = Math.Max(0, Math.Round(gross - expense, 2));
+
+                payouts.Add(new TaxPayoutItemDto
+                {
+                    BatchNumber = r.BatchNumber,
+                    BlockNumber = r.BlockNumber,
+                    Date = dateStr,
+                    Timestamp = tsSec,
+                    AmountHmnd = Math.Round(r.AmountHmnd, 2),
+                    PriceUsd = price,
+                    GrossIncomeUsd = gross,
+                    DeductibleExpenseUsd = expense,
+                    NetTaxableUsd = net
+                });
+            }
+        }
+        catch
+        {
+            // Table error, fallback to JSON
+        }
+
+        if (payouts.Count == 0 && File.Exists(_payoutsPath))
         {
             try
             {
@@ -85,7 +92,7 @@ public class TaxReportRepository : ITaxReportRepository
                         var dateStr = DateTimeOffset.FromUnixTimeSeconds(tsSec).ToString("yyyy-MM-dd");
                         var payoutYear = DateTimeOffset.FromUnixTimeSeconds(tsSec).Year;
 
-                        if (year.HasValue && payoutYear != targetYear) continue;
+                        if (req.Year.HasValue && payoutYear != targetYear) continue;
 
                         if (b.TryGetProperty("recipients", out var recs))
                         {
@@ -107,7 +114,8 @@ public class TaxReportRepository : ITaxReportRepository
 
                                 if (string.Equals(recipientAddr, clean, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    double price = priceMap.TryGetValue(dateStr, out var p) ? p : latestPrice;
+                                    var priceMatch = priceList.FirstOrDefault(x => x.Date.Equals(dateStr, StringComparison.OrdinalIgnoreCase));
+                                    double price = priceMatch != null ? priceMatch.PriceUsd : latestPrice;
                                     double gross = Math.Round(hmnd * price, 2);
                                     double expense = Math.Round(vpsMonthlyUsd / 2.14, 2); // Expense allocated per round
                                     double net = Math.Max(0, Math.Round(gross - expense, 2));
@@ -152,9 +160,9 @@ public class TaxReportRepository : ITaxReportRepository
         };
     }
 
-    public async Task<string> GenerateTaxReportCsvAsync(string address, int? year = null, double vpsMonthlyUsd = 15.0)
+    public async Task<string> GenerateTaxReportCsvAsync(ValidatorTaxReportRequest req)
     {
-        var report = await GenerateTaxReportAsync(address, year, vpsMonthlyUsd);
+        var report = await GenerateTaxReportAsync(req);
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("BatchNumber,BlockNumber,Date,Timestamp,Amount_HMND,Price_USD,Gross_Income_USD,Deductible_Expense_USD,Net_Taxable_USD");
 

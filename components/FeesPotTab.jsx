@@ -90,7 +90,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
   const cdMins = Math.floor((Math.abs(diffSec) % 3600) / 60);
   const cdSecs = Math.abs(diffSec) % 60;
   const countdownFormatted = isOverdue
-    ? (t('feespot_imminentPayout') || 'Dağıtım Eşiğinde')
+    ? t('feespot_imminentPayout')
     : `${cdDays}g ${String(cdHours).padStart(2, '0')}:${String(cdMins).padStart(2, '0')}:${String(cdSecs).padStart(2, '0')}`;
 
   // Paginated payout batch history. TODO: Support CSV export of historic rounds
@@ -202,11 +202,11 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             title={t('feespot_nextBatchCountdown')}
             value={countdownFormatted}
             color={isOverdue ? 'teal' : 'violet'}
-            badge={isOverdue ? (t('feespot_pendingMultisig') || 'Bekleniyor') : null}
+            badge={isOverdue ? t('feespot_pendingMultisig') : null}
             badgeColor={isOverdue ? 'teal' : 'violet'}
             icon={IconCalendar}
             subtext={isOverdue
-              ? `~10-14 ${t('feespot_nov620HmndNode')} • ${t('feespot_multisigConfirmationPending') || 'Tur her an tetiklenebilir'}`
+              ? `~10-14 ${t('feespot_nov620HmndNode')} • ${t('feespot_multisigConfirmationPending')}`
               : `~10-14 ${t('feespot_nov620HmndNode')}`}
             tooltip={t('feespot_estimatedNextPayoutBatch')}
           />
@@ -292,7 +292,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             <Box style={{ overflowX: 'auto', width: '100%' }}>
               <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 680, tableLayout: 'fixed' }}>
                 <Table.Thead>
-                  <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                     <Table.Th style={{ width: '22%', minWidth: 140, padding: '10px 8px' }}>
                       {t('feespot_fundingSourceSender')}
                     </Table.Th>
@@ -327,7 +327,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                       type: 'DIRECT_TRANSFER'
                     }
                   ]).map((tx, idx) => (
-                    <Table.Tr key={tx.hash || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <Table.Tr key={tx.hash || idx} style={{ borderBottom: '1px solid #d9cbbe' }}>
                       <Table.Td style={{ padding: '8px 8px' }}>
                         <AddressBadge
                           address={tx.signer}
@@ -345,9 +345,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                       <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                         <Text
                           size="xs"
-                          c="cyan"
-                          fw={700}
-                          style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                          style={{ color: '#0d7680', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
                           onClick={() => onOpenBlock && onOpenBlock(tx.block)}
                         >
                           #{tx.block?.toLocaleString(locStr)}
@@ -355,7 +353,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                       </Table.Td>
 
                       <Table.Td style={{ padding: '8px 8px' }}>
-                        <Text size="xs" c="gray.3">
+                        <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                           {formatTimestamp(tx.timestamp, lang)}
                         </Text>
                       </Table.Td>
@@ -377,9 +375,9 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                   ))}
 
                   {/* Record 2: Genesis / System Reserve Inflow */}
-                  <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: 'rgba(56, 189, 248, 0.02)' }}>
+                  <Table.Tr style={{ borderBottom: '1px solid #d9cbbe', backgroundColor: '#fff1e5' }}>
                     <Table.Td style={{ padding: '8px 8px' }}>
-                      <Text size="xs" fw={700} c="cyan">
+                      <Text size="xs" fw={700} style={{ color: '#111111' }}>
                         Genesis / Sistem Rezervi
                       </Text>
                     </Table.Td>
@@ -393,9 +391,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                       <Text
                         size="xs"
-                        c="cyan"
-                        fw={700}
-                        style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        style={{ color: '#0d7680', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
                         onClick={() => onOpenBlock && onOpenBlock(0)}
                       >
                         #0 (Genesis)
@@ -403,7 +399,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     </Table.Td>
 
                     <Table.Td style={{ padding: '8px 8px' }}>
-                      <Text size="xs" c="gray.3">
+                      <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                         {t('feespot_oct142022')}
                       </Text>
                     </Table.Td>
@@ -426,10 +422,10 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                   </Table.Tr>
 
                   {/* Record 3: Network Transaction Gas Pool Inflow */}
-                  <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', backgroundColor: 'rgba(16, 185, 129, 0.02)' }}>
+                  <Table.Tr style={{ borderBottom: '1px solid #d9cbbe' }}>
                     <Table.Td style={{ padding: '8px 8px' }}>
-                      <Text size="xs" fw={700} c="teal">
-                        Ağ Gas İşlem Komisyonları
+                      <Text size="xs" fw={700} style={{ color: '#0d7680' }}>
+                        {t('feespot_gasFees')}
                       </Text>
                     </Table.Td>
 
@@ -446,7 +442,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     </Table.Td>
 
                     <Table.Td style={{ padding: '8px 8px' }}>
-                      <Text size="xs" c="gray.3">
+                      <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                         {t('feespot_continuousOnBlock')}
                       </Text>
                     </Table.Td>
@@ -474,7 +470,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
             <Box style={{ overflowX: 'auto', width: '100%' }}>
               <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 640, tableLayout: 'fixed' }}>
                 <Table.Thead>
-                  <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                     <Table.Th style={{ width: '12%', minWidth: 70, padding: '10px 8px' }}>
                       {t('feespot_batch')}
                     </Table.Th>
@@ -500,7 +496,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                     <Table.Tr>
                       <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
                         <Center>
-                          <Loader size="sm" color="cyan" mr="xs" />
+                          <Loader size="sm" color="teal" mr="xs" />
                           <Text size="sm" c="dimmed">
                             {t('feespot_loadingPayoutHistory')}
                           </Text>
@@ -516,8 +512,8 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                         <Table.Tr
                           key={item.block || idx}
                           style={{
-                            backgroundColor: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-                            borderBottom: '1px solid rgba(255,255,255,0.04)',
+                            backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                            borderBottom: '1px solid #d9cbbe',
                           }}
                         >
                           {/* Tur # */}
@@ -535,9 +531,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
                           <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                             <Text
                               size="xs"
-                              c="cyan"
-                              fw={700}
-                              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                              style={{ color: '#0d7680', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
                               onClick={() => onOpenBlock && onOpenBlock(item.block)}
                               title={`${item.block} - ${t('feespot_inspectBlock')}`}
                             >
@@ -547,7 +541,7 @@ export default function FeesPotTab({ onOpenBlock, onSelectAddress }) {
 
                           {/* Tarih */}
                           <Table.Td style={{ padding: '8px 8px' }}>
-                            <Text size="xs" c="gray.3">
+                            <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                               {formatTimestamp(item.timestamp, lang)}
                             </Text>
                           </Table.Td>

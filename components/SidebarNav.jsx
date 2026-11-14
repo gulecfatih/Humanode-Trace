@@ -60,7 +60,7 @@ export default function SidebarNav({
   const NAV_CATEGORIES = [
     {
       id: 'cat_network',
-      title: t('navCatNetwork') || 'AĞ & BLOKLAR',
+      title: t('navCatNetwork'),
       items: [
         { id: 'overview', label: t('navOverview'), icon: IconDashboard, color: 'cyan' },
         { id: 'leaderboard', label: t('navLeaderboard'), icon: IconTrophy, color: 'yellow' },
@@ -69,7 +69,7 @@ export default function SidebarNav({
     },
     {
       id: 'cat_economics',
-      title: t('navCatEconomics') || 'EKONOMİ & ARZ',
+      title: t('navCatEconomics'),
       items: [
         { id: 'tokenomics', label: t('navTokenomics'), icon: IconChartPie, color: 'cyan' },
         { id: 'unlocks', label: t('navUnlocks'), icon: IconLockOpen, color: 'pink' },
@@ -80,7 +80,7 @@ export default function SidebarNav({
     },
     {
       id: 'cat_validators',
-      title: t('navCatValidators') || 'BİYOMETRİ & VALİDATÖR',
+      title: t('navCatValidators'),
       items: [
         { id: 'validators', label: t('navValidators'), icon: IconDna, color: 'blue' },
         { id: 'feespot', label: t('navFeesPot'), icon: IconCoins, color: 'teal' },
@@ -89,7 +89,7 @@ export default function SidebarNav({
     },
     {
       id: 'cat_tokens',
-      title: t('navCatTokens') || 'TOKENLAR & DEX',
+      title: t('navCatTokens'),
       items: [
         { id: 'tokens', label: t('navTokens'), icon: IconCoins, color: 'teal' },
         { id: 'dexdepth', label: t('navDexDepth'), icon: IconArrowsExchange, color: 'indigo' },
@@ -97,7 +97,7 @@ export default function SidebarNav({
     },
     {
       id: 'cat_wallets',
-      title: t('navCatWallets') || 'CÜZDAN & İZ SÜRME',
+      title: t('navCatWallets'),
       items: [
         { id: 'directory', label: t('navDirectory'), icon: IconBuildingBank, color: 'yellow' },
         { id: 'whales', label: t('navWhales'), icon: IconRadar, color: 'yellow' },
@@ -118,7 +118,7 @@ export default function SidebarNav({
       }}
     >
       {/* Sidebar Header & Collapse/Expand Button */}
-      <Box pb="xs" mb={4} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.07)' }}>
+      <Box pb="xs" mb={4} style={{ borderBottom: '2px solid #000000' }}>
         {!collapsed ? (
           <Group justify="space-between" align="center" px={4} py={2}>
             <Group gap={6} align="center">
@@ -135,11 +135,11 @@ export default function SidebarNav({
                 c="dimmed"
                 style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
-                {t('menuTitle') || 'Menü'}
+                {t('menuTitle')}
               </Text>
             </Group>
             <Tooltip
-              label={`${t('collapseMenu') || 'Menüyü Daralt'} ([)`}
+              label={`${t('collapseMenu')} ([)`}
               position="right"
               withArrow
               offset={10}
@@ -149,10 +149,10 @@ export default function SidebarNav({
                 color="gray"
                 size="sm"
                 onClick={onToggleCollapse}
-                aria-label={t('collapseMenu') || 'Menüyü Daralt'}
+                aria-label={t('collapseMenu')}
                 style={{
-                  borderRadius: 6,
-                  color: '#94a3b8',
+                  borderRadius: 0,
+                  color: '#111111',
                 }}
               >
                 <IconLayoutSidebarLeftCollapse size={18} stroke={1.7} />
@@ -162,21 +162,21 @@ export default function SidebarNav({
         ) : (
           <Center py={2}>
             <Tooltip
-              label={`${t('expandMenu') || 'Menüyü Genişlet'} ([)`}
+              label={`${t('expandMenu')} ([)`}
               position="right"
               withArrow
               offset={14}
             >
               <ActionIcon
-                variant="light"
-                color="cyan"
+                variant="subtle"
                 size="md"
                 onClick={onToggleCollapse}
-                aria-label={t('expandMenu') || 'Menüyü Genişlet'}
+                aria-label={t('expandMenu')}
                 style={{
-                  borderRadius: 8,
-                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  borderRadius: 0,
+                  backgroundColor: '#ecdcd0',
+                  border: '1px solid #d9cbbe',
+                  color: '#111111',
                 }}
               >
                 <IconLayoutSidebarLeftExpand size={19} stroke={1.8} />
@@ -191,22 +191,23 @@ export default function SidebarNav({
         {NAV_CATEGORIES.map((category, catIdx) => (
           <Box key={category.id} mb={catIdx < NAV_CATEGORIES.length - 1 ? 4 : 0}>
             {!collapsed ? (
-              <Box px={6} py={3}>
+              <Box px={6} py={3} mb={3} style={{ borderBottom: '1px solid #d9cbbe' }}>
                 <Text
                   size="10px"
                   fw={800}
-                  c="#64748b"
+                  c="#666059"
                   style={{
-                    letterSpacing: '0.06em',
+                    letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     userSelect: 'none',
+                    fontFamily: "var(--font-sans), 'Inter', sans-serif",
                   }}
                 >
                   {category.title}
                 </Text>
               </Box>
             ) : (
-              catIdx > 0 && <Divider my={4} color="rgba(255, 255, 255, 0.06)" />
+              catIdx > 0 && <Divider my={4} color="#d9cbbe" />
             )}
 
             <Stack gap={2}>
@@ -225,8 +226,7 @@ export default function SidebarNav({
                       transitionProps={{ transition: 'fade', duration: 150 }}
                     >
                       <ActionIcon
-                        variant={isActive ? 'filled' : 'subtle'}
-                        color={isActive ? 'cyan' : 'gray'}
+                        variant="subtle"
                         size={38}
                         onClick={(e) => {
                           e.preventDefault();
@@ -236,14 +236,14 @@ export default function SidebarNav({
                         style={{
                           width: '100%',
                           height: 38,
-                          borderRadius: 8,
-                          backgroundColor: isActive ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                          border: isActive ? '1px solid rgba(56, 189, 248, 0.45)' : '1px solid transparent',
-                          color: isActive ? '#38bdf8' : '#94a3b8',
-                          transition: 'all 0.15s ease',
+                          borderRadius: 0,
+                          backgroundColor: isActive ? '#f2dfcf' : 'transparent',
+                          borderLeft: isActive ? '3px solid #990f3d' : '3px solid transparent',
+                          color: '#111111',
+                          transition: 'all 0.1s ease',
                         }}
                       >
-                        <Icon size={18} stroke={isActive ? 2 : 1.6} />
+                        <Icon size={18} stroke={isActive ? 2.5 : 1.8} />
                       </ActionIcon>
                     </Tooltip>
                   );
@@ -258,12 +258,14 @@ export default function SidebarNav({
                     label={
                       <Text
                         size="12px"
-                        fw={isActive ? 700 : 500}
+                        fw={isActive ? 800 : 600}
                         style={{
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           letterSpacing: '-0.1px',
+                          color: '#111111',
+                          fontFamily: "var(--font-sans), 'Inter', sans-serif",
                         }}
                         title={item.label}
                       >
@@ -273,9 +275,9 @@ export default function SidebarNav({
                     leftSection={
                       <Icon
                         size={16}
-                        stroke={isActive ? 2 : 1.6}
+                        stroke={isActive ? 2.5 : 1.8}
                         style={{
-                          color: isActive ? '#38bdf8' : '#94a3b8',
+                          color: isActive ? '#990f3d' : '#332f2b',
                           flexShrink: 0,
                         }}
                       />
@@ -285,16 +287,17 @@ export default function SidebarNav({
                       onTabChange(item.id);
                     }}
                     style={{
-                      borderRadius: 6,
-                      transition: 'all 0.15s ease',
-                      backgroundColor: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-                      borderLeft: isActive ? '3px solid #38bdf8' : '3px solid transparent',
-                      color: isActive ? '#f0f6fc' : '#94a3b8',
-                      paddingTop: 5,
-                      paddingBottom: 5,
-                      paddingLeft: 8,
-                      paddingRight: 8,
-                      minHeight: 32,
+                      borderRadius: 0,
+                      transition: 'all 0.1s ease',
+                      backgroundColor: isActive ? '#f2dfcf' : 'transparent',
+                      borderLeft: isActive ? '3px solid #990f3d' : '3px solid transparent',
+                      color: '#111111',
+                      paddingTop: 6,
+                      paddingBottom: 6,
+                      paddingLeft: 10,
+                      paddingRight: 10,
+                      minHeight: 34,
+                      marginBottom: 2,
                     }}
                   />
                 );
@@ -305,7 +308,7 @@ export default function SidebarNav({
       </Stack>
 
       {/* Sidebar Footer Area */}
-      <Box pt="xs" mt="auto" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.07)' }}>
+      <Box pt="xs" mt="auto" style={{ borderTop: '1px solid #d9cbbe' }}>
         {!collapsed ? (
           <UnstyledButton
             onClick={onToggleCollapse}
@@ -314,50 +317,49 @@ export default function SidebarNav({
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              padding: '6px 8px',
-              borderRadius: 6,
-              color: '#94a3b8',
-              fontSize: '11px',
-              fontWeight: 500,
+              padding: '8px 10px',
+              borderRadius: 0,
+              color: '#111111',
+              fontSize: '12px',
+              fontWeight: 600,
               transition: 'background 0.15s ease, color 0.15s ease',
               cursor: 'pointer',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.color = '#f0f6fc';
+              e.currentTarget.style.backgroundColor = '#ecdcd0';
+              e.currentTarget.style.color = '#111111';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#94a3b8';
+              e.currentTarget.style.color = '#111111';
             }}
           >
             <Group gap="xs" align="center">
-              <IconLayoutSidebarLeftCollapse size={15} stroke={1.6} />
-              <Text size="11px" fw={600}>
-                {t('collapseMenu') || 'Menüyü Daralt'}
+              <IconLayoutSidebarLeftCollapse size={16} stroke={2} color="#111111" />
+              <Text size="12px" fw={700} style={{ color: '#111111', fontFamily: 'var(--font-sans)' }}>
+                {t('collapseMenu')}
               </Text>
             </Group>
-            <Kbd size="xs" style={{ background: '#1e293b', border: '1px solid #334155' }}>
+            <Kbd size="xs" style={{ background: '#ecdcd0', border: '1px solid #d9cbbe', color: '#111111', fontWeight: 700 }}>
               [
             </Kbd>
           </UnstyledButton>
         ) : (
           <Center py={2}>
             <Tooltip
-              label={`${t('expandMenu') || 'Menüyü Genişlet'} ([)`}
+              label={`${t('expandMenu')} ([)`}
               position="right"
               withArrow
               offset={14}
             >
               <ActionIcon
                 variant="subtle"
-                color="gray"
                 size="md"
                 onClick={onToggleCollapse}
-                aria-label={t('expandMenu') || 'Menüyü Genişlet'}
-                style={{ borderRadius: 8, color: '#94a3b8' }}
+                aria-label={t('expandMenu')}
+                style={{ borderRadius: 0, color: '#111111' }}
               >
-                <IconLayoutSidebarLeftExpand size={18} stroke={1.6} />
+                <IconLayoutSidebarLeftExpand size={18} stroke={1.8} />
               </ActionIcon>
             </Tooltip>
           </Center>

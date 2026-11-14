@@ -222,6 +222,12 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
       fetch(`/api/wallet-cluster?address=${encodeURIComponent(targetAddr)}`).then((r) => r.json()),
     ])
       .then(([trailRes, clusterRes]) => {
+        if (trailRes?.links) {
+          trailRes.links = trailRes.links.map(l => ({
+            ...l,
+            valueHmnd: Number(l.valueHmnd ?? l.amount ?? 0)
+          }));
+        }
         setTrailData(trailRes);
         setClusterData(clusterRes);
         setAddress(targetAddr);
@@ -388,25 +394,35 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
               <div>
                 <Group gap="xs">
                   <Title order={4} c="white">
-                    {clusterData.entityName}
+                    {clusterData.entityType === 'RETAIL'
+                      ? t('entity_retailUser')
+                      : clusterData.entityType === 'VALIDATOR'
+                      ? t('entity_activeValidator')
+                      : clusterData.entityType === 'SMART_CONTRACT'
+                      ? t('entity_smartContract')
+                      : clusterData.entityName}
                   </Title>
                   <Badge color="violet" variant="light">
                     {clusterData.entityType}
                   </Badge>
                   <Badge
                     color={
-                      clusterData.riskLevel === 'Düşük'
+                      clusterData.riskScore <= 30
                         ? 'green'
-                        : clusterData.riskLevel === 'Orta'
+                        : clusterData.riskScore <= 70
                         ? 'yellow'
                         : 'red'
                     }
                   >
-                    {t('moneytrail_risk')} %{clusterData.riskScore} ({clusterData.riskLevel})
+                    {t('moneytrail_risk')} %{clusterData.riskScore} ({clusterData.riskScore <= 30 ? t('risk_low') : clusterData.riskScore <= 70 ? t('risk_medium') : t('risk_high')})
                   </Badge>
                 </Group>
                 <Text size="xs" c="dimmed" mt={2}>
-                  {clusterData.behavioralSummary}
+                  {t('moneytrail_behavioral_summary', {
+                    entity: t(`entity_${clusterData.entityType}`) || clusterData.entityName,
+                    flowCount: clusterData.topFlowPatterns?.length ?? 0,
+                    memberCount: clusterData.associatedClusterWallets?.length ?? 0,
+                  }) || clusterData.behavioralSummary}
                 </Text>
               </div>
             </Group>
@@ -454,7 +470,7 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                   >
                     <Group justify="space-between" mb={2}>
                       <Text size="xs" fw={700} c="white">
-                        {w.role}
+                        {t(`cluster_role_${w.inferredRole || w.relationType}`) || w.role}
                       </Text>
                       <Badge size="xs" color="violet">
                         %{w.affinityPercentage} {t('moneytrail_affinity')}
@@ -987,8 +1003,8 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
       {trailData && viewMode === 'diagram' && (
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           {/* Nodes Table */}
-          <Paper p="sm" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <Title order={5} c="white" mb="xs">
+          <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+            <Title order={5} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }} mb="xs">
               {t('moneytrail_discoveredNodes')}
             </Title>
             <Stack gap={6}>
@@ -996,16 +1012,16 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
                 <Paper
                   key={node.id}
                   p="xs"
-                  radius="sm"
                   style={{
-                    background: node.isRoot ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                    border: node.isRoot ? '1px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.06)',
+                    background: '#fff1e5',
+                    border: node.isRoot ? '2px solid #0d7680' : '1px solid #d9cbbe',
+                    borderRadius: 0,
                   }}
                 >
                   <Group justify="space-between" wrap="nowrap">
                     <div>
                       <Group gap={6} wrap="nowrap">
-                        <Badge size="xs" color={node.isRoot ? 'violet' : node.layer === 'EVM' ? 'cyan' : 'green'}>
+                        <Badge size="xs" color={node.isRoot ? 'teal' : node.layer === 'EVM' ? 'cyan' : 'green'}>
                           {node.isRoot ? (t('moneytrail_root_2')) : node.layer}
                         </Badge>
                         <AddressBadge address={node.address} network={node.layer} showNetwork={false} />
@@ -1045,53 +1061,56 @@ export default function MoneyTrailTab({ initialAddress, onSelectAddress, onOpenL
           </Paper>
 
           {/* Links Table */}
-          <Paper p="sm" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <Title order={5} c="white" mb="xs">
+          <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
+            <Title order={5} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }} mb="xs">
               {t('moneytrail_transferRoutesRanked')}
             </Title>
             <Stack gap={6}>
               {[...filteredLinks]
-                .sort((a, b) => b.valueHmnd - a.valueHmnd)
-                .map((link, idx) => (
-                  <Paper
-                    key={idx}
-                    p="xs"
-                    radius="sm"
-                    style={{
-                      background: link.type === 'bridge' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-                      border: link.type === 'bridge' ? '1px solid #ec4899' : '1px solid rgba(255, 255, 255, 0.05)',
-                    }}
-                  >
-                    <Group justify="space-between" wrap="nowrap">
-                      <div>
-                        <Group gap={4} wrap="nowrap">
-                          <Text size="xs" className="font-mono" c="cyan">
-                            {shortAddr(link.source)}
+                .sort((a, b) => (Number(b.valueHmnd || b.amount || 0)) - (Number(a.valueHmnd || a.amount || 0)))
+                .map((link, idx) => {
+                  const val = Number(link.valueHmnd || link.amount || 0);
+                  return (
+                    <Paper
+                      key={idx}
+                      p="xs"
+                      style={{
+                        background: '#fff1e5',
+                        border: link.type === 'bridge' ? '1px solid #0d7680' : '1px solid #d9cbbe',
+                        borderRadius: 0,
+                      }}
+                    >
+                      <Group justify="space-between" wrap="nowrap">
+                        <div>
+                          <Group gap={4} wrap="nowrap">
+                            <Text size="xs" className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }}>
+                              {shortAddr(link.source)}
+                            </Text>
+                            <Text size="xs" c="dimmed">➔</Text>
+                            <Text size="xs" className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }}>
+                              {shortAddr(link.target)}
+                            </Text>
+                            {link.type === 'bridge' && (
+                              <Badge size="xs" color="pink">
+                                🌉 {t('moneytrail_bridge')}
+                              </Badge>
+                            )}
+                          </Group>
+                          <Text size="10px" c="dimmed">
+                            {link.txCount} {t('moneytrail_transfersRecorded')}
                           </Text>
-                          <Text size="xs" c="dimmed">➔</Text>
-                          <Text size="xs" className="font-mono" c="teal">
-                            {shortAddr(link.target)}
-                          </Text>
-                          {link.type === 'bridge' && (
-                            <Badge size="xs" color="pink">
-                              🌉 {t('moneytrail_bridge')}
-                            </Badge>
-                          )}
-                        </Group>
-                        <Text size="10px" c="dimmed">
-                          {link.txCount} {t('moneytrail_transfersRecorded')}
-                        </Text>
-                      </div>
-                      <AmountDisplay
-                        value={formatShortAmount(link.valueHmnd, lang)}
-                        unit="HMND"
-                        color="teal"
-                        fw={700}
-                        size="xs"
-                      />
-                    </Group>
-                  </Paper>
-                ))}
+                        </div>
+                        <AmountDisplay
+                          value={formatShortAmount(val, lang)}
+                          unit="HMND"
+                          color="#111111"
+                          fw={700}
+                          size="xs"
+                        />
+                      </Group>
+                    </Paper>
+                  );
+                })}
             </Stack>
           </Paper>
         </SimpleGrid>

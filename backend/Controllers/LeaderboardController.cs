@@ -7,9 +7,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class LeaderboardController : ControllerBase
 {
-    private readonly ILeaderboardRepository _leaderboardRepo;
+    private readonly LeaderboardRepository _leaderboardRepo;
 
-    public LeaderboardController(ILeaderboardRepository leaderboardRepo)
+    public LeaderboardController(LeaderboardRepository leaderboardRepo)
     {
         _leaderboardRepo = leaderboardRepo;
     }

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 using HumanodeTracker.Services;
 
@@ -8,19 +10,20 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class DexController : ControllerBase
 {
-    private readonly IDexRepository _dexRepo;
-    private readonly IMethodDecoderService _decoderService;
+    private readonly DexRepository _dexRepo;
+    private readonly MethodDecoderService _decoderService;
 
-    public DexController(IDexRepository dexRepo, IMethodDecoderService decoderService)
+    public DexController(DexRepository dexRepo, MethodDecoderService decoderService)
     {
         _dexRepo = dexRepo;
         _decoderService = decoderService;
     }
 
+    [HttpGet("dex")]
     [HttpGet("dex-depth")]
     public async Task<IActionResult> GetDexDepth([FromQuery] string? pool = null)
     {
-        var depth = await _dexRepo.GetDexPoolDepthAsync(pool ?? "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2");
+        var depth = await _dexRepo.GetDexPoolDepthAsync(pool);
         return Ok(depth);
     }
 
@@ -36,7 +39,7 @@ public class DexController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(input))
         {
-            return BadRequest(new { error = "Input parametresi gereklidir (ör: 0xa9059cbb...)." });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_input_required", MessageKey = "err_input_required" });
         }
         var decoded = _decoderService.DecodeInput(input);
         return Ok(decoded);

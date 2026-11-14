@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,9 +8,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class ValidatorsController : ControllerBase
 {
-    private readonly IValidatorRepository _validatorRepo;
+    private readonly ValidatorRepository _validatorRepo;
 
-    public ValidatorsController(IValidatorRepository validatorRepo)
+    public ValidatorsController(ValidatorRepository validatorRepo)
     {
         _validatorRepo = validatorRepo;
     }
@@ -27,7 +28,7 @@ public class ValidatorsController : ControllerBase
         var target = address ?? addr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Validatör adresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_validator_address_required", MessageKey = "err_validator_address_required" });
         }
         var econ = await _validatorRepo.GetValidatorEconomicsAsync(target.Trim());
         return Ok(econ);

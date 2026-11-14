@@ -1,47 +1,37 @@
 using System.Data;
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IBridgeRepository
+public class BridgeRepository
 {
-    Task<object> GetBridgeAnalyticsAsync(string direction = "all", int page = 1, int limit = 50, string q = "");
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly SystemConfigRepository _configRepo;
 
-public class BridgeRepository : IBridgeRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-
-    public BridgeRepository(IDbConnectionFactory dbFactory)
+    public BridgeRepository(SqliteConnectionFactory dbFactory, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
+        _configRepo = configRepo;
     }
 
-    public async Task<object> GetBridgeAnalyticsAsync(string direction = "all", int page = 1, int limit = 50, string q = "")
+    public async Task<object> GetBridgeAnalyticsAsync(BridgeQueryRequest req)
     {
-        var safePage = Math.Max(1, page);
-        var safeLimit = Math.Clamp(limit, 1, 200);
-        var cleanQ = (q ?? "").Trim().ToLower();
-        var dir = (direction ?? "all").Trim().ToLower();
+        req ??= new BridgeQueryRequest();
+        var safePage = Math.Max(1, req.Page);
+        var safeLimit = Math.Clamp(req.Limit, 1, 200);
+        var cleanQ = (req.Q ?? "").Trim().ToLower();
+        var dir = (req.Direction ?? "all").Trim().ToLower();
+
+        var precompile = await _configRepo.GetConfigAsync("bridge_precompile_address");
 
         using var connection = _dbFactory.CreateConnection();
 
         // 1. KPIs
-        const string subKpiSql = @"
-            SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as vol
-            FROM substrate_extrinsics
-            WHERE pallet = 'nativeToEvmSwap'";
-        var subKpi = await connection.QueryFirstOrDefaultAsync<(long c, double vol)>(subKpiSql);
-
-        const string evmKpiSql = @"
-            SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as vol
-            FROM transactions
-            WHERE to_address = '0x0000000000000000000000000000000000000900'";
-        var evmKpi = await connection.QueryFirstOrDefaultAsync<(long c, double vol)>(evmKpiSql);
-
-        const string crossCountSql = "SELECT COUNT(*) FROM cross_layer_links";
-        var crossMatchedCount = await connection.ExecuteScalarAsync<long>(crossCountSql);
+        var subKpi = await connection.QueryFirstOrDefaultAsync<(long c, double vol)>(StoredProcedures.GetKpiNativeToEvmSwaps);
+        var evmKpi = await connection.QueryFirstOrDefaultAsync<(long c, double vol)>(StoredProcedures.GetBridgeEvmToSubKpi);
+        var crossMatchedCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetCrossLayerLinksCount);
 
         var subVol = subKpi.vol;
         var evmVol = evmKpi.vol;
@@ -57,18 +47,20 @@ public class BridgeRepository : IBridgeRepository
             evm_to_sub_count = evmKpi.c,
             evm_to_sub_volume_hmnd = Math.Round(evmVol, 2),
             net_flow_hmnd = Math.Round(subVol - evmVol, 2),
-            net_direction = subVol >= evmVol ? "Substrate ➔ EVM (Net Çıkış)" : "EVM ➔ Substrate (Net Giriş)",
+            net_direction_code = subVol >= evmVol ? "sub_to_evm" : "evm_to_sub",
+            net_direction = subVol >= evmVol ? "Substrate ➔ EVM" : "EVM ➔ Substrate",
             cross_layer_matched_wallets = crossMatchedCount,
-            precompile_address = "0x0000000000000000000000000000000000000900"
+            precompile_address = precompile
         };
 
         // 2. Fetch Items
         var items = new List<dynamic>();
 
         string whereSub = "pallet = 'nativeToEvmSwap'";
-        string whereEvm = "to_address = '0x0000000000000000000000000000000000000900'";
+        string whereEvm = "to_address = @precompile";
         var subP = new DynamicParameters();
         var evmP = new DynamicParameters();
+        evmP.Add("precompile", precompile);
 
         if (!string.IsNullOrEmpty(cleanQ))
         {

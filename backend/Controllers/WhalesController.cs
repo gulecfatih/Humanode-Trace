@@ -7,9 +7,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class WhalesController : ControllerBase
 {
-    private readonly IWhaleRepository _whaleRepo;
+    private readonly WhaleRepository _whaleRepo;
 
-    public WhalesController(IWhaleRepository whaleRepo)
+    public WhalesController(WhaleRepository whaleRepo)
     {
         _whaleRepo = whaleRepo;
     }

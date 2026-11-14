@@ -110,7 +110,7 @@ export default function BridgeTab({
   return (
     <Stack gap="md">
       {/* 1. HERO HEADER & GENERAL BRIDGE OVERVIEW */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
             <Group gap={8}>
@@ -170,7 +170,13 @@ export default function BridgeTab({
               <IconArrowsRightLeft size={16} color="#2ea043" />
             </Group>
             <Text size="md" fw={700} c="teal" className="font-mono" lineClamp={1}>
-              {kpis?.net_direction || '-'}
+              {kpis?.net_direction_code === 'sub_to_evm'
+                ? t('bridge_subToEvmNetOutflow')
+                : kpis?.net_direction_code === 'evm_to_sub'
+                ? t('bridge_evmToSubNetInflow')
+                : (kpis?.net_direction?.includes('EVM') && kpis?.net_direction?.includes('Substrate')
+                  ? (kpis.net_direction.startsWith('Sub') ? t('bridge_subToEvmNetOutflow') : t('bridge_evmToSubNetInflow'))
+                  : (kpis?.net_direction || '-'))}
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
               Δ {formatHMND(Math.abs(kpis?.net_flow_hmnd || 0), { locale: lang, showScale: false })}
@@ -185,7 +191,7 @@ export default function BridgeTab({
               </Badge>
               <IconShieldCheck size={16} color="#eab308" />
             </Group>
-            <Text size="xs" fw={700} className="font-mono" c="#f0f6fc" lineClamp={1}>
+            <Text size="xs" fw={700} className="font-mono" c="#111111" lineClamp={1}>
               0x0000...0900
             </Text>
             <Text size="10px" c="dimmed" mt={2}>
@@ -230,19 +236,15 @@ export default function BridgeTab({
       </Paper>
 
       {/* 3. BRIDGE TRANSACTIONS TABLE AND STICKY SEARCH BAR */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Stack gap="sm">
-          {/* STICKY TOOLBAR: Arama, Filtre ve Sayfalama */}
+          {/* TOOLBAR: Arama, Filtre ve Sayfalama */}
           <Box
             p="xs"
             style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 15,
-              backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(13, 17, 23, 0.92)',
-              borderRadius: 6,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f5e6d8',
+              borderRadius: 0,
+              border: '1px solid #d9cbbe',
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -260,7 +262,7 @@ export default function BridgeTab({
                     { value: 'evm_to_sub', label: '🌐 EVM ➔ Substrate' },
                   ]}
                   styles={{
-                    root: { background: 'rgba(255, 255, 255, 0.05)' },
+                    root: { background: '#ecdcd0', border: '1px solid #d9cbbe' },
                   }}
                 />
                 <Badge variant="light" color="cyan" size="sm">
@@ -293,11 +295,11 @@ export default function BridgeTab({
                     setPage(1);
                   }}
                   data={[
-                    { value: '25', label: '25 / s.' },
-                    { value: '50', label: '50 / s.' },
-                    { value: '100', label: '100 / s.' },
+                    { value: '25', label: t('perPage', { count: 25 }) },
+                    { value: '50', label: t('perPage', { count: 50 }) },
+                    { value: '100', label: t('perPage', { count: 100 }) },
                   ]}
-                  style={{ width: 85 }}
+                  style={{ width: 105 }}
                 />
               </Group>
             </Group>
@@ -308,11 +310,8 @@ export default function BridgeTab({
             <Table highlightOnHover verticalSpacing="xs">
               <Table.Thead
                 style={{
-                  position: 'sticky',
-                  top: 50,
-                  zIndex: 10,
-                  backdropFilter: 'blur(10px)',
-                  backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                  backgroundColor: '#f5e6d8',
+                  borderBottom: '2px solid #111111',
                 }}
               >
                 <Table.Tr>
@@ -331,7 +330,7 @@ export default function BridgeTab({
                   <Table.Tr>
                     <Table.Td colSpan={8} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {t('loading') || 'Yükleniyor...'}
+                        {t('loading')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -360,8 +359,12 @@ export default function BridgeTab({
                           <Text
                             size="xs"
                             className="font-mono"
-                            c="cyan"
-                            style={{ cursor: onOpenBlock ? 'pointer' : 'default', textDecoration: onOpenBlock ? 'underline' : 'none' }}
+                            style={{
+                              cursor: onOpenBlock ? 'pointer' : 'default',
+                              color: '#0d7680',
+                              fontWeight: 700,
+                              textDecoration: onOpenBlock ? 'underline' : 'none',
+                            }}
                             onClick={() => onOpenBlock?.(item.block_number)}
                           >
                             #{item.block_number?.toLocaleString(locStr)}
@@ -373,8 +376,12 @@ export default function BridgeTab({
                             <Text
                               size="xs"
                               className="font-mono"
-                              c="blue"
-                              style={{ cursor: onOpenTx ? 'pointer' : 'default', textDecoration: onOpenTx ? 'underline' : 'none' }}
+                              style={{
+                                cursor: onOpenTx ? 'pointer' : 'default',
+                                color: '#0d7680',
+                                fontWeight: 600,
+                                textDecoration: onOpenTx ? 'underline' : 'none',
+                              }}
                               onClick={() => onOpenTx?.(item.tx_hash)}
                             >
                               {shortAddr(item.tx_hash, 6, 4)}
@@ -459,7 +466,7 @@ export default function BridgeTab({
         title={
           <Group gap="xs">
             <Badge color={selectedTx?.direction === 'sub_to_evm' ? 'cyan' : 'violet'} variant="light">
-              {selectedTx?.direction === 'sub_to_evm' ? 'Substrate ➔ EVM Köprüsü' : 'EVM ➔ Substrate (Precompile)'}
+              {selectedTx?.direction === 'sub_to_evm' ? t('bridge_subToEvm') : t('bridge_evmToSub')}
             </Badge>
             <Text fw={700} size="sm">
               {t('bridge_bridgeSwapDetails')}
@@ -472,25 +479,25 @@ export default function BridgeTab({
           content: {
             maxWidth: '760px',
             width: '94vw',
-            border: '1px solid rgba(56, 189, 248, 0.28)',
-            borderRadius: 14,
-            background: '#0d1117',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+            border: '2px solid #111111',
+            borderRadius: 0,
+            background: '#fff1e5',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
           },
           header: {
-            background: '#161b22',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: '#f5e6d8',
+            borderBottom: '2px solid #111111',
             padding: '14px 20px',
           },
           body: {
-            background: '#0d1117',
+            background: '#fff1e5',
             padding: '20px',
           },
         }}
       >
         {selectedTx && (
           <Stack gap="sm">
-            <Paper p="sm" withBorder style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+            <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
                 <div>
                   <Text size="xs" c="dimmed">

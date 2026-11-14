@@ -272,7 +272,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
           <Box style={{ overflowX: 'auto', width: '100%' }}>
             <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 700, tableLayout: 'fixed' }}>
               <Table.Thead>
-                <Table.Tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                   <Table.Th style={{ width: '12%', minWidth: 80, padding: '10px 8px' }}>
                     {t('layer')}
                   </Table.Th>
@@ -298,7 +298,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                   <Table.Tr>
                     <Table.Td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
                       <Center>
-                        <Loader size="sm" color="yellow" mr="xs" />
+                        <Loader size="sm" color="teal" mr="xs" />
                         <Text size="sm" c="dimmed">
                           {t('whales_scanningForWhaleExtrinsics')}
                         </Text>
@@ -326,8 +326,8 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                       <Table.Tr
                         key={`${w.hash || idx}-${idx}`}
                         style={{
-                          backgroundColor: idx % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                          borderBottom: '1px solid #d9cbbe',
                         }}
                       >
                         {/* Katman */}
@@ -345,9 +345,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                         <Table.Td style={{ padding: '8px 8px' }} className="font-mono">
                           <Text
                             size="xs"
-                            c="cyan"
-                            fw={700}
-                            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                            style={{ color: '#0d7680', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
                             onClick={() => onOpenBlock && onOpenBlock(w.block_number)}
                           >
                             #{w.block_number?.toLocaleString(locStr)}
@@ -356,7 +354,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
 
                         {/* Tarih */}
                         <Table.Td style={{ padding: '8px 8px' }}>
-                          <Text size="xs" c="gray.3">
+                          <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                             {formatTimestamp(w.timestamp, lang)}
                           </Text>
                         </Table.Td>
@@ -463,7 +461,7 @@ export default function WhalesTab({ onSelectAddress, onOpenBlock, onOpenLedger }
                     <Group justify="space-between" mb="xs">
                       <Group gap={6}>
                         <Badge size="xs" color={isEvm ? 'cyan' : 'teal'} variant="light">
-                          {isEvm ? 'EVM Katmanı' : 'Substrate Katmanı'}
+                          {isEvm ? t('layer_evm') : t('layer_substrate')}
                         </Badge>
                       </Group>
 

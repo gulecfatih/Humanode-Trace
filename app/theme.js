@@ -2,48 +2,56 @@
 import { createTheme } from '@mantine/core';
 
 export const theme = createTheme({
-  primaryColor: 'cyan',
-  defaultRadius: 'md',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  fontFamilyMonospace: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+  primaryColor: 'dark',
+  defaultRadius: 'xs',
+  fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
+  fontFamilyMonospace: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
   colors: {
     dark: [
-      '#f0f6fc', // 0: text
-      '#c9d1d9', // 1: subtext
-      '#8b949e', // 2: muted
-      '#484f58', // 3: subtle
-      '#30363d', // 4: border
-      '#21262d', // 5: surface light
-      '#161b22', // 6: surface main
-      '#0d1117', // 7: card dark
-      '#0b0f17', // 8: bg main
-      '#030712', // 9: pitch dark
+      '#111111', // 0
+      '#24201c', // 1
+      '#3a342e', // 2
+      '#554f47', // 3
+      '#756d64', // 4
+      '#999084', // 5
+      '#c2b8ad', // 6
+      '#d9cbbe', // 7
+      '#f5e6d8', // 8
+      '#fff1e5', // 9
     ],
   },
   components: {
     Paper: {
       defaultProps: {
-        bg: '#161b22',
+        bg: '#fff1e5',
         p: 'md',
-        radius: 'md',
+        radius: 'xs',
         withBorder: true,
       },
     },
     Card: {
       defaultProps: {
-        bg: '#161b22',
+        bg: '#fff1e5',
         p: 'md',
-        radius: 'md',
+        radius: 'xs',
         withBorder: true,
+      },
+    },
+    Button: {
+      defaultProps: {
+        radius: 'xs',
+      },
+    },
+    Badge: {
+      defaultProps: {
+        radius: 'xs',
       },
     },
     Table: {
       defaultProps: {
-        striped: true,
+        striped: false,
         highlightOnHover: true,
-        verticalSpacing: 'sm',
-        stickyHeader: true,
-        stickyHeaderOffset: 52,
+        verticalSpacing: 'xs',
       },
     },
   },

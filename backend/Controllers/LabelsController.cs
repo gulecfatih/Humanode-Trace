@@ -8,22 +8,19 @@ namespace HumanodeTracker.Controllers;
 [Route("api/labels")]
 public class LabelsController : ControllerBase
 {
-    private readonly ILabelRepository _labelRepo;
+    private readonly LabelRepository _labelRepo;
 
-    public LabelsController(ILabelRepository labelRepo)
+    public LabelsController(LabelRepository labelRepo)
     {
         _labelRepo = labelRepo;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetLabels(
-        [FromQuery] bool watchedOnly = false,
-        [FromQuery] string category = "all",
-        [FromQuery] string search = "",
-        [FromQuery] string q = "")
+    public async Task<IActionResult> GetLabels([FromQuery] LabelsQueryRequest request)
     {
-        var s = !string.IsNullOrEmpty(search) ? search : q;
-        var (labels, total) = await _labelRepo.GetAddressLabelsAsync(watchedOnly, category, s);
+        request ??= new LabelsQueryRequest();
+        var s = !string.IsNullOrEmpty(request.Search) ? request.Search : request.Q;
+        var (labels, total) = await _labelRepo.GetAddressLabelsAsync(request.WatchedOnly, request.Category, s);
         return Ok(new { ok = true, labels, total });
     }
 
@@ -32,7 +29,7 @@ public class LabelsController : ControllerBase
     {
         if (model == null || string.IsNullOrWhiteSpace(model.Address) || string.IsNullOrWhiteSpace(model.Label))
         {
-            return BadRequest(new { ok = false, error = "Geçersiz veri: Cüzdan adresi ve etiket adı zorunludur." });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_invalid_data", MessageKey = "err_invalid_data" });
         }
 
         var saved = await _labelRepo.SaveAddressLabelAsync(model);
@@ -44,7 +41,7 @@ public class LabelsController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(address))
         {
-            return BadRequest(new { ok = false, error = "Silinecek adres parametresi gerekli (?address=...)" });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var deleted = await _labelRepo.DeleteAddressLabelAsync(address.Trim());

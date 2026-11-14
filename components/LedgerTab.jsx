@@ -184,9 +184,11 @@ export default function LedgerTab({
                 {data?.persona?.badges && (
                   <Group gap={6} mt="xs">
                     {data.persona.badges.map((b) => (
-                      <Badge key={b.id} size="sm" variant="light" style={{ color: b.color, borderColor: b.color }}>
-                        {b.icon} {b.label}
-                      </Badge>
+                      <Tooltip key={b.id} label={t('persona_' + b.id + '_desc') || b.desc} withArrow position="top">
+                        <Badge size="sm" variant="light" style={{ color: b.color, borderColor: b.color }}>
+                          {b.icon} {t('persona_' + b.id + '_label') || b.label}
+                        </Badge>
+                      </Tooltip>
                     ))}
                   </Group>
                 )}
@@ -312,9 +314,14 @@ export default function LedgerTab({
               {/* Ekstre Sekmesi */}
               <Tabs.Panel value="statement">
                 <Box style={{ overflowX: 'auto' }}>
-                  <Table striped highlightOnHover verticalSpacing="xs">
-                    <Table.Thead>
-                      <Table.Tr>
+                  <Table highlightOnHover verticalSpacing="xs">
+                    <Table.Thead
+                      style={{
+                        backgroundColor: '#f5e6d8',
+                        borderBottom: '2px solid #111111',
+                      }}
+                    >
+                      <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                         <Table.Th>{t('colBlock')}</Table.Th>
                         <Table.Th>{t('moneytrail_direction')}</Table.Th>
                         <Table.Th>{t('colLayerPallet')}</Table.Th>
@@ -327,13 +334,18 @@ export default function LedgerTab({
                     </Table.Thead>
                     <Table.Tbody>
                       {data.ledger?.items?.map((item, idx) => (
-                        <Table.Tr key={item.hash || idx}>
+                        <Table.Tr
+                          key={item.hash || idx}
+                          style={{
+                            borderBottom: '1px solid #d9cbbe',
+                            backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                          }}
+                        >
                           <Table.Td className="font-mono">
                             <Text
                               size="xs"
                               fw={700}
-                              c="cyan"
-                              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                              style={{ color: '#0d7680', cursor: 'pointer', textDecoration: 'underline' }}
                               onClick={() => onOpenBlock?.(item.block_number)}
                             >
                               #{item.block_number}
@@ -426,9 +438,14 @@ export default function LedgerTab({
 
               {/* Kaynaklar Sekmesi */}
               <Tabs.Panel value="sources">
-                <Table striped highlightOnHover verticalSpacing="xs">
-                  <Table.Thead>
-                    <Table.Tr>
+                <Table highlightOnHover verticalSpacing="xs">
+                  <Table.Thead
+                    style={{
+                      backgroundColor: '#f5e6d8',
+                      borderBottom: '2px solid #111111',
+                    }}
+                  >
+                    <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                       <Table.Th>{t('ledger_senderWallet')}</Table.Th>
                       <Table.Th>{t('dirColTxCount')}</Table.Th>
                       <Table.Th>{t('ledger_totalIncomingHmnd')}</Table.Th>
@@ -437,16 +454,22 @@ export default function LedgerTab({
                   </Table.Thead>
                   <Table.Tbody>
                     {data.sources?.items?.map((s, idx) => (
-                      <Table.Tr key={s.counterparty || idx}>
-                        <Table.Td className="font-mono" c="cyan">
+                      <Table.Tr
+                        key={s.counterparty || idx}
+                        style={{
+                          borderBottom: '1px solid #d9cbbe',
+                          backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                        }}
+                      >
+                        <Table.Td className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }}>
                           {s.counterparty}
                         </Table.Td>
                         <Table.Td className="font-mono">{s.tx_count}</Table.Td>
-                        <Table.Td className="font-mono" c="green" fw={700}>
+                        <Table.Td className="font-mono" style={{ color: '#0d7680', fontWeight: 700 }}>
                           {formatHMND(s.total_amount, { sign: true, locale: lang })}
                         </Table.Td>
                         <Table.Td>
-                          <Button size="xs" variant="light" color="cyan" onClick={() => onSelectAddress(s.counterparty)}>
+                          <Button size="xs" variant="light" color="teal" onClick={() => onSelectAddress(s.counterparty)}>
                             {t('preview')}
                           </Button>
                         </Table.Td>
@@ -458,9 +481,14 @@ export default function LedgerTab({
 
               {/* Hedefler Sekmesi */}
               <Tabs.Panel value="destinations">
-                <Table striped highlightOnHover verticalSpacing="xs">
-                  <Table.Thead>
-                    <Table.Tr>
+                <Table highlightOnHover verticalSpacing="xs">
+                  <Table.Thead
+                    style={{
+                      backgroundColor: '#f5e6d8',
+                      borderBottom: '2px solid #111111',
+                    }}
+                  >
+                    <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                       <Table.Th>{t('ledger_recipientWallet')}</Table.Th>
                       <Table.Th>{t('dirColTxCount')}</Table.Th>
                       <Table.Th>{t('ledger_totalOutgoingHmnd')}</Table.Th>
@@ -469,16 +497,22 @@ export default function LedgerTab({
                   </Table.Thead>
                   <Table.Tbody>
                     {data.destinations?.items?.map((d, idx) => (
-                      <Table.Tr key={d.counterparty || idx}>
-                        <Table.Td className="font-mono" c="cyan">
+                      <Table.Tr
+                        key={d.counterparty || idx}
+                        style={{
+                          borderBottom: '1px solid #d9cbbe',
+                          backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                        }}
+                      >
+                        <Table.Td className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }}>
                           {d.counterparty}
                         </Table.Td>
                         <Table.Td className="font-mono">{d.tx_count}</Table.Td>
-                        <Table.Td className="font-mono" c="red" fw={700}>
+                        <Table.Td className="font-mono" style={{ color: '#990f3d', fontWeight: 700 }}>
                           {formatHMND(d.total_amount, { sign: true, locale: lang })}
                         </Table.Td>
                         <Table.Td>
-                          <Button size="xs" variant="light" color="cyan" onClick={() => onSelectAddress(d.counterparty)}>
+                          <Button size="xs" variant="light" color="teal" onClick={() => onSelectAddress(d.counterparty)}>
                             {t('preview')}
                           </Button>
                         </Table.Td>
@@ -500,9 +534,9 @@ export default function LedgerTab({
                         p="sm"
                         mb="md"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid rgba(255, 255, 255, 0.07)',
-                          borderRadius: 8,
+                          background: '#f5e6d8',
+                          border: '1px solid #d9cbbe',
+                          borderRadius: 0,
                         }}
                       >
                         <Group justify="space-between" align="center" wrap="wrap" gap="md">
@@ -517,8 +551,8 @@ export default function LedgerTab({
                             </div>
 
                             {data?.crossLayer?.hasLink && data.crossLayer.linkedAddresses?.[0] && (
-                              <Box style={{ borderLeft: '1px solid rgba(255, 255, 255, 0.1)', paddingLeft: 12 }}>
-                                <Text size="xs" c="violet" tt="uppercase" fw={700}>
+                              <Box style={{ borderLeft: '1px solid #d9cbbe', paddingLeft: 12 }}>
+                                <Text size="xs" c="teal" tt="uppercase" fw={700}>
                                   🔗 {t('ledger_linkedDualIdentity')}
                                 </Text>
                                 <Group gap="xs" mt={3} align="center">
@@ -537,7 +571,7 @@ export default function LedgerTab({
                               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
                                 {t('ledger_totalPortfolioUsd')}
                               </Text>
-                              <Text size="lg" fw={800} c="teal" className="font-mono">
+                              <Text size="lg" fw={800} style={{ color: '#0d7680' }} className="font-mono">
                                 {formatUSD(data.summary?.totalPortfolioUsd ?? (data.summary?.netBalanceCurrentUsd || 0), lang)}
                               </Text>
                             </Box>
@@ -545,7 +579,7 @@ export default function LedgerTab({
                               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
                                 {t('ledger_totalAssetTypes')}
                               </Text>
-                              <Badge size="lg" color="cyan" variant="light">
+                              <Badge size="lg" color="teal" variant="light">
                                 {activeTokens.length} {t('tokens_assets')}
                               </Badge>
                             </Box>
@@ -560,9 +594,14 @@ export default function LedgerTab({
                       </Paper>
 
                       <Box style={{ overflowX: 'auto' }}>
-                        <Table striped highlightOnHover verticalSpacing="sm">
-                          <Table.Thead>
-                            <Table.Tr>
+                        <Table highlightOnHover verticalSpacing="sm">
+                          <Table.Thead
+                            style={{
+                              backgroundColor: '#f5e6d8',
+                              borderBottom: '2px solid #111111',
+                            }}
+                          >
+                            <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                               <Table.Th>{t('ledger_assetSymbol')}</Table.Th>
                               <Table.Th>{t('ledger_tokenCoinName')}</Table.Th>
                               <Table.Th>{t('ledger_assetType')}</Table.Th>
@@ -583,7 +622,13 @@ export default function LedgerTab({
                                 const contractAddr = tk.address && tk.address !== 'NATIVE' ? tk.address : tk.token_address;
 
                                 return (
-                                  <Table.Tr key={contractAddr || sym || idx}>
+                                  <Table.Tr
+                                    key={contractAddr || sym || idx}
+                                    style={{
+                                      backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                                      borderBottom: '1px solid #d9cbbe',
+                                    }}
+                                  >
                                     <Table.Td>
                                       <Group gap={6} wrap="nowrap">
                                         <Badge
@@ -591,7 +636,7 @@ export default function LedgerTab({
                                           variant="light"
                                           radius="sm"
                                           style={{
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                            border: '1px solid #d9cbbe',
                                             fontWeight: 800,
                                             padding: '0 8px',
                                           }}
@@ -612,10 +657,10 @@ export default function LedgerTab({
 
                                     <Table.Td>
                                       <div>
-                                        <Text size="sm" fw={600} style={{ color: '#f1f5f9', whiteSpace: 'nowrap' }}>
+                                        <Text size="sm" fw={700} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', whiteSpace: 'nowrap' }}>
                                           {tk.name || sym}
                                         </Text>
-                                        <Text size="xs" c="dimmed">
+                                        <Text size="xs" style={{ color: '#554f47' }}>
                                           {isNative
                                             ? (t('ledger_humanodeL1NativeCrypto'))
                                             : (t('erc20Decimals', { decimals: tk.decimals || 18 }))}
@@ -642,7 +687,7 @@ export default function LedgerTab({
                                           maxDecimals: 4,
                                         })}
                                         unit={sym}
-                                        color={Number(balance) > 0 ? (isNative ? 'teal' : 'white') : 'dimmed'}
+                                        color={Number(balance) > 0 ? (isNative ? '#0d7680' : '#111111') : '#554f47'}
                                         fw={700}
                                         size="sm"
                                       />
@@ -654,12 +699,12 @@ export default function LedgerTab({
                                           size="sm"
                                           fw={700}
                                           className="font-mono"
-                                          c={Number(valUsd) > 0 ? 'teal' : 'dimmed'}
+                                          style={{ color: Number(valUsd) > 0 ? '#0d7680' : '#554f47' }}
                                         >
                                           {formatUSD(valUsd, lang)}
                                         </Text>
                                         {Number(tk.priceUsd || 0) > 0 && (
-                                          <Text size="xs" c="dimmed">
+                                          <Text size="xs" style={{ color: '#554f47' }}>
                                             @ ${formatNumber(tk.priceUsd, { minDecimals: 2, maxDecimals: 6 })}
                                           </Text>
                                         )}
@@ -669,13 +714,13 @@ export default function LedgerTab({
                                     <Table.Td>
                                       <Group gap={6} wrap="nowrap">
                                         <Tooltip label={t('ledger_totalInflow')}>
-                                          <Text size="xs" c="cyan" className="font-mono">
+                                          <Text size="xs" style={{ color: '#0d7680', fontWeight: 600 }} className="font-mono">
                                             +{formatCompact(tk.totalIn || 0, lang)}
                                           </Text>
                                         </Tooltip>
-                                        <Text size="xs" c="dimmed">/</Text>
+                                        <Text size="xs" style={{ color: '#554f47' }}>/</Text>
                                         <Tooltip label={t('ledger_totalOutflow')}>
-                                          <Text size="xs" c="orange" className="font-mono">
+                                          <Text size="xs" style={{ color: '#b45309', fontWeight: 600 }} className="font-mono">
                                             -{formatCompact(tk.totalOut || 0, lang)}
                                           </Text>
                                         </Tooltip>

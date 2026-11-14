@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using HumanodeTracker.Repositories;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Controllers;
 
@@ -7,9 +8,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class PricesController : ControllerBase
 {
-    private readonly IPriceRepository _priceRepo;
+    private readonly PriceRepository _priceRepo;
 
-    public PricesController(IPriceRepository priceRepo)
+    public PricesController(PriceRepository priceRepo)
     {
         _priceRepo = priceRepo;
     }
@@ -22,30 +23,23 @@ public class PricesController : ControllerBase
     }
 
     [HttpGet("historical-rates")]
-    public async Task<IActionResult> GetHistoricalRates(
-        [FromQuery] string year = "all",
-        [FromQuery] string search = "",
-        [FromQuery] string q = "",
-        [FromQuery] bool onlySwaps = false,
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50)
+    public async Task<IActionResult> GetHistoricalRates([FromQuery] HistoricalRatesQueryRequest request)
     {
-        var s = !string.IsNullOrEmpty(search) ? search : q;
-        var data = await _priceRepo.GetHistoricalRatesListAsync(year, s, onlySwaps, page, limit);
+        var data = await _priceRepo.GetHistoricalRatesListAsync(request);
         return Ok(data);
     }
 
     [HttpGet("historical-rates/sync")]
-    public async Task<IActionResult> SyncHistoricalRates(
-        [FromQuery] string year = "all",
-        [FromQuery] string search = "",
-        [FromQuery] bool onlySwaps = false)
+    public async Task<IActionResult> SyncHistoricalRates([FromQuery] HistoricalRatesQueryRequest request)
     {
-        var data = await _priceRepo.GetHistoricalRatesListAsync(year, search, onlySwaps, 1, 50);
+        request ??= new HistoricalRatesQueryRequest();
+        request.Page = 1;
+        request.Limit = 50;
+        var data = await _priceRepo.GetHistoricalRatesListAsync(request);
         return Ok(new
         {
             data,
-            syncResult = new { ok = true, message = "Kurlar güncel" }
+            syncResult = new { ok = true, message = "Rates are up to date" }
         });
     }
 }

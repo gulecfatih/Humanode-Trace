@@ -7,9 +7,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class TokenomicsController : ControllerBase
 {
-    private readonly ITokenomicsRepository _tokenomicsRepo;
+    private readonly TokenomicsRepository _tokenomicsRepo;
 
-    public TokenomicsController(ITokenomicsRepository tokenomicsRepo)
+    public TokenomicsController(TokenomicsRepository tokenomicsRepo)
     {
         _tokenomicsRepo = tokenomicsRepo;
     }
@@ -21,6 +21,8 @@ public class TokenomicsController : ControllerBase
         return Ok(data);
     }
 
+    [HttpGet("fees-pot")]
+    [HttpGet("feespot")]
     [HttpGet("fees-pot-analytics")]
     public async Task<IActionResult> GetFeesPotAnalytics()
     {

@@ -6,32 +6,26 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface ITokenomicsRepository
+public class TokenomicsRepository
 {
-    Task<TokenomicsDto> GetTokenomicsAsync();
-    Task<FeesPotAnalyticsDto> GetFeesPotAnalyticsAsync();
-    void UpdateFeesPotBalance(double balance);
-    void UpdateCirculatingSupply(double supply);
-    double CurrentFeesPotBalance { get; }
-    double CurrentCirculatingSupply { get; }
-}
-
-public class TokenomicsRepository : ITokenomicsRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
+    private readonly SqliteConnectionFactory _dbFactory;
     private readonly IConfiguration _config;
-    private double _cachedFeesPotBalance = 403162.33;
-    private double _cachedCirculatingSupply = 285970432.10;
-    private const string FeesPotPalletAddress = "hmpwhPbL5XJTYPWXPMkacfqGhJ3eoQRPLKphajpvcot5Q5zkk";
+    private readonly SystemConfigRepository _configRepo;
+    private double _cachedFeesPotBalance = 0.0;
+    private double _cachedCirculatingSupply = 0.0;
     private readonly string _payoutsPath;
 
     public double CurrentFeesPotBalance => _cachedFeesPotBalance;
     public double CurrentCirculatingSupply => _cachedCirculatingSupply;
 
-    public TokenomicsRepository(IDbConnectionFactory dbFactory, IConfiguration config)
+    public TokenomicsRepository(SqliteConnectionFactory dbFactory, IConfiguration config, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
         _config = config;
+        _configRepo = configRepo;
+
+        _cachedFeesPotBalance = _configRepo.GetDoubleConfigAsync("fees_pot_baseline").GetAwaiter().GetResult();
+        _cachedCirculatingSupply = _configRepo.GetDoubleConfigAsync("circulating_supply_baseline").GetAwaiter().GetResult();
 
         var configuredPath = _config["DataFiles:ValidatorPayouts"] ?? "Data/validator_payouts.json";
         if (File.Exists(configuredPath))
@@ -63,25 +57,32 @@ public class TokenomicsRepository : ITokenomicsRepository
     public async Task<TokenomicsDto> GetTokenomicsAsync()
     {
         using var connection = _dbFactory.CreateConnection();
-        const double totalIssuance = 400000000.0;
+        var totalIssuance = await _configRepo.GetDoubleConfigAsync("total_issuance_cap");
 
-        const string burnedSql = "SELECT COALESCE(SUM(total_fees_hmnd), 0) FROM blocks_with_tx";
-        var burnedTotal = Math.Round(await connection.ExecuteScalarAsync<double>(burnedSql), 2);
-        if (burnedTotal == 0) burnedTotal = 690246.0;
+        var burnContractAddress = await _configRepo.GetConfigAsync("burn_contract_address");
+        var burnContractAddressLower = burnContractAddress.ToLowerInvariant();
+
+        var burnedEvm = Math.Round(await connection.ExecuteScalarAsync<double>(StoredProcedures.GetBurnedEvm, new { addr = burnContractAddress, addrLower = burnContractAddressLower }), 2);
+        var burnedSub = Math.Round(await connection.ExecuteScalarAsync<double>(StoredProcedures.GetBurnedSubstrate, new { addr = burnContractAddress, addrLower = burnContractAddressLower }), 2);
+        var burnedTxsCount = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetBurnedTxsCount, new { addr = burnContractAddress, addrLower = burnContractAddressLower });
+
+        var totalBurnedFromBlocks = Math.Round(burnedEvm + burnedSub, 2);
+        var burnedTotal = totalBurnedFromBlocks;
 
         var effectiveSupply = Math.Round(totalIssuance - burnedTotal, 2);
-        const double claimableAirdrop = 14114881.07;
-        var feesPot = Math.Round(_cachedFeesPotBalance, 2);
+        var claimableAirdrop = await _configRepo.GetDoubleConfigAsync("claimable_airdrop_amount");
         var circulating = Math.Round(_cachedCirculatingSupply, 2);
-        var lockedVesting = Math.Round(Math.Max(0, totalIssuance - circulating - claimableAirdrop - feesPot - burnedTotal), 2);
+        var lockedVesting = Math.Round(Math.Max(0, totalIssuance - circulating - claimableAirdrop - burnedTotal), 2);
 
         return new TokenomicsDto
         {
             TotalIssuance = totalIssuance,
             BurnedTotal = burnedTotal,
+            BurnContractAddress = burnContractAddress,
+            BurnedTxsCount = burnedTxsCount,
             EffectiveSupply = effectiveSupply,
             ClaimableAirdrop = claimableAirdrop,
-            FeesPotBalance = feesPot,
+            FeesPotBalance = 0.0,
             LockedVesting = lockedVesting,
             CirculatingEstimate = circulating,
             Source = "Official Humanode Native Supply API (supply-api.mainnet.stages.humanode.io)"
@@ -92,20 +93,40 @@ public class TokenomicsRepository : ITokenomicsRepository
     {
         using var connection = _dbFactory.CreateConnection();
 
-        const string burnedSql = "SELECT COALESCE(SUM(total_fees_hmnd), 0) FROM blocks_with_tx";
-        var burnedTotal = Math.Round(await connection.ExecuteScalarAsync<double>(burnedSql), 2);
-        if (burnedTotal == 0) burnedTotal = 690246.0;
+        var burnedTotal = Math.Round(await connection.ExecuteScalarAsync<double>(StoredProcedures.GetBurnedTotalFees), 2);
 
         var currentBalance = Math.Round(_cachedFeesPotBalance, 2);
 
         var history = new List<PayoutBatchItemDto>();
-        int totalBatches = 112;
-        long lastBatchBlock = 20447782;
-        long lastBatchTs = 1793211744;
-        int lastBatchRecipients = 80;
-        double samplePerValidator = 613.48;
+        int totalBatches = 0;
+        long lastBatchBlock = 0;
+        long lastBatchTs = 0;
+        int lastBatchRecipients = 0;
+        double samplePerValidator = 0.0;
 
-        if (File.Exists(_payoutsPath))
+        try
+        {
+            var dbBatches = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetFeesPotBatchesCount);
+            if (dbBatches > 0)
+            {
+                totalBatches = dbBatches;
+                var rows = (await connection.QueryAsync<PayoutBatchItemDto>(StoredProcedures.GetFeesPotPayoutHistory)).ToList();
+                if (rows.Count > 0)
+                {
+                    history = rows;
+                    lastBatchBlock = history[0].Block;
+                    lastBatchTs = history[0].Timestamp;
+                    lastBatchRecipients = history[0].RecipientCount;
+                    samplePerValidator = history[0].SamplePerValidator;
+                }
+            }
+        }
+        catch
+        {
+            // Fallback to json if table query fails
+        }
+
+        if (history.Count == 0 && File.Exists(_payoutsPath))
         {
             try
             {
@@ -135,7 +156,7 @@ public class TokenomicsRepository : ITokenomicsRepository
                             var bts = b.GetProperty("ts").GetInt64();
                             var tsSec = bts > 100_000_000_000 ? bts / 1000 : bts;
                             double totDistributed = 0;
-                            double sampleVal = 613.48;
+                            double sampleVal = 0.0;
                             int count = 0;
 
                             if (b.TryGetProperty("recipients", out var recs))
@@ -182,21 +203,18 @@ public class TokenomicsRepository : ITokenomicsRepository
             }
         }
 
-        var avgCost = history.Count > 0 ? (history.Sum(h => h.TotalDistributed) / history.Count) : 49000.0;
+        var defaultBatchCost = await _configRepo.GetDoubleConfigAsync("simulation_avg_batch_payout");
+        var avgCost = history.Count > 0 ? (history.Sum(h => h.TotalDistributed) / history.Count) : defaultBatchCost;
         var remainingRounds = Math.Round(currentBalance / Math.Max(1.0, avgCost), 1);
         var remainingDays = (int)Math.Round(remainingRounds * 14);
         var nextEstimatedTs = lastBatchTs + (14 * 86400);
 
         var incomingTransfers = new List<IncomingTransferItemDto>();
         double directInflowHmnd = 0;
+        var feesPotPalletAddress = await _configRepo.GetConfigAsync("fees_pot_address");
         try
         {
-            const string inSql = @"
-                SELECT hash, block_number as Block, timestamp, signer, value_hmnd as Amount, pallet, method
-                FROM substrate_extrinsics
-                WHERE target = @addr
-                ORDER BY block_number DESC";
-            var inRows = (await connection.QueryAsync<dynamic>(inSql, new { addr = FeesPotPalletAddress })).ToList();
+            var inRows = (await connection.QueryAsync<dynamic>(StoredProcedures.GetFeesPotIncomingTransfers, new { addr = feesPotPalletAddress })).ToList();
             foreach (var r in inRows)
             {
                 double amt = r.Amount != null ? (double)r.Amount : 0.0;
@@ -224,7 +242,7 @@ public class TokenomicsRepository : ITokenomicsRepository
 
         return new FeesPotAnalyticsDto
         {
-            FeesPotAddress = FeesPotPalletAddress,
+            FeesPotAddress = feesPotPalletAddress,
             CurrentBalance = currentBalance,
             TotalBatches = totalBatches,
             BurnedTotal = burnedTotal,

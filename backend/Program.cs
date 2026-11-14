@@ -3,6 +3,9 @@ using HumanodeTracker.Repositories;
 using HumanodeTracker.Services;
 using Microsoft.Extensions.FileProviders;
 
+// Enable snake_case to PascalCase column mapping across Dapper queries globally
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Kestrel port to 3000
@@ -14,38 +17,38 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<IHumanodeSidecarClient, HumanodeSidecarClient>();
+builder.Services.AddHttpClient<HumanodeSidecarClient>();
 
-// Repositories
-builder.Services.AddSingleton<IDbConnectionFactory, SqliteConnectionFactory>();
-builder.Services.AddSingleton<IStatsRepository, StatsRepository>();
-builder.Services.AddSingleton<ITransactionRepository, TransactionRepository>();
-builder.Services.AddSingleton<IBlockRepository, BlockRepository>();
-builder.Services.AddSingleton<IWhaleRepository, WhaleRepository>();
-builder.Services.AddSingleton<ILeaderboardRepository, LeaderboardRepository>();
-builder.Services.AddSingleton<ITokenRepository, TokenRepository>();
-builder.Services.AddSingleton<ITokenomicsRepository, TokenomicsRepository>();
-builder.Services.AddSingleton<IValidatorRepository, ValidatorRepository>();
-builder.Services.AddSingleton<IWalletRepository, WalletRepository>();
-builder.Services.AddSingleton<IDirectoryRepository, DirectoryRepository>();
-builder.Services.AddSingleton<IGovernanceRepository, GovernanceRepository>();
-builder.Services.AddSingleton<ILabelRepository, LabelRepository>();
-builder.Services.AddSingleton<IPriceRepository, PriceRepository>();
-builder.Services.AddSingleton<IEqualityRepository, EqualityRepository>();
-builder.Services.AddSingleton<IClusterRepository, ClusterRepository>();
-builder.Services.AddSingleton<IDexRepository, DexRepository>();
-builder.Services.AddSingleton<ITaxReportRepository, TaxReportRepository>();
-builder.Services.AddSingleton<ITimeMachineRepository, TimeMachineRepository>();
-builder.Services.AddSingleton<IQuerySandboxRepository, QuerySandboxRepository>();
-builder.Services.AddSingleton<IBiomapperRepository, BiomapperRepository>();
-builder.Services.AddSingleton<IBridgeRepository, BridgeRepository>();
-builder.Services.AddSingleton<IHodlersRepository, HodlersRepository>();
-builder.Services.AddSingleton<ILocalizationRepository, LocalizationRepository>();
-builder.Services.AddSingleton<IMethodDecoderService, MethodDecoderService>();
+// Repositories (Pure Concrete Classes, Zero Interfaces)
+builder.Services.AddSingleton<SqliteConnectionFactory>();
+builder.Services.AddSingleton<SystemConfigRepository>();
+builder.Services.AddSingleton<PriceRepository>();
+builder.Services.AddSingleton<LabelRepository>();
+builder.Services.AddSingleton<StatsRepository>();
+builder.Services.AddSingleton<TransactionRepository>();
+builder.Services.AddSingleton<BlockRepository>();
+builder.Services.AddSingleton<WhaleRepository>();
+builder.Services.AddSingleton<LeaderboardRepository>();
+builder.Services.AddSingleton<TokenRepository>();
+builder.Services.AddSingleton<TokenomicsRepository>();
+builder.Services.AddSingleton<ValidatorRepository>();
+builder.Services.AddSingleton<WalletRepository>();
+builder.Services.AddSingleton<DirectoryRepository>();
+builder.Services.AddSingleton<GovernanceRepository>();
+builder.Services.AddSingleton<EqualityRepository>();
+builder.Services.AddSingleton<ClusterRepository>();
+builder.Services.AddSingleton<DexRepository>();
+builder.Services.AddSingleton<TaxReportRepository>();
+builder.Services.AddSingleton<TimeMachineRepository>();
+builder.Services.AddSingleton<QuerySandboxRepository>();
+builder.Services.AddSingleton<BiomapperRepository>();
+builder.Services.AddSingleton<BridgeRepository>();
+builder.Services.AddSingleton<HodlersRepository>();
+builder.Services.AddSingleton<LocalizationRepository>();
+builder.Services.AddSingleton<MethodDecoderService>();
 
 // Background Services
 builder.Services.AddSingleton<BlockchainIndexerService>();
-builder.Services.AddSingleton<IIndexerService>(sp => sp.GetRequiredService<BlockchainIndexerService>());
 builder.Services.AddHostedService(sp => sp.GetRequiredService<BlockchainIndexerService>());
 builder.Services.AddHostedService<TokenomicsSyncService>();
 
@@ -92,7 +95,11 @@ if (Directory.Exists(staticDir))
         RequestPath = "",
         OnPrepareResponse = ctx =>
         {
-            if (ctx.File.Name.EndsWith(".js") || ctx.File.Name.EndsWith(".css"))
+            if (ctx.File.Name.EndsWith(".html"))
+            {
+                ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            }
+            else if (ctx.File.Name.EndsWith(".js") || ctx.File.Name.EndsWith(".css"))
             {
                 ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
             }
@@ -112,7 +119,7 @@ if (Directory.Exists(staticDir) && File.Exists(Path.Combine(staticDir, "index.ht
         {
             context.Response.StatusCode = 404;
             context.Response.ContentType = "application/json; charset=utf-8";
-            await context.Response.WriteAsJsonAsync(new { error = "Geçersiz API rotası", path = context.Request.Path.Value });
+            await context.Response.WriteAsJsonAsync(new { error = "Invalid API route", path = context.Request.Path.Value });
             return;
         }
 

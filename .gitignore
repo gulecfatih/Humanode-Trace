@@ -43,6 +43,16 @@ project.lock.json
 .env.test.local
 .env.production.local
 
+# AI Assistants, Agent Skills & Prompt Configuration (Excluded from GitHub)
+GEMINI.md
+CLAUDE.md
+AGENTS.md
+*.rules
+*.prompt
+.cursor/
+.copilot/
+.gemini/
+
 # IDE & Editor Settings
 .agents/
 .vscode/

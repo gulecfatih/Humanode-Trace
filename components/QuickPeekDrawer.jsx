@@ -46,18 +46,18 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
       }
       styles={{
         content: {
-          background: '#161b22',
-          borderLeft: '1px solid rgba(56, 189, 248, 0.25)',
+          background: '#fff1e5',
+          borderLeft: '2px solid #111111',
         },
         header: {
-          background: '#0d1117',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#f5e6d8',
+          borderBottom: '2px solid #111111',
         },
       }}
     >
       <Stack gap="md" p="xs">
         {/* Adres ve Kopyalama */}
-        <Paper p="sm" bg="rgba(0, 0, 0, 0.3)">
+        <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
           <Group justify="space-between" align="center">
             <Box style={{ maxWidth: '85%' }}>
               <Text size="xs" c="dimmed">{t('quickPeekAddress')}</Text>
@@ -79,9 +79,11 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
           {data?.persona?.badges && (
             <Group gap={6} mt="xs">
               {data.persona.badges.map((b) => (
-                <Badge key={b.id} size="sm" variant="light" style={{ color: b.color, borderColor: b.color }}>
-                  {b.icon} {b.label}
-                </Badge>
+                <Tooltip key={b.id} label={t('persona_' + b.id + '_desc') || b.desc} withArrow position="top">
+                  <Badge size="sm" variant="light" style={{ color: b.color, borderColor: b.color }}>
+                    {b.icon} {t('persona_' + b.id + '_label') || b.label}
+                  </Badge>
+                </Tooltip>
               ))}
             </Group>
           )}
@@ -89,9 +91,9 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
 
         {/* Bakiye & Hacim KPI Grid */}
         <SimpleGrid cols={2} spacing="xs">
-          <Paper p="sm" style={{ borderLeft: '3px solid #10b981' }}>
+          <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #0d7680', borderRadius: 0 }}>
             <Text size="xs" c="dimmed">{t('quickPeekNetBalance')}</Text>
-            <Text size="lg" fw={800} c="green" className="font-mono">
+            <Text size="lg" fw={800} style={{ color: '#0d7680' }} className="font-mono">
               {formatHMND(data?.netBalanceHmnd, lang)}
             </Text>
             <Text size="xs" c="dimmed">
@@ -99,9 +101,9 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
             </Text>
           </Paper>
 
-          <Paper p="sm" style={{ borderLeft: '3px solid #38bdf8' }}>
+          <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #111111', borderRadius: 0 }}>
             <Text size="xs" c="dimmed">{t('quickPeekTotalTxs')}</Text>
-            <Text size="lg" fw={800} c="cyan" className="font-mono">
+            <Text size="lg" fw={800} style={{ color: '#111111' }} className="font-mono">
               {((data?.evm?.sentCount || 0) + (data?.evm?.receivedCount || 0) + (data?.substrate?.signedCount || 0) + (data?.substrate?.targetCount || 0)).toLocaleString(locStr)}
             </Text>
             <Text size="xs" c="dimmed">{t('peek_networkActivity')}</Text>
@@ -110,9 +112,9 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
 
         {/* Multi-Asset & Token Portfolio */}
         {data?.tokens && data.tokens.length > 1 && (
-          <Paper p="sm" style={{ background: 'rgba(20, 184, 166, 0.08)', border: '1px solid rgba(20, 184, 166, 0.3)' }}>
+          <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
             <Group justify="space-between" mb={6}>
-              <Text size="xs" fw={700} c="teal">🪙 {t('peek_additionalWalletAssets')}</Text>
+              <Text size="xs" fw={700} style={{ color: '#0d7680' }}>🪙 {t('peek_additionalWalletAssets')}</Text>
               <Badge size="xs" color="teal">
                 {data.tokens.length} {t('tokens_assets')} (≈ {formatUSD(data?.totalPortfolioUsd || data?.valueUsd, lang)})
               </Badge>
@@ -135,14 +137,14 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
 
         {/* Dual-Layer Cross Match Badge */}
         {data?.crossLayer?.hasLink && (
-          <Paper p="sm" style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+          <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
             <Group justify="space-between" mb={4}>
-              <Text size="xs" fw={700} c="violet">🔗 {t('peek_linkedDualLayerAddress')}</Text>
+              <Text size="xs" fw={700} style={{ color: '#7c3aed' }}>🔗 {t('peek_linkedDualLayerAddress')}</Text>
               <Badge size="xs" color="violet">
                 {data.crossLayer.linkedAddresses?.[0]?.swapCount || 0} {t('peek_bridgeSwaps')}
               </Badge>
             </Group>
-            <Text size="xs" fw={700} className="font-mono" c="indigo" style={{ wordBreak: 'break-all' }}>
+            <Text size="xs" fw={700} className="font-mono" style={{ color: '#7c3aed', wordBreak: 'break-all' }}>
               {data.crossLayer.linkedAddresses?.[0]?.linkedAddress}
             </Text>
             <Text size="xs" c="dimmed" mt={4}>
@@ -153,7 +155,7 @@ export default function QuickPeekDrawer({ opened, onClose, address, onOpenLedger
 
         {/* Validator Badge */}
         {data?.isValidator && (
-          <Paper p="sm" style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+          <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
             <Text size="xs" fw={700} c="cyan">🧬 {t('peek_activeBiometricValidatorProof')}</Text>
             <Text size="xs" c="dimmed" mt={4}>
               {t('peekValidatorStats', {

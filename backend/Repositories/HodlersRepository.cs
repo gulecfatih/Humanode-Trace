@@ -1,65 +1,41 @@
 using System.Data;
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IHodlersRepository
+public class HodlersRepository
 {
-    Task<object> GetHodlersAnalyticsAsync(string network = "all", int page = 1, int limit = 50, string q = "");
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly SystemConfigRepository _configRepo;
 
-public class HodlersRepository : IHodlersRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-
-    public HodlersRepository(IDbConnectionFactory dbFactory)
+    public HodlersRepository(SqliteConnectionFactory dbFactory, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
+        _configRepo = configRepo;
     }
 
-    public async Task<object> GetHodlersAnalyticsAsync(string network = "all", int page = 1, int limit = 50, string q = "")
+    public async Task<object> GetHodlersAnalyticsAsync(HodlersQueryRequest request)
     {
-        var safePage = Math.Max(1, page);
-        var safeLimit = Math.Clamp(limit, 1, 200);
-        var cleanQ = (q ?? "").Trim().ToLower();
-        var net = (network ?? "all").Trim().ToLower();
+        request ??= new HodlersQueryRequest();
+        var safePage = Math.Max(1, request.Page);
+        var safeLimit = Math.Clamp(request.Limit, 1, 200);
+        var cleanQ = (request.Q ?? "").Trim().ToLower();
+        var net = (request.Network ?? "all").Trim().ToLower();
 
-        const double circulatingSupply = 285970432.10;
+        var circulatingSupply = await _configRepo.GetDoubleConfigAsync("circulating_supply_baseline");
 
         using var connection = _dbFactory.CreateConnection();
 
         // 1. Load balances
-        const string balanceSql = @"
-            SELECT address, balance_hmnd, updated_at
-            FROM wallet_balances_cache
-            WHERE balance_hmnd > 0
-            ORDER BY balance_hmnd DESC";
-        var allRows = (await connection.QueryAsync<(string address, double balance_hmnd, long? updated_at)>(balanceSql)).ToList();
+        var allRows = (await connection.QueryAsync<(string address, double balance_hmnd, long? updated_at)>(StoredProcedures.GetHodlerCacheBalances)).ToList();
 
         // 2. Load address labels
-        const string labelsSql = "SELECT address, label, category FROM address_labels";
-        var labelRows = await connection.QueryAsync<(string address, string label, string category)>(labelsSql);
-        var labelsMap = new Dictionary<string, (string label, string category)>(StringComparer.OrdinalIgnoreCase);
-        foreach (var l in labelRows)
-        {
-            if (!string.IsNullOrEmpty(l.address))
-                labelsMap[l.address] = (l.label, l.category);
-        }
+        var labelRows = (await connection.QueryAsync<(string address, string label, string category)>(StoredProcedures.GetHodlerAddressLabels)).ToList();
 
         // 3. Load cross-layer links
-        const string linksSql = "SELECT substrate_address, evm_address FROM cross_layer_links";
-        var links = await connection.QueryAsync<(string sub, string evm)>(linksSql);
-        var subToEvmMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var evmToSubMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var link in links)
-        {
-            if (!string.IsNullOrEmpty(link.sub) && !string.IsNullOrEmpty(link.evm))
-            {
-                subToEvmMap[link.sub] = link.evm;
-                evmToSubMap[link.evm] = link.sub;
-            }
-        }
+        var links = (await connection.QueryAsync<(string sub, string evm)>(StoredProcedures.GetHodlerCrossLayerLinks)).ToList();
 
         long subCount = 0;
         double subTotal = 0;
@@ -81,13 +57,15 @@ public class HodlersRepository : IHodlersRepository
             string? counterpart = null;
             if (isSub)
             {
-                subToEvmMap.TryGetValue(addr, out counterpart);
+                var match = links.FirstOrDefault(l => l.sub.Equals(addr, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrEmpty(match.evm)) counterpart = match.evm;
                 subCount++;
                 subTotal += balance;
             }
             else if (isEvm)
             {
-                evmToSubMap.TryGetValue(addr, out counterpart);
+                var match = links.FirstOrDefault(l => l.evm.Equals(addr, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrEmpty(match.sub)) counterpart = match.sub;
                 evmCount++;
                 evmTotal += balance;
             }
@@ -97,7 +75,9 @@ public class HodlersRepository : IHodlersRepository
                 crossCount++;
             }
 
-            labelsMap.TryGetValue(addr, out var labelInfo);
+            var labelMatch = labelRows.FirstOrDefault(l => l.address.Equals(addr, StringComparison.OrdinalIgnoreCase));
+            string? lbl = !string.IsNullOrEmpty(labelMatch.address) ? labelMatch.label : null;
+            string? cat = !string.IsNullOrEmpty(labelMatch.address) ? labelMatch.category : null;
             double sharePercent = Math.Round((balance / circulatingSupply) * 100.0, 4);
 
             processed.Add(new
@@ -107,8 +87,8 @@ public class HodlersRepository : IHodlersRepository
                 layer,
                 balance_hmnd = Math.Round(balance, 2),
                 share_percent = sharePercent,
-                label = labelInfo.label,
-                category = labelInfo.category,
+                label = lbl,
+                category = cat,
                 counterpart,
                 updated_at = row.updated_at
             });

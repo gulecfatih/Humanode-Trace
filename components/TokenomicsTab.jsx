@@ -124,35 +124,50 @@ export default function TokenomicsTab({
   };
 
   const totalIssuance = data?.totalIssuance || 400000000;
-  const burnedTotal = data?.burnedTotal || 690246;
+  const burnedTotal = data?.burnedTotal !== undefined ? data.burnedTotal : 300;
+  const burnContractAddress = data?.burnContractAddress || '0x2248100d4d0950B06C1973b601f6DFD8Fb149e45';
+  const burnedTxsCount = data?.burnedTxsCount || 1;
   const circulating = data?.circulatingEstimate || 285970432;
   const claimable = data?.claimableAirdrop || 14114881;
-  const feesPot = data?.feesPotBalance || 402744;
-  const lockedVesting = data?.lockedVesting || Math.max(0, totalIssuance - circulating - claimable - feesPot - burnedTotal);
+  const lockedVesting = data?.lockedVesting || Math.max(0, totalIssuance - circulating - claimable - burnedTotal);
 
   const pctCirculating = ((circulating / totalIssuance) * 100).toFixed(1);
   const pctLocked = ((lockedVesting / totalIssuance) * 100).toFixed(1);
   const pctClaimable = ((claimable / totalIssuance) * 100).toFixed(1);
-  const pctFeesPot = ((feesPot / totalIssuance) * 100).toFixed(2);
-  const pctBurned = ((burnedTotal / totalIssuance) * 100).toFixed(2);
+  const pctBurnedNum = (burnedTotal / totalIssuance) * 100;
+  const pctBurned = pctBurnedNum < 0.01 ? (pctBurnedNum > 0 ? '<0.01' : '0.00') : pctBurnedNum.toFixed(2);
 
   return (
     <Stack gap="md">
       {/* 1. HEADER TITLE & DESCRIPTION */}
-      <Paper p="md" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="md">
           <Box>
             <Group gap="xs" mb={4}>
-              <IconChartPie size={24} color="#38bdf8" />
-              <Title order={2} size="h3" c="white">
+              <IconChartPie size={24} color="#0d7680" />
+              <Title order={2} size="h3" style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }}>
                 {t('tokenomics_tokenomics400mSupplyArchitecture')}
               </Title>
               <Badge color="cyan" variant="light" size="sm">
-                Proof-of-Humanity
+                {t('tokenomics_proofOfHumanityBadge')}
               </Badge>
               <Badge color="teal" variant="light" size="sm">
                 {t('tokenomics_verifiedOnChainData')}
               </Badge>
+              <Tooltip label={`${t('tokenomics_burnContract')}: ${burnContractAddress}`} withArrow>
+                <Badge
+                  component="a"
+                  href={`https://humanode.subscan.io/account/${burnContractAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  color="orange"
+                  variant="light"
+                  size="sm"
+                  style={{ cursor: 'pointer' }}
+                >
+                  🔥 {t('tokenomics_burnContract')}: {shortAddr(burnContractAddress)} ({burnedTxsCount} {t('tokenomics_burnTxCountSuffix')}) ↗
+                </Badge>
+              </Tooltip>
             </Group>
             <Text size="xs" c="dimmed" maw={820}>
               {t('tokenomics_humanode400000000')}
@@ -199,20 +214,23 @@ export default function TokenomicsTab({
           />
 
           <KpiStatCard
-            title={t('totalBurnedGas')}
-            value={burnedTotal.toLocaleString(locStr, { maximumFractionDigits: 0 })}
+            title={t('tokenomics_totalBurnedCoins')}
+            value={burnedTotal.toLocaleString(locStr, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
             unit="HMND"
             color="orange"
             icon={IconFlame}
+            badge={t('tokenomics_burnContract')}
+            badgeColor="orange"
+            tooltip={`Burn Contract: ${burnContractAddress}`}
             subtext={t('tokenomics_burnedPermanentlyFromSupply')}
           />
         </SimpleGrid>
       </Paper>
 
       {/* 2. MACRO DISTRIBUTION BAR */}
-      <Paper p="md" bg="rgba(0,0,0,0.2)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" mb="xs">
-          <Text size="sm" fw={700} c="white">
+          <Text size="sm" fw={700} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif' }}>
             {t('tokenomics_400000000Hmnd')}
           </Text>
           <Text size="xs" c="dimmed">
@@ -239,12 +257,8 @@ export default function TokenomicsTab({
             </Progress.Section>
           </Tooltip>
 
-          <Tooltip label={`${t('validators_feespotPool')}: %${pctFeesPot} (~${(feesPot / 1e3).toFixed(0)}K HMND)`}>
-            <Progress.Section value={Math.max(0.8, Number(pctFeesPot))} color="yellow" />
-          </Tooltip>
-
-          <Tooltip label={`${t('tokenomics_burnedGas')}: %${pctBurned} (~${(burnedTotal / 1e3).toFixed(0)}K HMND)`}>
-            <Progress.Section value={Math.max(0.5, Number(pctBurned))} color="orange" />
+          <Tooltip label={`${t('tokenomics_burnedCoins')}: %${pctBurned} (${burnedTotal.toLocaleString(locStr, { maximumFractionDigits: 2 })} HMND)`}>
+            <Progress.Section value={Math.max(0.2, Number(pctBurnedNum || 0.01))} color="orange" />
           </Tooltip>
         </Progress.Root>
 
@@ -269,34 +283,24 @@ export default function TokenomicsTab({
             </Text>
           </Group>
           <Group gap={6}>
-            <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#eab308' }} />
-            <Text size="xs" c="dimmed">
-              {t('tokenomics_feespotReserve')} (%{pctFeesPot})
-            </Text>
-          </Group>
-          <Group gap={6}>
             <Box style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#f97316' }} />
             <Text size="xs" c="dimmed">
-              {t('tokenomics_burnedGas')} (%{pctBurned})
+              {t('tokenomics_burnedCoins')} (%{pctBurned})
             </Text>
           </Group>
         </Group>
       </Paper>
 
       {/* 3. HISTORICAL UNLOCK EVENTS AND BLOCK/TX AUDIT TABLE */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Stack gap="sm">
-          {/* STICKY TOOLBAR */}
+          {/* TOOLBAR */}
           <Box
             p="xs"
             style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 15,
-              backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(13, 17, 23, 0.92)',
-              borderRadius: 6,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f5e6d8',
+              borderRadius: 0,
+              border: '1px solid #d9cbbe',
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -305,7 +309,7 @@ export default function TokenomicsTab({
                   <Badge color="pink" variant="light" size="sm">
                     🔓 {t('tokenomics_onChainLedger')}
                   </Badge>
-                  <Title order={5}>
+                  <Title order={5} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }}>
                     {t('tokenomics_historicalUnlockScheduleBlocks')}
                   </Title>
                 </Group>
@@ -354,11 +358,8 @@ export default function TokenomicsTab({
             <Table highlightOnHover verticalSpacing="xs">
               <Table.Thead
                 style={{
-                  position: 'sticky',
-                  top: 50,
-                  zIndex: 10,
-                  backdropFilter: 'blur(10px)',
-                  backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                  backgroundColor: '#f5e6d8',
+                  borderBottom: '2px solid #111111',
                 }}
               >
                 <Table.Tr>
@@ -375,7 +376,7 @@ export default function TokenomicsTab({
                   <Table.Tr>
                     <Table.Td colSpan={6} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {t('loading') || 'Yükleniyor...'}
+                        {t('loading')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -392,7 +393,7 @@ export default function TokenomicsTab({
                     <Table.Tr key={`${row.hash || row.block_number}-${idx}`}>
                       <Table.Td>
                         <Tooltip label={formatTimestamp(row.timestamp, locStr)} withArrow>
-                          <Text size="xs" c="dimmed">
+                          <Text size="xs" style={{ color: '#554f47', fontWeight: 600 }}>
                             {timeAgo(row.timestamp, lang)}
                           </Text>
                         </Tooltip>
@@ -402,8 +403,7 @@ export default function TokenomicsTab({
                         <Text
                           size="xs"
                           className="font-mono"
-                          c="cyan"
-                          style={{ cursor: onOpenBlock ? 'pointer' : 'default', textDecoration: onOpenBlock ? 'underline' : 'none' }}
+                          style={{ color: '#0d7680', fontWeight: 700, cursor: onOpenBlock ? 'pointer' : 'default', textDecoration: onOpenBlock ? 'underline' : 'none' }}
                           onClick={() => onOpenBlock?.(row.block_number)}
                         >
                           #{row.block_number?.toLocaleString(locStr)}
@@ -415,8 +415,7 @@ export default function TokenomicsTab({
                           <Text
                             size="xs"
                             className="font-mono"
-                            c="blue"
-                            style={{ cursor: onOpenTx ? 'pointer' : 'default', textDecoration: onOpenTx ? 'underline' : 'none' }}
+                            style={{ color: '#0d7680', fontWeight: 600, cursor: onOpenTx ? 'pointer' : 'default', textDecoration: onOpenTx ? 'underline' : 'none' }}
                             onClick={() => onOpenTx?.(row.hash)}
                           >
                             {shortAddr(row.hash, 6, 4)}
@@ -471,10 +470,10 @@ export default function TokenomicsTab({
       {/* 4. DUAL SECTION: WALLET TIERS & BIOMETRIC FAIRNESS SCORE */}
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
         {/* Wallet Tiers Pyramid */}
-        <Paper p="md" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+        <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
           <Group gap={8} mb="sm">
-            <IconUsers size={20} color="#38bdf8" />
-            <Text size="sm" fw={700} c="white">
+            <IconUsers size={20} color="#0d7680" />
+            <Text size="sm" fw={700} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif' }}>
               {t('tokenomics_walletWealthDistributionTiers')}
             </Text>
           </Group>
@@ -483,9 +482,9 @@ export default function TokenomicsTab({
           </Text>
 
           <Stack gap="xs">
-            <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #ef4444' }}>
+            <Paper p="xs" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #ef4444', borderRadius: 0 }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🐋 {t('tokenomics_whale100kHmnd')}</Text>
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>🐋 {t('tokenomics_whale100kHmnd')}</Text>
                 <Badge size="xs" color="red" variant="light">{t('tokenomics_exchangesAndTreasuries')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -493,9 +492,9 @@ export default function TokenomicsTab({
               </Text>
             </Paper>
 
-            <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #f59e0b' }}>
+            <Paper p="xs" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #f59e0b', borderRadius: 0 }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🦈 {t('tokenomics_shark10k100kHmnd')}</Text>
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>🦈 {t('tokenomics_shark10k100kHmnd')}</Text>
                 <Badge size="xs" color="yellow" variant="light">{t('tokenomics_nodeOperators')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -503,9 +502,9 @@ export default function TokenomicsTab({
               </Text>
             </Paper>
 
-            <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #14b8a6' }}>
+            <Paper p="xs" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #14b8a6', borderRadius: 0 }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🐬 {t('tokenomics_dolphin1k10kHmnd')}</Text>
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>🐬 {t('tokenomics_dolphin1k10kHmnd')}</Text>
                 <Badge size="xs" color="teal" variant="light">{t('tokenomics_defiParticipants')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -513,9 +512,9 @@ export default function TokenomicsTab({
               </Text>
             </Paper>
 
-            <Paper p="xs" bg="rgba(0,0,0,0.3)" style={{ borderLeft: '3px solid #06b6d4' }}>
+            <Paper p="xs" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #06b6d4', borderRadius: 0 }}>
               <Group justify="space-between">
-                <Text size="xs" fw={700} c="white">🦐 {t('tokenomics_shrimpFish1kHmnd')}</Text>
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>🦐 {t('tokenomics_shrimpFish1kHmnd')}</Text>
                 <Badge size="xs" color="cyan" variant="light">{t('tokenomics_communityMembers')}</Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -526,10 +525,10 @@ export default function TokenomicsTab({
         </Paper>
 
         {/* Biyometrik Adalet Skoru & Gini Endeksi */}
-        <Paper p="md" bg="rgba(0,0,0,0.25)" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+        <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
           <Group gap={8} mb="sm">
-            <IconScale size={20} color="#14b8a6" />
-            <Text size="sm" fw={700} c="white">
+            <IconScale size={20} color="#0d7680" />
+            <Text size="sm" fw={700} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif' }}>
               {t('tokenomics_proofOfHumanityDecentralization')}
             </Text>
           </Group>
@@ -538,13 +537,13 @@ export default function TokenomicsTab({
           </Text>
 
           <Stack gap="sm">
-            <Paper p="sm" bg="rgba(20, 184, 166, 0.08)" style={{ border: '1px solid rgba(20, 184, 166, 0.2)' }}>
+            <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #0d7680', borderRadius: 0 }}>
               <Group justify="space-between" mb={4}>
-                <Text size="xs" fw={700} c="teal">
+                <Text size="xs" fw={700} style={{ color: '#0d7680' }}>
                   {t('tokenomics_validatorVotingEquality')}
                 </Text>
                 <Badge color="teal" size="sm" variant="light">
-                  %100 Tam Eşitlik
+                  {t('tokenomics_100PercentEquality')}
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -552,13 +551,13 @@ export default function TokenomicsTab({
               </Text>
             </Paper>
 
-            <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
+            <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
               <Group justify="space-between" mb={4}>
-                <Text size="xs" fw={700} c="white">
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>
                   {t('tokenomics_sybilResistance')}
                 </Text>
                 <Badge color="cyan" size="sm" variant="light">
-                  3D Canlılık Testi
+                  {t('tokenomics_3dLivenessDetection')}
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
@@ -566,20 +565,17 @@ export default function TokenomicsTab({
               </Text>
             </Paper>
 
-            <Paper p="sm" bg="rgba(0,0,0,0.3)" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
+            <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
               <Group justify="space-between" mb={4}>
-                <Text size="xs" fw={700} c="white">
-                  {t('tokenomics_fairRewardsFeespot')}
+                <Text size="xs" fw={700} style={{ color: '#111111' }}>
+                  {t('tokenomics_fixedSupplyHardCap')}
                 </Text>
-                <Badge color="yellow" size="sm" variant="light">
-                  Eşit Paylaşım
+                <Badge color="orange" size="sm" variant="light">
+                  {t('tokenomics_deflationaryMechanics')}
                 </Badge>
               </Group>
               <Text size="11px" c="dimmed">
-                {t('tokenomicsPoolEqual', {
-                  k: Math.round(feesPot / 1000),
-                  amount: feesPot.toLocaleString(locStr, { maximumFractionDigits: 0 })
-                })}
+                {t('tokenomics_fixedSupplyDesc')}
               </Text>
             </Paper>
           </Stack>

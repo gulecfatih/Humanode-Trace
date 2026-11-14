@@ -103,12 +103,14 @@ export default function MajorWalletsTab({
 
   return (
     <Stack gap="md">
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" mb="sm" wrap="wrap">
           <div>
             <Group gap={8}>
-              <IconBuildingBank size={20} color="#eab308" />
-              <Title order={4}>{t('dirTitle')}</Title>
+              <IconBuildingBank size={20} color="#b45309" />
+              <Title order={4} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }}>
+                {t('dirTitle')}
+              </Title>
             </Group>
             <Text size="xs" c="dimmed" mt={2}>
               {t('dirSubtitle')}
@@ -122,72 +124,80 @@ export default function MajorWalletsTab({
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mb="md">
           <Paper
             p="xs"
-            bg="rgba(0,0,0,0.25)"
+            bg="#f5e6d8"
             style={{
-              borderLeft: '3px solid #eab308',
+              border: '1px solid #d9cbbe',
+              borderLeft: '3px solid #b45309',
+              borderRadius: 0,
               cursor: 'pointer',
-              background: categoryFilter === 'exchange' ? 'rgba(234, 179, 8, 0.14)' : 'rgba(0,0,0,0.25)',
+              background: categoryFilter === 'exchange' ? '#ebd8c5' : '#f5e6d8',
             }}
             onClick={() => setCategoryFilter(categoryFilter === 'exchange' ? 'all' : 'exchange')}
           >
-            <Text size="10px" c="dimmed" tt="uppercase" fw={700}>
+            <Text size="10px" c="#554f47" tt="uppercase" fw={700}>
               {t('dirExchangeCard')}
             </Text>
-            <Text size="md" fw={800} c="yellow" className="font-mono">
+            <Text size="md" fw={800} c="#b45309" className="font-mono">
               {t('dirExchangeCount', { count: countByCat.exchange })}
             </Text>
           </Paper>
 
           <Paper
             p="xs"
-            bg="rgba(0,0,0,0.25)"
+            bg="#f5e6d8"
             style={{
-              borderLeft: '3px solid #8b5cf6',
+              border: '1px solid #d9cbbe',
+              borderLeft: '3px solid #990f3d',
+              borderRadius: 0,
               cursor: 'pointer',
-              background: categoryFilter === 'system' ? 'rgba(139, 92, 246, 0.14)' : 'rgba(0,0,0,0.25)',
+              background: categoryFilter === 'system' ? '#ebd8c5' : '#f5e6d8',
             }}
             onClick={() => setCategoryFilter(categoryFilter === 'system' ? 'all' : 'system')}
           >
-            <Text size="10px" c="dimmed" tt="uppercase" fw={700}>
+            <Text size="10px" c="#554f47" tt="uppercase" fw={700}>
               {t('dirSystemCard')}
             </Text>
-            <Text size="md" fw={800} c="violet" className="font-mono">
+            <Text size="md" fw={800} c="#990f3d" className="font-mono">
               {t('dirSystemCount', { count: countByCat.system })}
             </Text>
           </Paper>
 
           <Paper
             p="xs"
-            bg="rgba(0,0,0,0.25)"
+            bg="#f5e6d8"
             style={{
-              borderLeft: '3px solid #06b6d4',
+              border: '1px solid #d9cbbe',
+              borderLeft: '3px solid #0d7680',
+              borderRadius: 0,
               cursor: 'pointer',
-              background: categoryFilter === 'whale' ? 'rgba(6, 182, 212, 0.14)' : 'rgba(0,0,0,0.25)',
+              background: categoryFilter === 'whale' ? '#ebd8c5' : '#f5e6d8',
             }}
             onClick={() => setCategoryFilter(categoryFilter === 'whale' ? 'all' : 'whale')}
           >
-            <Text size="10px" c="dimmed" tt="uppercase" fw={700}>
+            <Text size="10px" c="#554f47" tt="uppercase" fw={700}>
               {t('dirWhaleCard')}
             </Text>
-            <Text size="md" fw={800} c="cyan" className="font-mono">
+            <Text size="md" fw={800} c="#0d7680" className="font-mono">
               {t('dirWhaleCount', { count: countByCat.whale })}
             </Text>
           </Paper>
 
           <Paper
             p="xs"
-            bg="rgba(0,0,0,0.25)"
+            bg="#f5e6d8"
             style={{
-              borderLeft: '3px solid #3b82f6',
+              border: '1px solid #d9cbbe',
+              borderLeft: '3px solid #111111',
+              borderRadius: 0,
               cursor: 'pointer',
-              background: categoryFilter === 'contracts' ? 'rgba(59, 130, 246, 0.14)' : 'rgba(0,0,0,0.25)',
+              background: categoryFilter === 'contracts' ? '#ebd8c5' : '#f5e6d8',
             }}
             onClick={() => setCategoryFilter(categoryFilter === 'contracts' ? 'all' : 'contracts')}
           >
-            <Text size="10px" c="dimmed" tt="uppercase" fw={700}>
+            <Text size="10px" c="#554f47" tt="uppercase" fw={700}>
               {t('dirContractCard')}
             </Text>
-            <Text size="md" fw={800} c="blue" className="font-mono">
+            <Text size="md" fw={800} c="#111111" className="font-mono">
               {t('dirContractCount', { count: countByCat.contracts })}
             </Text>
           </Paper>
@@ -218,11 +228,16 @@ export default function MajorWalletsTab({
         </Group>
       </Paper>
 
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Box style={{ overflowX: 'auto', width: '100%' }}>
-          <Table striped highlightOnHover verticalSpacing="xs">
-            <Table.Thead>
-              <Table.Tr>
+          <Table highlightOnHover verticalSpacing="xs">
+            <Table.Thead
+              style={{
+                backgroundColor: '#f5e6d8',
+                borderBottom: '2px solid #111111',
+              }}
+            >
+              <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                 <Table.Th style={{ width: '15%', minWidth: 120 }}>{t('dirColCategory')}</Table.Th>
                 <Table.Th style={{ width: '25%', minWidth: 180 }}>{t('dirColName')}</Table.Th>
                 <Table.Th style={{ width: '18%', minWidth: 140 }}>{t('dirColAddress')}</Table.Th>
@@ -236,7 +251,7 @@ export default function MajorWalletsTab({
                 const meta = CATEGORY_META[w.category] || { label: w.category, color: 'gray' };
                 const netBal = w.live_balance_hmnd !== undefined ? w.live_balance_hmnd : Math.max(0, (w.inflow_hmnd || 0) - (w.outflow_hmnd || 0));
                 return (
-                  <Table.Tr key={w.address}>
+                  <Table.Tr key={w.address} style={{ borderBottom: '1px solid #d9cbbe' }}>
                     <Table.Td style={{ whiteSpace: 'nowrap' }}>
                       <Group gap={4} wrap="nowrap">
                         <Badge size="xs" color={meta.color} variant="light">
@@ -253,10 +268,10 @@ export default function MajorWalletsTab({
                     </Table.Td>
 
                     <Table.Td>
-                      <Text size="xs" fw={700} c="gray.1" lineClamp={1} title={w.label}>
+                      <Text size="xs" fw={700} c="#111111" lineClamp={1} title={w.label} style={{ fontFamily: "var(--font-serif)" }}>
                         {w.label}
                       </Text>
-                      <Text size="11px" c="dimmed" lineClamp={1} title={w.notes}>
+                      <Text size="11px" c="#554f47" lineClamp={1} title={w.notes}>
                         {w.notes}
                       </Text>
                     </Table.Td>
@@ -272,7 +287,7 @@ export default function MajorWalletsTab({
                     </Table.Td>
 
                     <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                      <Text size="xs" fw={800} c="white" className="font-mono">
+                      <Text size="xs" fw={800} c="#111111" className="font-mono">
                         {(w.tx_count || 0).toLocaleString(loc)} {t('unlocks_txs_3')}
                       </Text>
                       <Text size="11px" c="dimmed" className="font-mono">

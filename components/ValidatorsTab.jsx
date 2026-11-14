@@ -122,11 +122,11 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
   const totalBioauthCount = stats?.totalBioauth || 126968;
 
   return (
-    <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+    <Paper p="md" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
       {/* Header Title */}
       <Group justify="space-between" align="flex-start" mb="sm" wrap="wrap">
         <div>
-          <Title order={3} mb={4} c="white">
+          <Title order={3} mb={4} c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif", fontWeight: 700 }}>
             🧬 {t('valTitle')}
           </Title>
           <Text size="xs" c="dimmed">
@@ -175,35 +175,35 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
       </SimpleGrid>
 
       {/* Validator Economics & Earnings Guide */}
-      <Paper p="xs" mb="md" style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', borderRadius: '8px' }}>
+      <Paper p="xs" mb="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group align="flex-start" gap="xs">
-          <IconInfoCircle size={18} color="#06b6d4" style={{ marginTop: '2px', flexShrink: 0 }} />
+          <IconInfoCircle size={18} color="#0d7680" style={{ marginTop: '2px', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
-            <Text size="xs" fw={700} c="cyan">
+            <Text size="xs" fw={700} style={{ color: '#0d7680', fontFamily: 'var(--font-serif), Georgia, serif' }}>
               💡 {t('valExplainerTitle')}
             </Text>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="xs" mt={4}>
-              <Box p={8} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
-                <Text size="11px" fw={600} c="gray.3">{t('valRule1')}</Text>
+              <Box p={8} style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
+                <Text size="11px" fw={700} style={{ color: '#111111' }}>{t('valRule1')}</Text>
                 <Text size="10px" c="dimmed">
                   {t('valRule1Desc')}
                 </Text>
               </Box>
-              <Box p={8} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
-                <Text size="11px" fw={600} c="cyan.3">{t('valRule2')}</Text>
+              <Box p={8} style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
+                <Text size="11px" fw={700} style={{ color: '#111111' }}>{t('valRule2')}</Text>
                 <Text size="10px" c="dimmed">
                   {t('valRule2Desc')}
                 </Text>
               </Box>
-              <Box p={8} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
-                <Text size="11px" fw={600} c="green.3">{t('valRule3')}</Text>
+              <Box p={8} style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
+                <Text size="11px" fw={700} style={{ color: '#111111' }}>{t('valRule3')}</Text>
                 <Text size="10px" c="dimmed">
                   {t('valRule3Desc')}
                 </Text>
               </Box>
-              <Box p={8} style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '6px' }}>
+              <Box p={8} style={{ background: '#fff1e5', border: '1px solid #0d7680', borderRadius: 0 }}>
                 <Group justify="space-between" wrap="nowrap" mb={2}>
-                  <Text size="11px" fw={700} c="teal">
+                  <Text size="11px" fw={700} style={{ color: '#0d7680' }}>
                     🏛️ {t('validators_feespotPool')}
                   </Text>
                   <Badge size="xs" color="teal" variant="light">
@@ -220,7 +220,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
       </Paper>
 
       {/* Search & 2 View Switchers (Active vs Inactive) */}
-      <Paper p="xs" bg="rgba(15, 23, 42, 0.7)" mb="sm" style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
+      <Paper p="xs" mb="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
         <Group justify="space-between" wrap="wrap" gap="sm">
           {/* Leaderboard Style 2 View Tabs */}
           <SegmentedControl
@@ -230,7 +230,8 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
               setPage(1);
             }}
             size="xs"
-            radius="md"
+            radius={0}
+            styles={{ root: { background: '#ecdcd0', border: '1px solid #d9cbbe' } }}
             data={[
               {
                 value: 'active',
@@ -269,7 +270,7 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
 
           <Group gap="xs">
             <TextInput
-              placeholder={t('valSearchPlaceholder') || 'Validatör ara...'}
+              placeholder={t('valSearchPlaceholder')}
               leftSection={<IconSearch size={14} />}
               value={searchQuery}
               onChange={(e) => {
@@ -373,7 +374,9 @@ export default function ValidatorsTab({ onSelectAddress, onOpenLedger }) {
                       </Text>
                       {isActiveNode ? (
                         <Text size="10px" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-                          {v.cadence_hours ? `~${v.cadence_hours} sa/blok • 30g: ${v.recent_blocks ?? 0}` : `30g: ${v.recent_blocks || 0} blok`}
+                          {v.cadence_hours
+                            ? `${(t('validators_hoursPerBlock') || '~{0} sa/blok').replace('{0}', v.cadence_hours)} • ${(t('validators_recentBlocks30d') || '30g: {0} blok').replace('{0}', v.recent_blocks ?? 0)}`
+                            : (t('validators_recentBlocks30d') || '30g: {0} blok').replace('{0}', v.recent_blocks || 0)}
                         </Text>
                       ) : (
                         <Text size="10px" c="dimmed">

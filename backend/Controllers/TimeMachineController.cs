@@ -7,9 +7,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class TimeMachineController : ControllerBase
 {
-    private readonly ITimeMachineRepository _timeMachineRepo;
+    private readonly TimeMachineRepository _timeMachineRepo;
 
-    public TimeMachineController(ITimeMachineRepository timeMachineRepo)
+    public TimeMachineController(TimeMachineRepository timeMachineRepo)
     {
         _timeMachineRepo = timeMachineRepo;
     }

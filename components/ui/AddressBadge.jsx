@@ -72,10 +72,10 @@ export default function AddressBadge({
           className="font-mono"
           style={{
             cursor: onSelectAddress ? 'pointer' : 'default',
-            color: '#f0f6fc',
+            color: onSelectAddress ? '#0d7680' : '#111111',
             fontWeight: 600,
             textDecoration: onSelectAddress ? 'underline' : 'none',
-            textDecorationColor: 'rgba(56, 189, 248, 0.4)',
+            textDecorationColor: '#0d7680',
           }}
           onClick={() => onSelectAddress?.(address)}
         >
@@ -86,7 +86,7 @@ export default function AddressBadge({
       {copyable && (
         <CopyButton value={address} timeout={2000}>
           {({ copied, copy }) => (
-            <Tooltip label={copied ? (t('copied') || 'Kopyalandı!') : (t('copyAddress') || 'Adresi Kopyala')} withArrow position="top">
+            <Tooltip label={copied ? t('copied') : t('copyAddress')} withArrow position="top">
               <ActionIcon
                 size={18}
                 variant="subtle"
@@ -104,7 +104,7 @@ export default function AddressBadge({
       )}
 
       {onOpenLedger && (
-        <Tooltip label={t('quickPeekOpenLedger') || 'Hesap Defterini Aç'} withArrow position="top">
+        <Tooltip label={t('quickPeekOpenLedger')} withArrow position="top">
           <ActionIcon
             size={18}
             variant="subtle"

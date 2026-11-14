@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using HumanodeTracker.Repositories;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Controllers;
 
@@ -7,9 +8,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class LocalizationController : ControllerBase
 {
-    private readonly ILocalizationRepository _locRepo;
+    private readonly LocalizationRepository _locRepo;
 
-    public LocalizationController(ILocalizationRepository locRepo)
+    public LocalizationController(LocalizationRepository locRepo)
     {
         _locRepo = locRepo;
     }
@@ -45,16 +46,9 @@ public class LocalizationController : ControllerBase
     public async Task<IActionResult> UpdateTranslation([FromBody] UpdateTranslationRequest req)
     {
         if (req == null || string.IsNullOrWhiteSpace(req.Key))
-            return BadRequest(new { error = "Key is required" });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_key_required", MessageKey = "err_key_required" });
 
         var success = await _locRepo.UpsertTranslationAsync(req.Lang, req.Key, req.Value);
         return Ok(new { success });
     }
-}
-
-public class UpdateTranslationRequest
-{
-    public string Lang { get; set; } = "";
-    public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
 }

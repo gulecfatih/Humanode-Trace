@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using HumanodeTracker.Repositories;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Controllers;
 
@@ -7,21 +8,17 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class HodlersController : ControllerBase
 {
-    private readonly IHodlersRepository _hodlersRepo;
+    private readonly HodlersRepository _hodlersRepo;
 
-    public HodlersController(IHodlersRepository hodlersRepo)
+    public HodlersController(HodlersRepository hodlersRepo)
     {
         _hodlersRepo = hodlersRepo;
     }
 
     [HttpGet("hodlers")]
-    public async Task<IActionResult> GetHodlers(
-        [FromQuery] string network = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50,
-        [FromQuery] string q = "")
+    public async Task<IActionResult> GetHodlers([FromQuery] HodlersQueryRequest request)
     {
-        var result = await _hodlersRepo.GetHodlersAnalyticsAsync(network, page, limit, q);
+        var result = await _hodlersRepo.GetHodlersAnalyticsAsync(request);
         return Ok(result);
     }
 }

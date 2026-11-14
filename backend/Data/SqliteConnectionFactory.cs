@@ -3,13 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace HumanodeTracker.Data;
 
-public interface IDbConnectionFactory
-{
-    SqliteConnection CreateConnection();
-    string GetDbPath();
-}
-
-public class SqliteConnectionFactory : IDbConnectionFactory
+public class SqliteConnectionFactory
 {
     private readonly string _connectionString;
     private readonly string _dbPath;

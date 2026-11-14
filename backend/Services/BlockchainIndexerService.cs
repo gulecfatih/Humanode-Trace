@@ -4,12 +4,7 @@ using HumanodeTracker.Data;
 
 namespace HumanodeTracker.Services;
 
-public interface IIndexerService
-{
-    object GetProgress();
-}
-
-public class BlockchainIndexerService : BackgroundService, IIndexerService
+public class BlockchainIndexerService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<BlockchainIndexerService> _logger;
@@ -63,10 +58,22 @@ public class BlockchainIndexerService : BackgroundService, IIndexerService
                     Arguments = $"\"{fullPath}\"",
                     WorkingDirectory = repoRoot,
                     UseShellExecute = false,
+                    RedirectStandardError = true,
                     CreateNoWindow = true
                 };
 
                 _indexerProcess = Process.Start(psi);
+                if (_indexerProcess != null)
+                {
+                    _indexerProcess.ErrorDataReceived += (s, e) =>
+                    {
+                        if (!string.IsNullOrEmpty(e.Data))
+                        {
+                            _logger.LogWarning("[NodeIndexer] {Error}", e.Data);
+                        }
+                    };
+                    _indexerProcess.BeginErrorReadLine();
+                }
                 _logger.LogInformation("Managed Node.js blockchain indexer worker started (PID: {Pid})", _indexerProcess?.Id);
             }
         }
@@ -85,30 +92,29 @@ public class BlockchainIndexerService : BackgroundService, IIndexerService
         {
             try
             {
+                if (_indexerProcess == null || _indexerProcess.HasExited)
+                {
+                    _logger.LogInformation("Indexer worker process not running. Reviving managed Node.js worker...");
+                    StartWorkerProcess();
+                }
+
                 using var scope = _serviceProvider.CreateScope();
-                var dbFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
+                var dbFactory = scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
                 using var conn = dbFactory.CreateConnection();
 
-                const string stateSql = "SELECT key, value FROM sync_state";
-                var states = (await conn.QueryAsync<(string key, string value)>(stateSql))
-                    .ToDictionary(k => k.key, v => v.value);
+                var states = (await conn.QueryAsync<(string key, string value)>(StoredProcedures.GetSyncStates)).ToList();
 
-                states.TryGetValue("last_indexed_block", out var lastStr);
-                states.TryGetValue("target_block", out var targetStr);
-                states.TryGetValue("sync_status", out var statusStr);
+                var lastStr = states.FirstOrDefault(k => k.key == "last_indexed_block").value;
+                var targetStr = states.FirstOrDefault(k => k.key == "target_block").value;
+                var statusStr = states.FirstOrDefault(k => k.key == "sync_status").value;
 
                 long.TryParse(lastStr, out var currentBlock);
                 long.TryParse(targetStr, out var targetBlock);
                 if (targetBlock < currentBlock) targetBlock = currentBlock;
 
-                const string evmCntSql = "SELECT COUNT(*) FROM transactions";
-                var evmCnt = await conn.ExecuteScalarAsync<long>(evmCntSql);
-
-                const string subCntSql = "SELECT COUNT(*) FROM substrate_extrinsics";
-                var subCnt = await conn.ExecuteScalarAsync<long>(subCntSql);
-
-                const string tokCntSql = "SELECT COUNT(*) FROM token_transfers";
-                var tokCnt = await conn.ExecuteScalarAsync<long>(tokCntSql);
+                var evmCnt = await conn.ExecuteScalarAsync<long>(StoredProcedures.GetEvmTxsCount);
+                var subCnt = await conn.ExecuteScalarAsync<long>(StoredProcedures.GetSubstrateExtrinsicsCount);
+                var tokCnt = await conn.ExecuteScalarAsync<long>(StoredProcedures.GetTokenTransfersCount);
 
                 double pct = targetBlock > 0 ? Math.Min(100.0, Math.Round((double)currentBlock / targetBlock * 100, 2)) : 100.0;
 

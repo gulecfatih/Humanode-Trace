@@ -8,7 +8,6 @@ public class TokenomicsSyncService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<TokenomicsSyncService> _logger;
-    private const string FeesPotPalletAddress = "hmpwhPbL5XJTYPWXPMkacfqGhJ3eoQRPLKphajpvcot5Q5zkk";
 
     public TokenomicsSyncService(IServiceProvider serviceProvider, ILogger<TokenomicsSyncService> logger)
     {
@@ -77,26 +76,21 @@ public class TokenomicsSyncService : BackgroundService
     private async Task SyncFeesPotAsync()
     {
         using var scope = _serviceProvider.CreateScope();
-        var sidecar = scope.ServiceProvider.GetRequiredService<IHumanodeSidecarClient>();
-        var tokenomicsRepo = scope.ServiceProvider.GetRequiredService<ITokenomicsRepository>();
-        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
+        var sidecar = scope.ServiceProvider.GetRequiredService<HumanodeSidecarClient>();
+        var tokenomicsRepo = scope.ServiceProvider.GetRequiredService<TokenomicsRepository>();
+        var configRepo = scope.ServiceProvider.GetRequiredService<SystemConfigRepository>();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
 
-        var bal = await sidecar.GetAccountBalanceAsync(FeesPotPalletAddress);
+        var feesPotAddress = await configRepo.GetConfigAsync("fees_pot_address");
+        var bal = await sidecar.GetAccountBalanceAsync(feesPotAddress);
         if (bal.HasValue && bal.Value > 1000)
         {
             tokenomicsRepo.UpdateFeesPotBalance(bal.Value);
 
             using var conn = dbFactory.CreateConnection();
-            const string sql = @"
-                INSERT INTO wallet_balances_cache (address, balance_hmnd, updated_at)
-                VALUES (@FeesPotPalletAddress, @Balance, @UpdatedAt)
-                ON CONFLICT(address) DO UPDATE SET
-                    balance_hmnd = excluded.balance_hmnd,
-                    updated_at = excluded.updated_at";
-
-            await conn.ExecuteAsync(sql, new
+            await conn.ExecuteAsync(StoredProcedures.UpsertWalletBalanceCacheStandard, new
             {
-                FeesPotPalletAddress,
+                Address = feesPotAddress,
                 Balance = bal.Value,
                 UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             });
@@ -108,8 +102,8 @@ public class TokenomicsSyncService : BackgroundService
     private async Task SyncSupplyAsync()
     {
         using var scope = _serviceProvider.CreateScope();
-        var sidecar = scope.ServiceProvider.GetRequiredService<IHumanodeSidecarClient>();
-        var tokenomicsRepo = scope.ServiceProvider.GetRequiredService<ITokenomicsRepository>();
+        var sidecar = scope.ServiceProvider.GetRequiredService<HumanodeSidecarClient>();
+        var tokenomicsRepo = scope.ServiceProvider.GetRequiredService<TokenomicsRepository>();
 
         var supply = await sidecar.GetOfficialCirculatingSupplyAsync();
         if (supply.HasValue && supply.Value > 1e8)
@@ -122,30 +116,17 @@ public class TokenomicsSyncService : BackgroundService
     private async Task SyncTopBalancesAsync()
     {
         using var scope = _serviceProvider.CreateScope();
-        var sidecar = scope.ServiceProvider.GetRequiredService<IHumanodeSidecarClient>();
-        var dbFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
+        var sidecar = scope.ServiceProvider.GetRequiredService<HumanodeSidecarClient>();
+        var dbFactory = scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
 
         using var conn = dbFactory.CreateConnection();
-        const string topSql = @"
-            SELECT address FROM (
-                SELECT target as address, SUM(value_hmnd) as vol FROM substrate_extrinsics WHERE target > '' AND status = 1 GROUP BY target
-                UNION
-                SELECT signer as address, SUM(value_hmnd) as vol FROM substrate_extrinsics WHERE signer > '' AND status = 1 GROUP BY signer
-            ) WHERE address LIKE 'hm%' ORDER BY vol DESC LIMIT 25";
-
-        var addresses = (await conn.QueryAsync<string>(topSql)).ToList();
+        var addresses = (await conn.QueryAsync<string>(StoredProcedures.GetTopSubstrateAddressesForCache)).ToList();
         foreach (var addr in addresses)
         {
             var bal = await sidecar.GetAccountBalanceAsync(addr);
             if (bal.HasValue)
             {
-                const string upsertSql = @"
-                    INSERT INTO wallet_balances_cache (address, balance_hmnd, updated_at)
-                    VALUES (@addr, @bal, @now)
-                    ON CONFLICT(address) DO UPDATE SET
-                        balance_hmnd = excluded.balance_hmnd,
-                        updated_at = excluded.updated_at";
-                await conn.ExecuteAsync(upsertSql, new { addr, bal = bal.Value, now = DateTimeOffset.UtcNow.ToUnixTimeSeconds() });
+                await conn.ExecuteAsync(StoredProcedures.UpsertWalletBalanceCacheStandard, new { Address = addr, Balance = bal.Value, UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() });
             }
         }
     }

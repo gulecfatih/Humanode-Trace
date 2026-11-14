@@ -5,7 +5,7 @@
   "scripts": {
     "start": "dotnet run --project backend",
     "start:dotnet": "dotnet run --project backend",
-    "indexer": "node src/indexer.js",
+    "indexer": "dotnet run --project backend",
     "dev": "next dev",
     "build": "next build",
     "start:next": "next start"

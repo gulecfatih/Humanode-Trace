@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,32 +8,29 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class FiscalController : ControllerBase
 {
-    private readonly ITaxReportRepository _taxRepo;
+    private readonly TaxReportRepository _taxRepo;
 
-    public FiscalController(ITaxReportRepository taxRepo)
+    public FiscalController(TaxReportRepository taxRepo)
     {
         _taxRepo = taxRepo;
     }
 
     [HttpGet("validator-tax-report")]
-    public async Task<IActionResult> GetValidatorTaxReport(
-        [FromQuery] string? address = null,
-        [FromQuery] int? year = null,
-        [FromQuery] double vpsMonthly = 15.0,
-        [FromQuery] string format = "json")
+    public async Task<IActionResult> GetValidatorTaxReport([FromQuery] ValidatorTaxReportRequest request)
     {
-        if (string.IsNullOrWhiteSpace(address))
+        request ??= new ValidatorTaxReportRequest();
+        if (string.IsNullOrWhiteSpace(request.Address))
         {
-            return BadRequest(new { error = "Validatör adresi gereklidir (?address=...)" });
+            return BadRequest(new ApiErrorDto { Ok = false, Error = "err_validator_address_required", MessageKey = "err_validator_address_required" });
         }
 
-        if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
+        if (request.Format.Equals("csv", StringComparison.OrdinalIgnoreCase))
         {
-            var csv = await _taxRepo.GenerateTaxReportCsvAsync(address.Trim(), year, vpsMonthly);
-            return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=utf-8", $"humanode_vergi_raporu_{address.Trim()[..Math.Min(8, address.Trim().Length)]}.csv");
+            var csv = await _taxRepo.GenerateTaxReportCsvAsync(request);
+            return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=utf-8", $"humanode_vergi_raporu_{request.Address.Trim()[..Math.Min(8, request.Address.Trim().Length)]}.csv");
         }
 
-        var report = await _taxRepo.GenerateTaxReportAsync(address.Trim(), year, vpsMonthly);
+        var report = await _taxRepo.GenerateTaxReportAsync(request);
         return Ok(report);
     }
 }

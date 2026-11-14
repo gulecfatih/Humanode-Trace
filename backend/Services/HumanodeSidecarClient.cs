@@ -2,15 +2,7 @@ using System.Text.Json;
 
 namespace HumanodeTracker.Services;
 
-public interface IHumanodeSidecarClient
-{
-    Task<double?> GetAccountBalanceAsync(string address);
-    Task<double?> GetEvmBalanceAsync(string address);
-    Task<double?> GetErc20BalanceAsync(string tokenAddress, string walletAddress, int decimals = 18);
-    Task<double?> GetOfficialCirculatingSupplyAsync();
-}
-
-public class HumanodeSidecarClient : IHumanodeSidecarClient
+public class HumanodeSidecarClient
 {
     private readonly HttpClient _httpClient;
     private readonly string _sidecarBaseUrl;

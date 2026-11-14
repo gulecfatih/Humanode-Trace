@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,10 +8,10 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class GovernanceController : ControllerBase
 {
-    private readonly IGovernanceRepository _govRepo;
-    private readonly IDirectoryRepository _dirRepo;
+    private readonly GovernanceRepository _govRepo;
+    private readonly DirectoryRepository _dirRepo;
 
-    public GovernanceController(IGovernanceRepository govRepo, IDirectoryRepository dirRepo)
+    public GovernanceController(GovernanceRepository govRepo, DirectoryRepository dirRepo)
     {
         _govRepo = govRepo;
         _dirRepo = dirRepo;
@@ -25,13 +26,9 @@ public class GovernanceController : ControllerBase
 
     [HttpGet("unlocks")]
     [HttpGet("unlocks-swaps")]
-    public async Task<IActionResult> GetUnlocksAndSwaps(
-        [FromQuery] string category = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50,
-        [FromQuery] string q = "")
+    public async Task<IActionResult> GetUnlocksAndSwaps([FromQuery] UnlocksAndSwapsQueryRequest request)
     {
-        var data = await _govRepo.GetUnlocksAndSwapsAnalyticsAsync(category, page, limit, q);
+        var data = await _govRepo.GetUnlocksAndSwapsAnalyticsAsync(request);
         return Ok(data);
     }
 

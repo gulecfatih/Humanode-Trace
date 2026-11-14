@@ -5,47 +5,25 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IGovernanceRepository
+public class GovernanceRepository
 {
-    Task<GovernanceAnalyticsDto> GetGovernanceAnalyticsAsync();
-    Task<object> GetUnlocksAndSwapsAnalyticsAsync(string category = "all", int page = 1, int limit = 50, string q = "");
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly SystemConfigRepository _configRepo;
 
-public class GovernanceRepository : IGovernanceRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-
-    public GovernanceRepository(IDbConnectionFactory dbFactory)
+    public GovernanceRepository(SqliteConnectionFactory dbFactory, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
+        _configRepo = configRepo;
     }
 
     public async Task<GovernanceAnalyticsDto> GetGovernanceAnalyticsAsync()
     {
         using var connection = _dbFactory.CreateConnection();
-        const string sudoKey = "hmt3zuFmJpA9ohqFqbuRskS7bSKkxBtkddk6WySqwsNcYxFcY";
+        var sudoKey = await _configRepo.GetConfigAsync("sudo_address");
 
-        const string sudoSql = @"
-            SELECT block_number, timestamp, signer, method, details
-            FROM substrate_extrinsics
-            WHERE pallet = 'sudo'
-            ORDER BY block_number DESC
-            LIMIT 20";
-        var sudoTxs = (await connection.QueryAsync<dynamic>(sudoSql)).ToList<object>();
-
-        const string msStatsSql = @"
-            SELECT COUNT(*) as total_txs, COUNT(DISTINCT signer) as unique_signers
-            FROM substrate_extrinsics
-            WHERE pallet = 'multisig'";
-        var msStats = await connection.QueryFirstOrDefaultAsync<(int total_txs, int unique_signers)>(msStatsSql);
-
-        const string msRecentSql = @"
-            SELECT block_number, timestamp, signer, method, details, fee_hmnd
-            FROM substrate_extrinsics
-            WHERE pallet = 'multisig'
-            ORDER BY block_number DESC
-            LIMIT 15";
-        var msRecent = (await connection.QueryAsync<dynamic>(msRecentSql)).ToList<object>();
+        var sudoTxs = (await connection.QueryAsync<dynamic>(StoredProcedures.GetGovernanceSudoCalls)).ToList<object>();
+        var msStats = await connection.QueryFirstOrDefaultAsync<(int total_txs, int unique_signers)>(StoredProcedures.GetGovernanceMultisigStats);
+        var msRecent = (await connection.QueryAsync<dynamic>(StoredProcedures.GetGovernanceRecentMultisigCalls)).ToList<object>();
 
         return new GovernanceAnalyticsDto
         {
@@ -63,33 +41,23 @@ public class GovernanceRepository : IGovernanceRepository
         };
     }
 
-    public async Task<object> GetUnlocksAndSwapsAnalyticsAsync(string category = "all", int page = 1, int limit = 50, string q = "")
+    public async Task<object> GetUnlocksAndSwapsAnalyticsAsync(UnlocksAndSwapsQueryRequest req)
     {
-        var safePage = Math.Max(1, page);
-        var safeLimit = Math.Clamp(limit, 1, 250);
+        req ??= new UnlocksAndSwapsQueryRequest();
+        var safePage = Math.Max(1, req.Page);
+        var safeLimit = Math.Clamp(req.Limit, 1, 250);
         var offset = (safePage - 1) * safeLimit;
-        var cleanQ = (q ?? "").Trim();
-        var cat = (category ?? "all").Trim();
+        var cleanQ = (req.Q ?? "").Trim();
+        var cat = (req.Category ?? "all").Trim();
 
         using var connection = _dbFactory.CreateConnection();
 
-        const string VESTING_VAULTS = "('hmoSQfhjSfTma4wsprfarynvpNGiuHSgA6dGwpVnU8AYy9LMY', 'hmsQhDefepRwhF8dpGwYCnb13t18V5mHUm6AqpYDZxMvF3e4X')";
-
         // KPIs across pallets
-        string kpiVesting = $"SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as val FROM substrate_extrinsics WHERE pallet = 'vesting' OR (signer IN {VESTING_VAULTS} AND pallet = 'balances' AND value_hmnd > 0)";
-        var vRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(kpiVesting);
-
-        const string kpiClaims = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as val FROM substrate_extrinsics WHERE pallet = 'tokenClaims'";
-        var tcRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(kpiClaims);
-
-        const string kpiSwaps = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as val FROM substrate_extrinsics WHERE pallet = 'nativeToEvmSwap'";
-        var neRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(kpiSwaps);
-
-        const string kpiCurSwaps = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as val FROM substrate_extrinsics WHERE pallet = 'currencySwap'";
-        var csRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(kpiCurSwaps);
-
-        const string kpiMultisig = "SELECT COUNT(*) as c, COALESCE(SUM(value_hmnd), 0) as val FROM substrate_extrinsics WHERE pallet = 'multisig'";
-        var msRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(kpiMultisig);
+        var vRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(StoredProcedures.GetKpiVesting);
+        var tcRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(StoredProcedures.GetKpiTokenClaims);
+        var neRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(StoredProcedures.GetKpiNativeToEvmSwaps);
+        var csRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(StoredProcedures.GetKpiCurrencySwaps);
+        var msRow = await connection.QueryFirstOrDefaultAsync<(long c, double val)>(StoredProcedures.GetKpiMultisigCalls);
 
         var kpis = new
         {
@@ -110,7 +78,7 @@ public class GovernanceRepository : IGovernanceRepository
         string whereSql;
         if (cat == "vesting")
         {
-            whereSql = $"WHERE (pallet = 'vesting' OR (signer IN {VESTING_VAULTS} AND pallet = 'balances' AND value_hmnd > 0))";
+            whereSql = "WHERE (pallet = 'vesting' OR (signer IN (SELECT address FROM address_labels WHERE category = 'vesting_vault') AND pallet = 'balances' AND value_hmnd > 0))";
         }
         else if (cat is "tokenClaims" or "nativeToEvmSwap" or "currencySwap" or "multisig")
         {
@@ -119,7 +87,7 @@ public class GovernanceRepository : IGovernanceRepository
         }
         else
         {
-            whereSql = $"WHERE (pallet IN ('vesting', 'tokenClaims', 'nativeToEvmSwap', 'currencySwap', 'multisig') OR (signer IN {VESTING_VAULTS} AND pallet = 'balances' AND value_hmnd > 0))";
+            whereSql = "WHERE (pallet IN ('vesting', 'tokenClaims', 'nativeToEvmSwap', 'currencySwap', 'multisig') OR (signer IN (SELECT address FROM address_labels WHERE category = 'vesting_vault') AND pallet = 'balances' AND value_hmnd > 0))";
         }
 
         if (!string.IsNullOrEmpty(cleanQ))
@@ -128,35 +96,18 @@ public class GovernanceRepository : IGovernanceRepository
             p.Add("qTerm", $"%{cleanQ}%");
         }
 
-        var totalCount = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM substrate_extrinsics {whereSql}", p);
+        var totalCount = await connection.ExecuteScalarAsync<long>($"{StoredProcedures.GetSubstrateExtrinsicsCountBase} {whereSql}", p);
         var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit));
 
         p.Add("safeLimit", safeLimit);
         p.Add("offset", offset);
 
-        string dataSql = $@"
-            SELECT
-                hash, block_number, timestamp, pallet, method, signer, target,
-                value_hmnd, fee_hmnd, status, details
-            FROM substrate_extrinsics
+        string dataSql = $@"{StoredProcedures.GetGovernanceExtrinsicsBase}
             {whereSql}
             ORDER BY timestamp DESC, block_number DESC
             LIMIT @safeLimit OFFSET @offset";
 
-        var rawItems = (await connection.QueryAsync<dynamic>(dataSql, p)).ToList();
-        var items = rawItems.Select(item =>
-        {
-            var dict = (IDictionary<string, object>)item;
-            string s = dict.ContainsKey("signer") && dict["signer"] != null ? dict["signer"].ToString()! : "";
-            string pal = dict.ContainsKey("pallet") && dict["pallet"] != null ? dict["pallet"].ToString()! : "";
-            if ((s == "hmoSQfhjSfTma4wsprfarynvpNGiuHSgA6dGwpVnU8AYy9LMY" || s == "hmsQhDefepRwhF8dpGwYCnb13t18V5mHUm6AqpYDZxMvF3e4X") && pal == "balances")
-            {
-                dict["pallet"] = "vesting";
-                dict["method"] = "hakedisTransferi";
-                dict["details"] = "Humanode Vakfı & Vesting Kilit Açılım Transferi";
-            }
-            return dict;
-        }).ToList();
+        var items = (await connection.QueryAsync<GovernanceExtrinsicItemDto>(dataSql, p)).ToList();
 
         return new
         {

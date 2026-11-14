@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,13 +8,14 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class EqualityController : ControllerBase
 {
-    private readonly IEqualityRepository _equalityRepo;
+    private readonly EqualityRepository _equalityRepo;
 
-    public EqualityController(IEqualityRepository equalityRepo)
+    public EqualityController(EqualityRepository equalityRepo)
     {
         _equalityRepo = equalityRepo;
     }
 
+    [HttpGet("equality")]
     [HttpGet("equality-metrics")]
     public async Task<IActionResult> GetEqualityMetrics()
     {
@@ -36,19 +38,16 @@ public class EqualityController : ControllerBase
     }
 
     [HttpGet("simulate")]
-    public IActionResult SimulateGet(
-        [FromQuery] int? validators = null,
-        [FromQuery] double? volume = null,
-        [FromQuery] double? price = null,
-        [FromQuery] double? vps = null)
+    public IActionResult SimulateGet([FromQuery] SimulationQueryRequest query)
     {
+        query ??= new SimulationQueryRequest();
         var baseline = _equalityRepo.GetSimulationBaseline();
         var input = new SimulationInputDto
         {
-            ValidatorCount = validators ?? 48,
-            VolumeMultiplier = volume ?? 1.0,
-            HmndPriceUsd = price ?? baseline.BaselinePriceUsd,
-            VpsCostPerMonth = vps ?? 15.0
+            ValidatorCount = query.Validators ?? 48,
+            VolumeMultiplier = query.Volume ?? 1.0,
+            HmndPriceUsd = query.Price ?? baseline.BaselinePriceUsd,
+            VpsCostPerMonth = query.Vps ?? 15.0
         };
 
         var result = _equalityRepo.RunSimulation(input);

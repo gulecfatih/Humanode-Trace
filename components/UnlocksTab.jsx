@@ -118,14 +118,14 @@ export default function UnlocksTab({
   return (
     <Stack gap="md">
       {/* 1. HERO HEADER & COUNTDOWN CARD */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" mb="xs" align="flex-start" wrap="wrap">
           <div>
             <Group gap={8}>
               <Badge color="pink" variant="light" size="md">
                 🔓 {t('unlocks_vestingClaims')}
               </Badge>
-              <Title order={4}>
+              <Title order={4} style={{ color: '#111111', fontFamily: 'var(--font-serif), Georgia, serif', fontWeight: 700 }}>
                 {t('unlocks_tokenUnlocksVestingSchedule')}
               </Title>
             </Group>
@@ -136,12 +136,12 @@ export default function UnlocksTab({
         </Group>
 
         {/* COUNTDOWN & CALENDAR INFO CARD */}
-        <Card p="sm" radius="md" mb="sm" style={{ background: 'rgba(236, 72, 153, 0.05)', border: '1px solid rgba(236, 72, 153, 0.25)' }}>
+        <Card p="sm" mb="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderLeft: '3px solid #990f3d', borderRadius: 0 }}>
           <Group justify="space-between" align="center" wrap="wrap">
             <Group gap="xs">
               <IconCalendarEvent size={22} color="#ec4899" />
               <div>
-                <Text size="sm" fw={700} c="#f0f6fc">
+                <Text size="sm" fw={700} c="#111111" style={{ fontFamily: "var(--font-serif)" }}>
                   ⏱️ {t('unlocks_nextTokenUnlockEpoch')}
                 </Text>
                 <Text size="xs" c="dimmed">
@@ -164,7 +164,7 @@ export default function UnlocksTab({
               unit={t('unlocks_txs_3')}
               color="pink"
               icon={IconLockOpen}
-              badge={category === 'vesting' ? 'AKTİF' : null}
+              badge={category === 'vesting' ? t('badge_active') : null}
               badgeColor="pink"
               subtext={kpis?.vesting_amount_hmnd > 0 ? formatHMND(kpis.vesting_amount_hmnd, { locale: lang, showScale: false }) : (t('unlocks_vaultDistributions'))}
             />
@@ -177,7 +177,7 @@ export default function UnlocksTab({
               unit={t('unlocks_txs_3')}
               color="yellow"
               icon={IconGift}
-              badge={category === 'tokenClaims' ? 'AKTİF' : null}
+              badge={category === 'tokenClaims' ? t('badge_active') : null}
               badgeColor="yellow"
               subtext={kpis?.tokenClaims_amount_hmnd > 0 ? formatHMND(kpis.tokenClaims_amount_hmnd, { locale: lang, showScale: false }) : 'tokenClaims:claim'}
             />
@@ -190,7 +190,7 @@ export default function UnlocksTab({
               unit={t('unlocks_txs_3')}
               color="orange"
               icon={IconShieldLock}
-              badge={category === 'multisig' ? 'AKTİF' : null}
+              badge={category === 'multisig' ? t('badge_active') : null}
               badgeColor="orange"
               subtext={t('unlocks_multiSigGovernance')}
             />
@@ -207,19 +207,15 @@ export default function UnlocksTab({
       </Paper>
 
       {/* 2. UNLOCK SCHEDULE TABLE AND STICKY SEARCH BAR */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Stack gap="sm">
-          {/* STICKY TOOLBAR */}
+          {/* TOOLBAR */}
           <Box
             p="xs"
             style={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 15,
-              backdropFilter: 'blur(12px)',
-              backgroundColor: 'rgba(13, 17, 23, 0.92)',
-              borderRadius: 6,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f5e6d8',
+              borderRadius: 0,
+              border: '1px solid #d9cbbe',
             }}
           >
             <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -286,11 +282,11 @@ export default function UnlocksTab({
                     setPage(1);
                   }}
                   data={[
-                    { value: '25', label: '25 / s.' },
-                    { value: '50', label: '50 / s.' },
-                    { value: '100', label: '100 / s.' },
+                    { value: '25', label: t('perPage', { count: 25 }) },
+                    { value: '50', label: t('perPage', { count: 50 }) },
+                    { value: '100', label: t('perPage', { count: 100 }) },
                   ]}
-                  style={{ width: 85 }}
+                  style={{ width: 105 }}
                 />
               </Group>
             </Group>
@@ -301,11 +297,8 @@ export default function UnlocksTab({
             <Table highlightOnHover verticalSpacing="xs">
               <Table.Thead
                 style={{
-                  position: 'sticky',
-                  top: 50,
-                  zIndex: 10,
-                  backdropFilter: 'blur(10px)',
-                  backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                  backgroundColor: '#f5e6d8',
+                  borderBottom: '2px solid #111111',
                 }}
               >
                 <Table.Tr>
@@ -323,7 +316,7 @@ export default function UnlocksTab({
                   <Table.Tr>
                     <Table.Td colSpan={7} align="center" py="xl">
                       <Text size="sm" c="dimmed">
-                        {t('loading') || 'Yükleniyor...'}
+                        {t('loading')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -355,8 +348,12 @@ export default function UnlocksTab({
                           <Text
                             size="xs"
                             className="font-mono"
-                            c="cyan"
-                            style={{ cursor: onOpenBlock ? 'pointer' : 'default', textDecoration: onOpenBlock ? 'underline' : 'none' }}
+                            style={{
+                              cursor: onOpenBlock ? 'pointer' : 'default',
+                              color: '#0d7680',
+                              fontWeight: 700,
+                              textDecoration: onOpenBlock ? 'underline' : 'none',
+                            }}
                             onClick={() => onOpenBlock?.(row.block_number)}
                           >
                             #{row.block_number?.toLocaleString(locStr)}
@@ -453,25 +450,25 @@ export default function UnlocksTab({
           content: {
             maxWidth: '760px',
             width: '94vw',
-            border: '1px solid rgba(56, 189, 248, 0.28)',
-            borderRadius: 14,
-            background: '#0d1117',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.12)',
+            border: '2px solid #111111',
+            borderRadius: 0,
+            background: '#fff1e5',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
           },
           header: {
-            background: '#161b22',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            background: '#f5e6d8',
+            borderBottom: '2px solid #111111',
             padding: '14px 20px',
           },
           body: {
-            background: '#0d1117',
+            background: '#fff1e5',
             padding: '20px',
           },
         }}
       >
         {selectedExtrinsic && (
           <Stack gap="sm">
-            <Paper p="sm" withBorder style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+            <Paper p="sm" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderRadius: 0 }}>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
                 <div>
                   <Text size="xs" c="dimmed">

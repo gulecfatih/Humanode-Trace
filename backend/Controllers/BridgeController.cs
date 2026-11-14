@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HumanodeTracker.Models;
 using HumanodeTracker.Repositories;
 
 namespace HumanodeTracker.Controllers;
@@ -7,21 +8,17 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class BridgeController : ControllerBase
 {
-    private readonly IBridgeRepository _bridgeRepo;
+    private readonly BridgeRepository _bridgeRepo;
 
-    public BridgeController(IBridgeRepository bridgeRepo)
+    public BridgeController(BridgeRepository bridgeRepo)
     {
         _bridgeRepo = bridgeRepo;
     }
 
     [HttpGet("bridge")]
-    public async Task<IActionResult> GetBridgeAnalytics(
-        [FromQuery] string direction = "all",
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 50,
-        [FromQuery] string q = "")
+    public async Task<IActionResult> GetBridgeAnalytics([FromQuery] BridgeQueryRequest request)
     {
-        var result = await _bridgeRepo.GetBridgeAnalyticsAsync(direction, page, limit, q);
+        var result = await _bridgeRepo.GetBridgeAnalyticsAsync(request);
         return Ok(result);
     }
 }

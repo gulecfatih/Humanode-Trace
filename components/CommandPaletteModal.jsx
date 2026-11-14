@@ -58,24 +58,25 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
       size="min(720px, 94vw)"
       withCloseButton={false}
       padding={0}
-      radius="md"
+      radius={0}
       centered
       styles={{
         content: {
           maxWidth: '720px',
           width: '94vw',
-          background: '#161b22',
-          border: '1px solid rgba(56, 189, 248, 0.35)',
-          boxShadow: '0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.15)',
+          background: '#fff1e5',
+          border: '2px solid #111111',
+          boxShadow: '6px 6px 0px #111111',
+          borderRadius: 0,
         },
       }}
     >
       <form onSubmit={handleSearchSubmit}>
-        <Box p="md" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <Box p="md" style={{ borderBottom: '2px solid #111111', background: '#f5e6d8' }}>
           <TextInput
             placeholder={t('cmdPlaceholder')}
-            leftSection={<IconSearch size={18} color="#38bdf8" />}
-            rightSection={<Kbd size="xs">ESC</Kbd>}
+            leftSection={<IconSearch size={18} color="#0d7680" />}
+            rightSection={<Kbd size="xs" style={{ background: '#ecdcd0', color: '#111', border: '1px solid #c9b9aa', borderRadius: 0 }}>ESC</Kbd>}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
@@ -83,7 +84,7 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
             styles={{
               input: {
                 fontSize: 16,
-                color: '#f0f6fc',
+                color: '#111111',
               },
             }}
           />
@@ -99,9 +100,9 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                 p="sm"
                 style={{
                   width: '100%',
-                  borderRadius: 8,
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  borderRadius: 0,
+                  background: '#f5e6d8',
+                  border: '1px solid #111111',
                 }}
                 onClick={() => {
                   onOpenBlock?.(query.trim().replace('#', ''));
@@ -111,8 +112,8 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                 <Group justify="space-between">
                   <div>
                     <Group gap={6}>
-                      <IconCube size={18} color="#38bdf8" />
-                      <Text size="sm" fw={700} c="cyan" className="font-mono">
+                      <IconCube size={18} color="#0d7680" />
+                      <Text size="sm" fw={700} style={{ color: '#0d7680' }} className="font-mono">
                         {t('colBlock')} #{query.trim().replace('#', '')}
                       </Text>
                     </Group>
@@ -120,7 +121,7 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                       {t('cmdInspectBlock')}
                     </Text>
                   </div>
-                  <IconArrowRight size={16} color="#38bdf8" />
+                  <IconArrowRight size={16} color="#0d7680" />
                 </Group>
               </UnstyledButton>
             </Box>
@@ -133,9 +134,9 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                 p="sm"
                 style={{
                   width: '100%',
-                  borderRadius: 8,
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: 0,
+                  background: '#f5e6d8',
+                  border: '1px solid #111111',
                 }}
                 onClick={() => {
                   onOpenTx?.(query.trim());
@@ -145,8 +146,8 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                 <Group justify="space-between">
                   <div>
                     <Group gap={6}>
-                      <IconActivity size={18} color="#f59e0b" />
-                      <Text size="sm" fw={700} c="yellow" className="font-mono" style={{ wordBreak: 'break-all' }}>
+                      <IconActivity size={18} color="#b45309" />
+                      <Text size="sm" fw={700} style={{ color: '#b45309' }} className="font-mono" style={{ wordBreak: 'break-all' }}>
                         {query.trim().slice(0, 16)}...{query.trim().slice(-8)}
                       </Text>
                     </Group>
@@ -154,7 +155,7 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                       {t('cmdInspectTx')}
                     </Text>
                   </div>
-                  <IconArrowRight size={16} color="#f59e0b" />
+                  <IconArrowRight size={16} color="#b45309" />
                 </Group>
               </UnstyledButton>
             </Box>
@@ -167,9 +168,9 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
                 p="sm"
                 style={{
                   width: '100%',
-                  borderRadius: 8,
-                  background: 'rgba(56, 189, 248, 0.1)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  borderRadius: 0,
+                  background: '#f5e6d8',
+                  border: '1px solid #111111',
                 }}
                 onClick={() => {
                   onSelectAddress(query.trim());
@@ -178,14 +179,14 @@ export default function CommandPaletteModal({ opened, onClose, onSelectAddress, 
               >
                 <Group justify="space-between">
                   <div>
-                    <Text size="sm" fw={600} c="cyan" className="font-mono">
+                    <Text size="sm" fw={600} style={{ color: '#0d7680' }} className="font-mono">
                       {query.trim()}
                     </Text>
                     <Text size="xs" c="dimmed">
                       {t('cmdInspectWallet')}
                     </Text>
                   </div>
-                  <IconArrowRight size={16} color="#38bdf8" />
+                  <IconArrowRight size={16} color="#0d7680" />
                 </Group>
               </UnstyledButton>
             </Box>

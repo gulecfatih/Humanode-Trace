@@ -1,15 +1,30 @@
 @import '@mantine/core/styles.css';
 
 :root {
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ft-paper: #fff1e5;
+  --ft-paper-subtle: #f5e6d8;
+  --ft-ink: #111111;
+  --ft-ink-muted: #554f47;
+  --ft-border-dark: #111111;
+  --ft-border-subtle: #d9cbbe;
+  --ft-teal: #0d7680;
+  --ft-claret: #990f3d;
+  --ft-amber: #b45309;
+
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-masthead: 'Cinzel', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 body {
-  background-color: #0b0f17;
-  color: #f0f6fc;
+  background-color: var(--ft-paper);
+  color: var(--ft-ink);
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-serif);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 .font-mono, td.font-mono, .mantine-Table-td.font-mono {
@@ -17,29 +32,249 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Glass panel utility */
+/* ==========================================================================
+   FINANCIAL TIMES EDİTORYAL MİZANPAJ SINIFLARI & GERİYE UYUMLULUK
+   ========================================================================== */
+.neo-box,
 .glass-panel {
-  background: rgba(22, 27, 34, 0.75) !important;
-  backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--ft-paper) !important;
+  border: 1px solid var(--ft-border-subtle) !important;
+  border-top: 2px solid var(--ft-border-dark) !important;
+  box-shadow: none !important;
+  border-radius: 0px !important;
+  color: var(--ft-ink) !important;
 }
 
+.neo-box-subtle,
 .glass-panel-subtle {
-  background: rgba(13, 17, 23, 0.5) !important;
-  backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: var(--ft-paper-subtle) !important;
+  border: 1px solid var(--ft-border-subtle) !important;
+  box-shadow: none !important;
+  border-radius: 0px !important;
+  color: var(--ft-ink) !important;
 }
 
-/* Table row micro-interactions */
-.mantine-Table-tr {
-  transition: background-color 0.15s ease;
+.neo-btn {
+  border: 1px solid var(--ft-border-dark) !important;
+  box-shadow: none !important;
+  background: var(--ft-paper) !important;
+  color: var(--ft-ink) !important;
+  cursor: pointer !important;
+  border-radius: 0px !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 700 !important;
+  font-size: 11.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.12s ease !important;
 }
 
-.mantine-Table-tr:hover {
-  background-color: rgba(56, 189, 248, 0.05) !important;
+.neo-btn:hover {
+  background: var(--ft-paper-subtle) !important;
+  color: var(--ft-claret) !important;
+  border-color: var(--ft-claret) !important;
 }
 
-/* Tabular number column alignment */
+.neo-btn:active {
+  background: var(--ft-border-subtle) !important;
+}
+
+.neo-pill {
+  border: 1px solid var(--ft-border-subtle) !important;
+  box-shadow: none !important;
+  background: var(--ft-paper-subtle) !important;
+  color: var(--ft-ink) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 700 !important;
+  font-size: 10px !important;
+  padding: 2px 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* ==========================================================================
+   MANTINE COMPONENT OVERRIDES (FINANCIAL TIMES STYLING)
+   ========================================================================== */
+.mantine-Paper-root {
+  background-color: var(--ft-paper) !important;
+  border: 1px solid var(--ft-border-subtle) !important;
+  border-top: 2px solid var(--ft-border-dark) !important;
+  box-shadow: none !important;
+  border-radius: 0px !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Card-root {
+  background-color: var(--ft-paper) !important;
+  border: 1px solid var(--ft-border-subtle) !important;
+  border-top: 2px solid var(--ft-border-dark) !important;
+  box-shadow: none !important;
+  border-radius: 0px !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Table-table {
+  border: none !important;
+  border-top: 2px solid var(--ft-border-dark) !important;
+  border-bottom: 2px solid var(--ft-border-dark) !important;
+  border-collapse: collapse !important;
+  background-color: transparent !important;
+  color: var(--ft-ink) !important;
+  border-radius: 0px !important;
+}
+
+.mantine-Table-th {
+  background-color: var(--ft-paper-subtle) !important;
+  color: var(--ft-ink) !important;
+  border-bottom: 2px solid var(--ft-border-dark) !important;
+  border-top: 1px solid var(--ft-border-dark) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 800 !important;
+  font-size: 10.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  padding: 8px 10px !important;
+}
+
+.mantine-Table-td {
+  border-bottom: 1px solid var(--ft-border-subtle) !important;
+  color: var(--ft-ink) !important;
+  font-size: 12.5px !important;
+  padding: 9px 10px !important;
+}
+
+.mantine-Table-td .mantine-Text-root[style*="var(--mantine-color-gray-3)"],
+.mantine-Table-td .mantine-Text-root[style*="var(--mantine-color-gray-4)"],
+.mantine-Table-td .mantine-Text-root[style*="#dee2e6"],
+.mantine-Table-td .mantine-Text-root[style*="#ced4da"],
+.mantine-Text-root[style*="var(--mantine-color-gray-3)"],
+.mantine-Text-root[style*="var(--mantine-color-gray-4)"] {
+  color: var(--ft-ink-muted) !important;
+}
+
+.mantine-Table-td a {
+  color: var(--ft-teal) !important;
+  font-weight: 600;
+}
+
+.mantine-Table-td a:hover {
+  color: var(--ft-claret) !important;
+}
+
+.mantine-Table-tr:hover td {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Modal and Drawer styling */
+.mantine-Modal-content {
+  border: 2px solid var(--ft-border-dark) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15) !important;
+  background-color: var(--ft-paper) !important;
+  border-radius: 0px !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Modal-header {
+  background-color: var(--ft-paper-subtle) !important;
+  border-bottom: 2px solid var(--ft-border-dark) !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Modal-title {
+  color: var(--ft-ink) !important;
+  font-family: var(--font-serif) !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-close {
+  border: 1px solid var(--ft-border-dark) !important;
+  color: var(--ft-ink) !important;
+  border-radius: 0px !important;
+  background: var(--ft-paper) !important;
+}
+
+.mantine-Modal-close:hover {
+  background-color: var(--ft-paper-subtle) !important;
+  color: var(--ft-claret) !important;
+}
+
+.mantine-Drawer-content {
+  border-left: 2px solid var(--ft-border-dark) !important;
+  background-color: var(--ft-paper) !important;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12) !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Drawer-header {
+  background-color: var(--ft-paper-subtle) !important;
+  border-bottom: 2px solid var(--ft-border-dark) !important;
+  color: var(--ft-ink) !important;
+}
+
+.mantine-Drawer-title {
+  font-family: var(--font-serif) !important;
+  font-weight: 700 !important;
+  color: var(--ft-ink) !important;
+}
+
+/* Inputs, Selects, and Form controls */
+.mantine-TextInput-input,
+.mantine-Select-input {
+  background-color: var(--ft-paper) !important;
+  border: 1px solid #c9b9aa !important;
+  color: var(--ft-ink) !important;
+  border-radius: 0px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.mantine-TextInput-input:focus,
+.mantine-Select-input:focus {
+  border-color: var(--ft-border-dark) !important;
+}
+
+/* Headings and typography */
+h1, h2, h3, h4, h5, h6, .mantine-Title-root {
+  color: var(--ft-ink) !important;
+  font-family: var(--font-serif) !important;
+  font-weight: 700 !important;
+}
+
+a, .mantine-Anchor-root {
+  color: var(--ft-teal);
+  text-decoration: none;
+}
+
+a:hover, .mantine-Anchor-root:hover {
+  color: var(--ft-claret);
+  text-decoration: underline;
+}
+
+/* Ensure white text props on light panels adapt to dark ink */
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="var(--mantine-color-white)"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="#ffffff"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="rgb(255, 255, 255)"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="#f0f6fc"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="rgb(240, 246, 252)"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="var(--mantine-color-gray-0)"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="var(--mantine-color-gray-1)"],
+.mantine-Text-root:not(.mantine-Button-label):not(.mantine-Badge-label)[style*="var(--mantine-color-gray-2)"],
+.mantine-Title-root[style*="var(--mantine-color-white)"],
+.mantine-Title-root[style*="#ffffff"],
+.mantine-Title-root[style*="rgb(255, 255, 255)"],
+.mantine-Title-root[style*="#f0f6fc"],
+.mantine-Title-root[style*="rgb(240, 246, 252)"] {
+  color: var(--ft-ink) !important;
+}
+
+[data-dimmed],
+.mantine-Text-root[data-dimmed] {
+  color: var(--ft-ink-muted) !important;
+}
+
+/* Tabular numbers and amounts */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono);
@@ -51,46 +286,19 @@ body {
   align-items: baseline !important;
 }
 
-/* Custom modern scrollbars */
+/* Custom Financial Times scrollbars */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: var(--ft-paper-subtle);
+  border-left: 1px solid var(--ft-border-subtle);
 }
 ::-webkit-scrollbar-thumb {
-  background: #21262d;
-  border-radius: 4px;
+  background: #c2b8ad;
+  border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #38bdf8;
-}
-
-/* Global Sticky Headers for All Grids / Tables */
-div:has(> .mantine-Table-table) {
-  overflow: visible !important;
-}
-
-.mantine-Table-thead {
-  position: sticky;
-  top: 52px;
-  z-index: 25;
-  background-color: #161b22;
-}
-
-.mantine-Table-th {
-  position: sticky !important;
-  top: 52px !important;
-  z-index: 25 !important;
-  background-color: #161b22 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 -1px 0 #30363d;
-}
-
-/* Inside Modals and ScrollAreas, pin sticky header to top: 0 of container */
-.mantine-Modal-body .mantine-Table-thead,
-.mantine-Modal-body .mantine-Table-th,
-.mantine-ScrollArea-viewport .mantine-Table-thead,
-.mantine-ScrollArea-viewport .mantine-Table-th {
-  top: 0 !important;
+  background: var(--ft-claret);
 }

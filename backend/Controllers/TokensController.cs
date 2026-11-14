@@ -7,9 +7,9 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class TokensController : ControllerBase
 {
-    private readonly ITokenRepository _tokenRepo;
+    private readonly TokenRepository _tokenRepo;
 
-    public TokensController(ITokenRepository tokenRepo)
+    public TokensController(TokenRepository tokenRepo)
     {
         _tokenRepo = tokenRepo;
     }

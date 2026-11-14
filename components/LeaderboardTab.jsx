@@ -88,12 +88,12 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
   return (
     <Stack gap="md">
       {/* Header Title & Controls */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Group justify="space-between" align="center" mb="sm" wrap="wrap" gap="sm">
           <div>
             <Group gap={8}>
-              <IconTrophy size={24} color="#eab308" />
-              <Title order={3} c="white">
+              <IconTrophy size={24} color="#b45309" />
+              <Title order={3} c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif", fontWeight: 700 }}>
                 {t('lbTitle')}
               </Title>
               <Badge color="yellow" variant="light" size="sm">
@@ -109,7 +109,8 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
             size="xs"
             value={metric}
             onChange={setMetric}
-            color="yellow"
+            radius={0}
+            styles={{ root: { background: '#ecdcd0', border: '1px solid #d9cbbe' } }}
             data={[
               { label: t('lbBalance'), value: 'balance' },
               { label: t('lbSenders'), value: 'senders' },
@@ -125,7 +126,8 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
             size="xs"
             value={network}
             onChange={setNetwork}
-            color={network === 'substrate' ? 'teal' : network === 'evm' ? 'cyan' : 'gray'}
+            radius={0}
+            styles={{ root: { background: '#ecdcd0', border: '1px solid #d9cbbe' } }}
             data={[
               { label: t('lbSubTab'), value: 'substrate' },
               { label: t('lbEvmTab'), value: 'evm' },
@@ -133,7 +135,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
           />
           <Badge
             size="md"
-            color={network === 'substrate' ? 'teal' : network === 'evm' ? 'cyan' : 'gray'}
+            color="teal"
             variant="light"
           >
             {rows.length} {t('recordsRanked')}
@@ -147,14 +149,15 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
             <Paper
               p="sm"
               style={{
-                background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(0, 0, 0, 0.4))',
-                border: '1px solid rgba(234, 179, 8, 0.4)',
-                borderRadius: 8,
+                background: '#fff1e5',
+                border: '1px solid #d9cbbe',
+                borderTop: '3px solid #b45309',
+                borderRadius: 0,
               }}
             >
               <Group justify="space-between" mb={4}>
                 <Badge color="yellow" variant="filled" size="sm" leftSection={<IconCrown size={12} />}>
-                  #1 LİDER (ALTIN)
+                  {t('leaderboard_rank1')}
                 </Badge>
                 <Badge size="xs" color="gray" variant="light">
                   {(topThree[0].total_txs || 0).toLocaleString(loc)} TX
@@ -170,7 +173,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                 <AmountDisplay
                   value={formatHMND(metric === 'volume' ? topThree[0].total_volume_hmnd : (topThree[0].balance_hmnd ?? topThree[0].total_volume_hmnd), { suffix: false, locale: lang })}
                   unit="HMND"
-                  color="#eab308"
+                  color="#b45309"
                   size="md"
                 />
               </Box>
@@ -180,14 +183,15 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
             <Paper
               p="sm"
               style={{
-                background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(0, 0, 0, 0.4))',
-                border: '1px solid rgba(148, 163, 184, 0.3)',
-                borderRadius: 8,
+                background: '#fff1e5',
+                border: '1px solid #d9cbbe',
+                borderTop: '3px solid #554f47',
+                borderRadius: 0,
               }}
             >
               <Group justify="space-between" mb={4}>
                 <Badge color="gray" variant="filled" size="sm" leftSection={<IconMedal size={12} />}>
-                  #2 GÜMÜŞ
+                  {t('leaderboard_rank2')}
                 </Badge>
                 <Badge size="xs" color="gray" variant="light">
                   {(topThree[1].total_txs || 0).toLocaleString(loc)} TX
@@ -203,7 +207,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                 <AmountDisplay
                   value={formatHMND(metric === 'volume' ? topThree[1].total_volume_hmnd : (topThree[1].balance_hmnd ?? topThree[1].total_volume_hmnd), { suffix: false, locale: lang })}
                   unit="HMND"
-                  color="#94a3b8"
+                  color="#554f47"
                   size="md"
                 />
               </Box>
@@ -213,14 +217,15 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
             <Paper
               p="sm"
               style={{
-                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(0, 0, 0, 0.4))',
-                border: '1px solid rgba(249, 115, 22, 0.3)',
-                borderRadius: 8,
+                background: '#fff1e5',
+                border: '1px solid #d9cbbe',
+                borderTop: '3px solid #990f3d',
+                borderRadius: 0,
               }}
             >
               <Group justify="space-between" mb={4}>
                 <Badge color="orange" variant="filled" size="sm" leftSection={<IconMedal size={12} />}>
-                  #3 BRONZ
+                  {t('leaderboard_rank3')}
                 </Badge>
                 <Badge size="xs" color="gray" variant="light">
                   {(topThree[2].total_txs || 0).toLocaleString(loc)} TX
@@ -236,7 +241,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                 <AmountDisplay
                   value={formatHMND(metric === 'volume' ? topThree[2].total_volume_hmnd : (topThree[2].balance_hmnd ?? topThree[2].total_volume_hmnd), { suffix: false, locale: lang })}
                   unit="HMND"
-                  color="#f97316"
+                  color="#990f3d"
                   size="md"
                 />
               </Box>
@@ -246,11 +251,16 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
       </Paper>
 
       {/* Liderlik Tablosu */}
-      <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+      <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
         <Box style={{ overflowX: 'auto', width: '100%' }}>
-          <Table striped highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 720 }}>
-            <Table.Thead>
-              <Table.Tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <Table highlightOnHover verticalSpacing="xs" style={{ width: '100%', minWidth: 720 }}>
+            <Table.Thead
+              style={{
+                backgroundColor: '#f5e6d8',
+                borderBottom: '2px solid #111111',
+              }}
+            >
+              <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
                 <Table.Th style={{ width: 70, whiteSpace: 'nowrap' }}>{t('lbRank')}</Table.Th>
                 <Table.Th style={{ whiteSpace: 'nowrap' }}>{t('lbAddress')}</Table.Th>
                 <Table.Th style={{ width: 110, whiteSpace: 'nowrap' }}>{t('colLayerPallet')}</Table.Th>
@@ -267,7 +277,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                 <Table.Tr>
                   <Table.Td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
                     <Center>
-                      <Loader size="sm" color="yellow" mr="xs" />
+                      <Loader size="sm" color="teal" mr="xs" />
                       <Text size="sm" c="dimmed">
                         {t('leaderboard_loadingLeaderboardData')}
                       </Text>
@@ -282,7 +292,13 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                   const rankColors = ['yellow', 'gray', 'orange'];
 
                   return (
-                    <Table.Tr key={row.address || idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
+                    <Table.Tr
+                      key={row.address || idx}
+                      style={{
+                        borderBottom: '1px solid #d9cbbe',
+                        backgroundColor: idx % 2 === 0 ? '#fff1e5' : '#f5e6d8',
+                      }}
+                    >
                       <Table.Td>
                         <Badge
                           size="sm"
@@ -328,7 +344,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                       </Table.Td>
                       <Table.Td style={{ textAlign: 'center' }}>
                         <Group gap={4} wrap="nowrap" justify="center">
-                          <Tooltip label={t('preview') || 'Önizle'} withArrow position="top">
+                          <Tooltip label={t('preview')} withArrow position="top">
                             <ActionIcon
                               size="sm"
                               variant="light"
@@ -338,7 +354,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                               <IconEye size={14} />
                             </ActionIcon>
                           </Tooltip>
-                          <Tooltip label={t('ledger') || 'Hesap Defteri'} withArrow position="top">
+                          <Tooltip label={t('ledger')} withArrow position="top">
                             <ActionIcon
                               size="sm"
                               variant="light"
@@ -348,7 +364,7 @@ export default function LeaderboardTab({ onSelectAddress, onOpenLedger, onOpenTr
                               <IconBook size={14} />
                             </ActionIcon>
                           </Tooltip>
-                          <Tooltip label={t('moneyTrail') || 'Para İzi'} withArrow position="top">
+                          <Tooltip label={t('moneyTrail')} withArrow position="top">
                             <ActionIcon
                               size="sm"
                               variant="light"

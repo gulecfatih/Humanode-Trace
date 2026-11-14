@@ -6,140 +6,13 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IBlockRepository
+public class BlockRepository
 {
-    Task<BlockDetailDto> GetBlockDetailsAsync(long blockNumber);
-    Task<BlockSearchResultDto> SearchBlocksAsync(
-        string q = "",
-        string layer = "all",
-        string pallet = "",
-        string startDate = "",
-        string endDate = "",
-        string filter = "all",
-        int page = 1,
-        int limit = 50,
-        bool hideZeroFee = true,
-        bool whaleOnly = false);
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly TransactionRepository _txRepo;
+    private readonly PriceRepository _priceRepo;
 
-public class BlockDetailDto
-{
-    [JsonPropertyName("found")]
-    public bool Found { get; set; }
-
-    [JsonPropertyName("block_number")]
-    public long BlockNumber { get; set; }
-
-    [JsonPropertyName("blockNumber")]
-    public long BlockNumberCamel => BlockNumber;
-
-    [JsonPropertyName("timestamp")]
-    public long Timestamp { get; set; }
-
-    [JsonPropertyName("price_usd")]
-    public double PriceUsd { get; set; } = 0.0;
-
-    [JsonPropertyName("total_tx_count")]
-    public int TxCount { get; set; }
-
-    [JsonPropertyName("txCount")]
-    public int TxCountCamel => TxCount;
-
-    [JsonPropertyName("evm_count")]
-    public int EvmCount { get; set; }
-
-    [JsonPropertyName("evmCount")]
-    public int EvmCountCamel => EvmCount;
-
-    [JsonPropertyName("substrate_count")]
-    public int SubstrateCount { get; set; }
-
-    [JsonPropertyName("substrateCount")]
-    public int SubstrateCountCamel => SubstrateCount;
-
-    [JsonPropertyName("total_fees_hmnd")]
-    public double TotalFeesHmnd { get; set; }
-
-    [JsonPropertyName("totalFeesHmnd")]
-    public double TotalFeesHmndCamel => TotalFeesHmnd;
-
-    [JsonPropertyName("total_volume_hmnd")]
-    public double TotalVolumeHmnd { get; set; }
-
-    [JsonPropertyName("totalVolumeHmnd")]
-    public double TotalVolumeHmndCamel => TotalVolumeHmnd;
-
-    [JsonPropertyName("transactions")]
-    public List<TransactionDto> Transactions { get; set; } = new();
-}
-
-public class BlockSearchResultDto
-{
-    [JsonPropertyName("results")]
-    public List<BlockSummaryDto> Results { get; set; } = new();
-
-    [JsonPropertyName("count")]
-    public int Count { get; set; }
-
-    [JsonPropertyName("pagination")]
-    public PaginationDto Pagination { get; set; } = new();
-}
-
-public class BlockSummaryDto
-{
-    [JsonPropertyName("block_number")]
-    public long BlockNumber { get; set; }
-
-    [JsonPropertyName("blockNumber")]
-    public long BlockNumberCamel => BlockNumber;
-
-    [JsonPropertyName("timestamp")]
-    public long Timestamp { get; set; }
-
-    [JsonPropertyName("total_tx_count")]
-    public int TxCount { get; set; }
-
-    [JsonPropertyName("txCount")]
-    public int TxCountCamel => TxCount;
-
-    [JsonPropertyName("evm_count")]
-    public int EvmCount { get; set; }
-
-    [JsonPropertyName("evmCount")]
-    public int EvmCountCamel => EvmCount;
-
-    [JsonPropertyName("substrate_count")]
-    public int SubstrateCount { get; set; }
-
-    [JsonPropertyName("substrateCount")]
-    public int SubstrateCountCamel => SubstrateCount;
-
-    [JsonPropertyName("total_fees_hmnd")]
-    public double TotalFeesHmnd { get; set; }
-
-    [JsonPropertyName("totalFeesHmnd")]
-    public double TotalFeesHmndCamel => TotalFeesHmnd;
-
-    [JsonPropertyName("total_volume_hmnd")]
-    public double TotalVolumeHmnd { get; set; }
-
-    [JsonPropertyName("totalVolumeHmnd")]
-    public double TotalVolumeHmndCamel => TotalVolumeHmnd;
-
-    [JsonPropertyName("pallets")]
-    public string Pallets { get; set; } = "";
-
-    [JsonPropertyName("transactions")]
-    public List<TransactionDto> Transactions { get; set; } = new();
-}
-
-public class BlockRepository : IBlockRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly ITransactionRepository _txRepo;
-    private readonly IPriceRepository _priceRepo;
-
-    public BlockRepository(IDbConnectionFactory dbFactory, ITransactionRepository txRepo, IPriceRepository priceRepo)
+    public BlockRepository(SqliteConnectionFactory dbFactory, TransactionRepository txRepo, PriceRepository priceRepo)
     {
         _dbFactory = dbFactory;
         _txRepo = txRepo;
@@ -150,53 +23,13 @@ public class BlockRepository : IBlockRepository
     {
         using var connection = _dbFactory.CreateConnection();
 
-        const string evmSql = @"
-            SELECT
-                'EVM' AS Layer,
-                hash AS Hash,
-                block_number AS BlockNumber,
-                timestamp AS Timestamp,
-                'Ethereum' AS Pallet,
-                'transact' AS Method,
-                from_address AS FromAddress,
-                to_address AS ToAddress,
-                value_hmnd AS ValueHmnd,
-                gas_used AS GasUsed,
-                fee_hmnd AS FeeHmnd,
-                status AS Status,
-                '' AS Details,
-                'HMND' AS Symbol
-            FROM transactions
-            WHERE block_number = @blockNumber
-            ORDER BY timestamp DESC";
-
-        var evmTxs = (await connection.QueryAsync<TransactionDto>(evmSql, new { blockNumber })).ToList();
+        var evmTxs = (await connection.QueryAsync<TransactionDto>(StoredProcedures.GetBlockDetailsEvmTxs, new { BlockNumber = blockNumber })).ToList();
         foreach (var t in evmTxs)
         {
             t.TokenTransfers = await _txRepo.GetTokenTransfersByTxHashAsync(t.Hash);
         }
 
-        const string subSql = @"
-            SELECT
-                'SUBSTRATE' AS Layer,
-                hash AS Hash,
-                block_number AS BlockNumber,
-                timestamp AS Timestamp,
-                pallet AS Pallet,
-                method AS Method,
-                signer AS FromAddress,
-                target AS ToAddress,
-                value_hmnd AS ValueHmnd,
-                0 AS GasUsed,
-                fee_hmnd AS FeeHmnd,
-                status AS Status,
-                details AS Details,
-                'HMND' AS Symbol
-            FROM substrate_extrinsics
-            WHERE block_number = @blockNumber
-            ORDER BY timestamp DESC";
-
-        var subTxs = (await connection.QueryAsync<TransactionDto>(subSql, new { blockNumber })).ToList();
+        var subTxs = (await connection.QueryAsync<TransactionDto>(StoredProcedures.GetBlockDetailsSubExtrinsics, new { BlockNumber = blockNumber })).ToList();
 
         var allTxs = evmTxs.Concat(subTxs).ToList();
         if (allTxs.Count == 0)
@@ -225,21 +58,13 @@ public class BlockRepository : IBlockRepository
         };
     }
 
-    public async Task<BlockSearchResultDto> SearchBlocksAsync(
-        string q = "",
-        string layer = "all",
-        string pallet = "",
-        string startDate = "",
-        string endDate = "",
-        string filter = "all",
-        int page = 1,
-        int limit = 50,
-        bool hideZeroFee = true,
-        bool whaleOnly = false)
+    public async Task<BlockSearchResultDto> SearchBlocksAsync(SearchActivitiesRequest req)
     {
-        var safeLimit = Math.Clamp(limit, 1, 200);
-        var safePage = Math.Max(1, page);
+        req ??= new SearchActivitiesRequest();
+        var safeLimit = Math.Clamp(req.Limit, 1, 200);
+        var safePage = Math.Max(1, req.Page);
         var offset = (safePage - 1) * safeLimit;
+        var q = req.Q;
 
         using var connection = _dbFactory.CreateConnection();
 
@@ -270,19 +95,12 @@ public class BlockRepository : IBlockRepository
         }
 
         // Distinct block numbers from blocks_with_tx
-        const string countSql = "SELECT COUNT(*) FROM blocks_with_tx";
-        var totalCount = await connection.ExecuteScalarAsync<long>(countSql);
+        var totalCount = await connection.ExecuteScalarAsync<long>(StoredProcedures.GetBlocksCount);
         int totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit));
         var currentPage = Math.Clamp(safePage, 1, totalPages);
         offset = (currentPage - 1) * safeLimit;
 
-        const string blocksSql = @"
-            SELECT number as Number, timestamp as Timestamp, tx_count as TxCount, total_fees_hmnd as TotalFeesHmnd
-            FROM blocks_with_tx
-            ORDER BY number DESC
-            LIMIT @safeLimit OFFSET @offset";
-
-        var blocks = (await connection.QueryAsync<(long Number, long Timestamp, int TxCount, double TotalFeesHmnd)>(blocksSql, new { safeLimit, offset })).ToList();
+        var blocks = (await connection.QueryAsync<(long Number, long Timestamp, int TxCount, double TotalFeesHmnd)>(StoredProcedures.GetBlocksWithTxPaged, new { SafeLimit = safeLimit, Offset = offset })).ToList();
 
         var summaries = new List<BlockSummaryDto>();
         foreach (var b in blocks)

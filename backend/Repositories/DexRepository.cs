@@ -1,96 +1,37 @@
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IDexRepository
+public class DexRepository
 {
-    Task<DexDepthDto> GetDexPoolDepthAsync(string poolAddress = "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2");
-    Task<List<DexPoolOverviewDto>> GetAllPoolsOverviewAsync();
-}
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly SystemConfigRepository _configRepo;
 
-public class DexDepthDto
-{
-    public string PoolAddress { get; set; } = "";
-    public string PairName { get; set; } = "WeHMND / USDC";
-    public string DexName { get; set; } = "Impossible Finance V2";
-    public double ReserveToken0 { get; set; }
-    public string Symbol0 { get; set; } = "WeHMND";
-    public double ReserveToken1 { get; set; }
-    public string Symbol1 { get; set; } = "USDC";
-    public double ConstantProductK { get; set; }
-    public double SpotPriceUsd { get; set; } = 0.0;
-    public double TotalTvlUsd { get; set; }
-    public double Volume24hHmnd { get; set; }
-    public double Volume24hUsd { get; set; }
-    public double Fees24hUsd { get; set; }
-    public List<SlippageTierDto> SlippageTiers { get; set; } = new();
-    public List<ImpermanentLossPointDto> ImpermanentLossCurve { get; set; } = new();
-}
-
-public class SlippageTierDto
-{
-    public double TradeSizeHmnd { get; set; }
-    public double TradeSizeUsd { get; set; }
-    public double OutputToken1 { get; set; }
-    public double EffectivePriceUsd { get; set; }
-    public double PriceImpactPercent { get; set; }
-    public string WarningTier { get; set; } = "low";
-}
-
-public class ImpermanentLossPointDto
-{
-    public double PriceRatio { get; set; }
-    public string PriceRatioLabel { get; set; } = "";
-    public double ImpermanentLossPercent { get; set; }
-    public double HoldValueUsd { get; set; }
-    public double LpValueUsd { get; set; }
-}
-
-public class DexPoolOverviewDto
-{
-    public string Address { get; set; } = "";
-    public string PairName { get; set; } = "";
-    public double TvlUsd { get; set; }
-    public double Volume24hUsd { get; set; }
-    public double AprPercent { get; set; }
-}
-
-public class DexRepository : IDexRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
-
-    public DexRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
+    public DexRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
+        _configRepo = configRepo;
     }
 
-    public async Task<DexDepthDto> GetDexPoolDepthAsync(string poolAddress = "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2")
+    public async Task<DexDepthDto> GetDexPoolDepthAsync(string? poolAddress = null)
     {
-        var cleanPool = (poolAddress ?? "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(poolAddress))
+        {
+            poolAddress = await _configRepo.GetConfigAsync("default_dex_pool_address");
+        }
+        var cleanPool = (poolAddress ?? "").Trim().ToLowerInvariant();
         using var connection = _dbFactory.CreateConnection();
 
         // 1. Calculate pool reserves from token_transfers
-        const string inSql = @"
-            SELECT token_symbol as symbol, SUM(amount) as total
-            FROM token_transfers
-            WHERE to_address = @cleanPool
-            GROUP BY token_symbol";
-        var inRows = (await connection.QueryAsync<(string symbol, double total)>(inSql, new { cleanPool }))
-            .ToDictionary(r => r.symbol.ToUpperInvariant(), r => r.total);
+        var inRows = (await connection.QueryAsync<(string symbol, double total)>(StoredProcedures.GetDexPoolReservesIn, new { cleanPool })).ToList();
+        var outRows = (await connection.QueryAsync<(string symbol, double total)>(StoredProcedures.GetDexPoolReservesOut, new { cleanPool })).ToList();
 
-        const string outSql = @"
-            SELECT token_symbol as symbol, SUM(amount) as total
-            FROM token_transfers
-            WHERE from_address = @cleanPool
-            GROUP BY token_symbol";
-        var outRows = (await connection.QueryAsync<(string symbol, double total)>(outSql, new { cleanPool }))
-            .ToDictionary(r => r.symbol.ToUpperInvariant(), r => r.total);
-
-        double reserveHmnd = 12734327.0; // Baseline WeHMND pool reserve
-        double reserveUsd = 573044.0;    // Baseline USDC pool reserve
+        double reserveHmnd = await _configRepo.GetDoubleConfigAsync("dex_baseline_wehmnd_reserve");
+        double reserveUsd = await _configRepo.GetDoubleConfigAsync("dex_baseline_usdc_reserve");
         string sym0 = "WeHMND";
         string sym1 = "USDC";
         string pairName = "WeHMND / USDC";
@@ -99,45 +40,45 @@ public class DexRepository : IDexRepository
         {
             sym1 = "WETH";
             pairName = "WeHMND / WETH";
-            reserveHmnd = 3500000.0;
-            reserveUsd = 60.5; // ETH
         }
         else if (cleanPool.Contains("58d1"))
         {
             sym1 = "WBTC";
             pairName = "WeHMND / WBTC";
-            reserveHmnd = 2800000.0;
-            reserveUsd = 1.85; // BTC
         }
 
         // Overlay with on-chain transfers if present
-        if (inRows.TryGetValue(sym0.ToUpperInvariant(), out var in0))
+        var rIn0 = inRows.FirstOrDefault(r => r.symbol.Equals(sym0, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrEmpty(rIn0.symbol))
         {
-            outRows.TryGetValue(sym0.ToUpperInvariant(), out var out0);
-            double net0 = Math.Max(1000.0, in0 - out0);
+            var rOut0 = outRows.FirstOrDefault(r => r.symbol.Equals(sym0, StringComparison.OrdinalIgnoreCase));
+            double net0 = Math.Max(1000.0, rIn0.total - rOut0.total);
             reserveHmnd = net0;
         }
-        if (inRows.TryGetValue(sym1.ToUpperInvariant(), out var in1))
+
+        var rIn1 = inRows.FirstOrDefault(r => r.symbol.Equals(sym1, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrEmpty(rIn1.symbol))
         {
-            outRows.TryGetValue(sym1.ToUpperInvariant(), out var out1);
-            double net1 = Math.Max(10.0, in1 - out1);
+            var rOut1 = outRows.FirstOrDefault(r => r.symbol.Equals(sym1, StringComparison.OrdinalIgnoreCase));
+            double net1 = Math.Max(10.0, rIn1.total - rOut1.total);
             reserveUsd = net1;
         }
 
         double k = reserveHmnd * reserveUsd;
         var defaultPrice = await _priceRepo.GetLatestPriceAsync();
         double spotPrice = (sym1 == "USDC" && reserveHmnd > 0) ? (reserveUsd / reserveHmnd) : defaultPrice;
-        double tvlUsd = (reserveHmnd * spotPrice) + (sym1 == "USDC" ? reserveUsd : (reserveUsd * (sym1 == "WETH" ? 2650.0 : 68000.0)));
+
+        double refOtherUsd = sym1 == "WETH" 
+            ? await _configRepo.GetDoubleConfigAsync("price_ref_weth")
+            : await _configRepo.GetDoubleConfigAsync("price_ref_wbtc");
+
+        double tvlUsd = (reserveHmnd * spotPrice) + (sym1 == "USDC" ? reserveUsd : (reserveUsd * refOtherUsd));
 
         // 24h volume
         var dayAgo = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 86400;
-        const string volSql = @"
-            SELECT COALESCE(SUM(amount), 0)
-            FROM token_transfers
-            WHERE (to_address = @cleanPool OR from_address = @cleanPool)
-              AND timestamp >= @dayAgo";
-        var vol24Hmnd = await connection.ExecuteScalarAsync<double>(volSql, new { cleanPool, dayAgo });
-        if (vol24Hmnd < 1000) vol24Hmnd = 48500.0; // Baseline active daily volume
+        var vol24Hmnd = await connection.ExecuteScalarAsync<double>(StoredProcedures.GetDexPool24hVolume, new { cleanPool, dayAgo });
+        var baselineVol = await _configRepo.GetDoubleConfigAsync("dex_baseline_daily_volume");
+        if (vol24Hmnd < 1000) vol24Hmnd = baselineVol;
 
         double vol24Usd = Math.Round(vol24Hmnd * spotPrice, 2);
         double fees24Usd = Math.Round(vol24Usd * 0.003, 2); // 0.3% AMM fee
@@ -212,19 +153,20 @@ public class DexRepository : IDexRepository
 
     public async Task<List<DexPoolOverviewDto>> GetAllPoolsOverviewAsync()
     {
-        var pools = new List<string>
+        using var connection = _dbFactory.CreateConnection();
+        var pools = (await connection.QueryAsync<string>(StoredProcedures.GetDexPoolAddresses)).ToList();
+        if (pools.Count == 0)
         {
-            "0xe48cc340b8f1ac0a326577b3c2d1fe5229ebb1c2",
-            "0xd39111ff6649f78c4c9b9bb975886f6e062b653d",
-            "0x58d1d314abc3fb9896e30316cf2527aa14c8f680"
-        };
+            var defPool = await _configRepo.GetConfigAsync("default_dex_pool_address");
+            if (!string.IsNullOrEmpty(defPool)) pools.Add(defPool);
+        }
 
         var list = new List<DexPoolOverviewDto>();
         foreach (var p in pools)
         {
             var depth = await GetDexPoolDepthAsync(p);
             double annualFees = depth.Fees24hUsd * 365.0;
-            double apr = depth.TotalTvlUsd > 0 ? Math.Round((annualFees / depth.TotalTvlUsd) * 100.0, 1) : 18.5;
+            double apr = depth.TotalTvlUsd > 0 ? Math.Round((annualFees / depth.TotalTvlUsd) * 100.0, 1) : 0.0;
 
             list.Add(new DexPoolOverviewDto
             {

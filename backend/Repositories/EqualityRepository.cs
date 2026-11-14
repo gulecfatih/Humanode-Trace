@@ -1,91 +1,23 @@
 using Dapper;
 using HumanodeTracker.Data;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IEqualityRepository
+public class EqualityRepository
 {
-    Task<EqualityMetricsDto> GetEqualityMetricsAsync();
-    SimulationModelDto GetSimulationBaseline();
-    SimulationResultDto RunSimulation(SimulationInputDto input);
-}
-
-public class EqualityMetricsDto
-{
-    public double GiniCoefficient { get; set; }
-    public string GiniRating { get; set; } = "Orta Eşitsizlik";
-    public string GiniDescription { get; set; } = "";
-    public int TotalHoldersCount { get; set; }
-    public double TotalTrackedWealthHmnd { get; set; }
-    public int ActiveValidatorsCount { get; set; }
-    public int Nakamoto51Coefficient { get; set; }
-    public int Nakamoto33Coefficient { get; set; }
-    public string ProofOfHumanityAdvantage { get; set; } = "";
-    public List<LorenzPointDto> LorenzCurve { get; set; } = new();
-    public WealthTiersDto WealthDistribution { get; set; } = new();
-}
-
-public class LorenzPointDto
-{
-    public double PopulationPercent { get; set; }
-    public double WealthPercent { get; set; }
-    public double EqualityBaseline { get; set; }
-}
-
-public class WealthTiersDto
-{
-    public double Top01PercentShare { get; set; }
-    public double Top1PercentShare { get; set; }
-    public double Top5PercentShare { get; set; }
-    public double Top10PercentShare { get; set; }
-    public double Bottom90PercentShare { get; set; }
-}
-
-public class SimulationModelDto
-{
-    public int BaselineValidators { get; set; } = 48;
-    public double BaselineFeesPotBalance { get; set; } = 403162.33;
-    public double BaselineMonthlyGasInflowHmnd { get; set; } = 15840.0;
-    public double BaselineAvgBatchPayoutHmnd { get; set; } = 49078.4;
-    public double BaselinePriceUsd { get; set; } = 0.0;
-    public double BaselineVpsCostUsd { get; set; } = 15.0;
-}
-
-public class SimulationInputDto
-{
-    public int ValidatorCount { get; set; } = 48;
-    public double VolumeMultiplier { get; set; } = 1.0;
-    public double HmndPriceUsd { get; set; } = 0.0;
-    public double VpsCostPerMonth { get; set; } = 15.0;
-}
-
-public class SimulationResultDto
-{
-    public double RewardPerRoundHmnd { get; set; }
-    public double MonthlyTotalHmnd { get; set; }
-    public double MonthlyGrossUsd { get; set; }
-    public double MonthlyNetUsd { get; set; }
-    public double AnnualNetUsd { get; set; }
-    public double AnnualRoiPercent { get; set; }
-    public bool IsProfitable { get; set; }
-    public double RunwayMonths { get; set; }
-    public double MonthlyFeesPotInflowHmnd { get; set; }
-    public double MonthlyFeesPotOutflowHmnd { get; set; }
-    public double NetMonthlyFeesPotDeltaHmnd { get; set; }
-}
-
-public class EqualityRepository : IEqualityRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IPriceRepository _priceRepo;
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly SystemConfigRepository _configRepo;
     private static EqualityMetricsDto? _cached;
     private static DateTime _cacheTime = DateTime.MinValue;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
 
-    public EqualityRepository(IDbConnectionFactory dbFactory, IPriceRepository priceRepo)
+    public EqualityRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
         _priceRepo = priceRepo;
+        _configRepo = configRepo;
     }
 
     public async Task<EqualityMetricsDto> GetEqualityMetricsAsync()
@@ -98,26 +30,10 @@ public class EqualityRepository : IEqualityRepository
         using var connection = _dbFactory.CreateConnection();
 
         // 1. Fetch positive balances across all accounts
-        const string balanceSql = @"
-            SELECT balance_hmnd FROM (
-                SELECT target as address, SUM(value_hmnd) as balance_hmnd
-                FROM substrate_extrinsics
-                WHERE target > '' AND status = 1
-                GROUP BY target
-                UNION ALL
-                SELECT to_address as address, SUM(value_hmnd) as balance_hmnd
-                FROM transactions
-                WHERE to_address > '' AND status = 1
-                GROUP BY to_address
-            )
-            WHERE balance_hmnd > 0.01
-            ORDER BY balance_hmnd ASC";
-
-        var rawBalances = (await connection.QueryAsync<double>(balanceSql)).ToList();
+        var rawBalances = (await connection.QueryAsync<double>(StoredProcedures.GetEqualityRawBalances)).ToList();
 
         // Overlay with wallet_balances_cache for accuracy
-        const string cacheSql = "SELECT balance_hmnd FROM wallet_balances_cache WHERE balance_hmnd > 0.01";
-        var cachedBalances = (await connection.QueryAsync<double>(cacheSql)).ToList();
+        var cachedBalances = (await connection.QueryAsync<double>(StoredProcedures.GetEqualityCachedBalances)).ToList();
 
         var balances = rawBalances.Concat(cachedBalances)
             .OrderBy(b => b)
@@ -142,22 +58,26 @@ public class EqualityRepository : IEqualityRepository
         double gini = (2.0 * sumIndexTimesValue) / (n * totalWealth) - ((n + 1.0) / n);
         gini = Math.Clamp(Math.Round(gini, 4), 0.0, 1.0);
 
+        string ratingCode;
         string rating;
         string desc;
         if (gini < 0.40)
         {
-            rating = "Yüksek Eşitlik / Düşük Merkezileşme";
-            desc = "Humanode ağındaki servet dağılımı blokzincir standartlarına göre oldukça dengeli ve tabana yayılmıştır.";
+            ratingCode = "high_equality";
+            rating = "High Equality / Low Centralization";
+            desc = "Wealth distribution across the Humanode network is well-balanced and distributed across the base.";
         }
         else if (gini < 0.65)
         {
-            rating = "Dengeli / Tipik Kripto Seviyesi";
-            desc = "Borsa sıcak cüzdanları ve kurumsal havuzların etkisiyle servet dağılımı tipik Layer-1 seviyesindedir.";
+            ratingCode = "moderate";
+            rating = "Moderate / Typical L1";
+            desc = "Wealth distribution is at a typical Layer-1 level influenced by exchange hot wallets and institutional pools.";
         }
         else
         {
-            rating = "Yüksek Servet Yoğunlaşması (Balina & Borsa Hakimiyeti)";
-            desc = "KuCoin sıcak kasası ve vakıf rezervleri toplam bakiyenin önemli bir bölümünü elinde tutmaktadır.";
+            ratingCode = "high_concentration";
+            rating = "High Wealth Concentration (Whale Dominance)";
+            desc = "KuCoin hot wallet and foundation reserves hold a significant share of the total balance.";
         }
 
         // 3. Lorenz Curve Sampling (21 points from 0% to 100% population)
@@ -208,12 +128,8 @@ public class EqualityRepository : IEqualityRepository
 
         // 5. Nakamoto Coefficient in Proof-of-Humanity
         // Active validators query
-        const string valSql = @"
-            SELECT COUNT(DISTINCT signer)
-            FROM substrate_extrinsics
-            WHERE pallet = 'bioauth' AND timestamp >= @thirtyDaysAgo";
         var thirtyDaysAgo = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - (30 * 86400);
-        int activeVals = await connection.ExecuteScalarAsync<int>(valSql, new { thirtyDaysAgo });
+        int activeVals = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetEqualityActiveBioauthValidators, new { ThirtyDaysAgo = thirtyDaysAgo });
         if (activeVals < 20) activeVals = 48; // Baseline active humans
 
         // In Proof-of-Humanity, 1 Human = 1 Vote! No single entity can stake 51% with money.
@@ -223,6 +139,7 @@ public class EqualityRepository : IEqualityRepository
         var result = new EqualityMetricsDto
         {
             GiniCoefficient = gini,
+            GiniRatingCode = ratingCode,
             GiniRating = rating,
             GiniDescription = desc,
             TotalHoldersCount = n,
@@ -230,7 +147,7 @@ public class EqualityRepository : IEqualityRepository
             ActiveValidatorsCount = activeVals,
             Nakamoto51Coefficient = nakamoto51,
             Nakamoto33Coefficient = nakamoto33,
-            ProofOfHumanityAdvantage = "Geleneksel Proof-of-Stake ağlarında (Ethereum, Solana vb.) 2-3 staking havuzu %51 güce ulaşabilirken, Humanode'da biyometrik eşitlik sayesinde konsensüsü durdurmak için en az " + nakamoto33 + " bağımsız gerçek insanın, ağı ele geçirmek için ise en az " + nakamoto51 + " insanın anlaşması gerekir.",
+            ProofOfHumanityAdvantage = $"Proof-of-Humanity consensus requires at least {nakamoto33} humans to stall and {nakamoto51} humans to control the network.",
             LorenzCurve = lorenzCurve,
             WealthDistribution = wealthDist
         };
@@ -246,7 +163,12 @@ public class EqualityRepository : IEqualityRepository
         var price = _priceRepo.GetLatestPriceAsync().GetAwaiter().GetResult();
         return new SimulationModelDto
         {
-            BaselinePriceUsd = price
+            BaselinePriceUsd = price,
+            BaselineValidators = (int)_configRepo.GetDoubleConfigAsync("simulation_baseline_validators").GetAwaiter().GetResult(),
+            BaselineFeesPotBalance = _configRepo.GetDoubleConfigAsync("fees_pot_baseline").GetAwaiter().GetResult(),
+            BaselineMonthlyGasInflowHmnd = _configRepo.GetDoubleConfigAsync("simulation_monthly_gas_inflow").GetAwaiter().GetResult(),
+            BaselineAvgBatchPayoutHmnd = _configRepo.GetDoubleConfigAsync("simulation_avg_batch_payout").GetAwaiter().GetResult(),
+            BaselineVpsCostUsd = _configRepo.GetDoubleConfigAsync("simulation_vps_cost_usd").GetAwaiter().GetResult()
         };
     }
 
@@ -262,12 +184,13 @@ public class EqualityRepository : IEqualityRepository
         // Inflow to FeesPot from gas fees
         double monthlyGasInflow = baseline.BaselineMonthlyGasInflowHmnd * volMul;
 
-        // Current round payout sample: ~49,000 HMND pool distributed per round
+        // Current round payout sample: pool distributed per round
         double poolPerRound = baseline.BaselineAvgBatchPayoutHmnd;
         double rewardPerRound = Math.Round(poolPerRound / valCount, 2);
 
-        // 2.14 rounds per month (~14 days per round)
-        double monthlyRounds = 2.14;
+        // Dynamic monthly payout rounds
+        double monthlyRounds = _configRepo.GetDoubleConfigAsync("simulation_monthly_rounds").GetAwaiter().GetResult();
+        if (monthlyRounds <= 0) monthlyRounds = 2.14;
         double monthlyHmnd = Math.Round(rewardPerRound * monthlyRounds, 2);
         double monthlyGrossUsd = Math.Round(monthlyHmnd * price, 2);
         double monthlyNetUsd = Math.Round(monthlyGrossUsd - vps, 2);

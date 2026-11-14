@@ -5,18 +5,11 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface ILabelRepository
+public class LabelRepository
 {
-    Task<(List<AddressLabelDto> labels, int total)> GetAddressLabelsAsync(bool watchedOnly = false, string category = "all", string search = "");
-    Task<AddressLabelDto> SaveAddressLabelAsync(AddressLabelDto label);
-    Task<bool> DeleteAddressLabelAsync(string address);
-}
+    private readonly SqliteConnectionFactory _dbFactory;
 
-public class LabelRepository : ILabelRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-
-    public LabelRepository(IDbConnectionFactory dbFactory)
+    public LabelRepository(SqliteConnectionFactory dbFactory)
     {
         _dbFactory = dbFactory;
     }
@@ -44,18 +37,9 @@ public class LabelRepository : ILabelRepository
             p.Add("q", $"%{search.ToLowerInvariant()}%");
         }
 
-        var total = await connection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM address_labels {where}", p);
+        var total = await connection.ExecuteScalarAsync<int>($"{StoredProcedures.GetAddressLabelsCountBase} {where}", p);
 
-        string sql = $@"
-            SELECT
-                address as Address,
-                label as Label,
-                category as Category,
-                color as Color,
-                notes as Notes,
-                is_watched as IsWatched,
-                updated_at as UpdatedAt
-            FROM address_labels
+        string sql = $@"{StoredProcedures.GetAddressLabelsBase}
             {where}
             ORDER BY is_watched DESC, updated_at DESC";
 
@@ -67,27 +51,14 @@ public class LabelRepository : ILabelRepository
     {
         using var connection = _dbFactory.CreateConnection();
         label.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-        const string sql = @"
-            INSERT INTO address_labels (address, label, category, color, notes, is_watched, updated_at)
-            VALUES (@Address, @Label, @Category, @Color, @Notes, @IsWatched, @UpdatedAt)
-            ON CONFLICT(address) DO UPDATE SET
-                label = excluded.label,
-                category = excluded.category,
-                color = excluded.color,
-                notes = excluded.notes,
-                is_watched = excluded.is_watched,
-                updated_at = excluded.updated_at";
-
-        await connection.ExecuteAsync(sql, label);
+        await connection.ExecuteAsync(StoredProcedures.UpsertAddressLabel, label);
         return label;
     }
 
     public async Task<bool> DeleteAddressLabelAsync(string address)
     {
         using var connection = _dbFactory.CreateConnection();
-        const string sql = "DELETE FROM address_labels WHERE LOWER(address) = LOWER(@address)";
-        var affected = await connection.ExecuteAsync(sql, new { address });
+        var affected = await connection.ExecuteAsync(StoredProcedures.DeleteAddressLabel, new { Address = address });
         return affected > 0;
     }
 }

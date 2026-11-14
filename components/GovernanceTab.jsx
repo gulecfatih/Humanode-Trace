@@ -285,7 +285,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
                       {/* Detay */}
                       <Table.Td style={{ padding: '8px 8px' }}>
                         <Text size="xs" c="dimmed" truncate title={tx.details}>
-                          {tx.details || 'Çoklu imza yürütme çağrısı'}
+                          {tx.details || t('gov_multisigExecutionCall')}
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -397,7 +397,7 @@ export default function GovernanceTab({ onOpenBlock, onSelectAddress }) {
 
                     <Table.Td style={{ padding: '8px 8px' }}>
                       <Text size="xs" c="dimmed" truncate title={tx.details}>
-                        {tx.details || 'Root yetkili protokol çağrısı'}
+                        {tx.details || t('gov_rootAuthorizedCall')}
                       </Text>
                     </Table.Td>
                   </Table.Tr>

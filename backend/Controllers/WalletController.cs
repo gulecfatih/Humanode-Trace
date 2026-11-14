@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using HumanodeTracker.Repositories;
+using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Controllers;
 
@@ -7,10 +8,10 @@ namespace HumanodeTracker.Controllers;
 [Route("api")]
 public class WalletController : ControllerBase
 {
-    private readonly IWalletRepository _walletRepo;
-    private readonly IClusterRepository _clusterRepo;
+    private readonly WalletRepository _walletRepo;
+    private readonly ClusterRepository _clusterRepo;
 
-    public WalletController(IWalletRepository walletRepo, IClusterRepository clusterRepo)
+    public WalletController(WalletRepository walletRepo, ClusterRepository clusterRepo)
     {
         _walletRepo = walletRepo;
         _clusterRepo = clusterRepo;
@@ -22,7 +23,7 @@ public class WalletController : ControllerBase
         var target = address ?? addr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Cüzdan adresi parametresi gereklidir (?address=...)" });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var cluster = await _clusterRepo.GetWalletClusterAsync(target.Trim());
@@ -39,33 +40,28 @@ public class WalletController : ControllerBase
         var target = addr ?? address ?? queryAddr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Adres parametresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var summary = await _walletRepo.GetAddressSummaryAsync(target.Trim());
         if (summary == null)
         {
-            return NotFound(new { error = "Cüzdan bulunamadı." });
+            return NotFound(new ApiErrorDto { Error = "err_wallet_not_found", MessageKey = "err_wallet_not_found" });
         }
         return Ok(summary);
     }
 
     [HttpGet("wallet-ledger")]
-    public async Task<IActionResult> GetWalletLedger(
-        [FromQuery] string? address = null,
-        [FromQuery] string? addr = null,
-        [FromQuery] int ledgerPage = 1,
-        [FromQuery] int ledgerLimit = 50,
-        [FromQuery] string ledgerFlow = "all",
-        [FromQuery] bool hideBioauth = true)
+    public async Task<IActionResult> GetWalletLedger([FromQuery] WalletLedgerQueryRequest request)
     {
-        var target = address ?? addr;
+        request ??= new WalletLedgerQueryRequest();
+        var target = !string.IsNullOrEmpty(request.Address) ? request.Address : request.Addr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Cüzdan adresi parametresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
-        var ledger = await _walletRepo.GetWalletLedgerAnalyticsAsync(target.Trim(), ledgerPage, ledgerLimit, ledgerFlow, hideBioauth);
+        var ledger = await _walletRepo.GetWalletLedgerAnalyticsAsync(request);
         return Ok(ledger);
     }
 
@@ -76,11 +72,11 @@ public class WalletController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(address))
         {
-            return BadRequest(new { error = "Adres parametresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var csv = await _walletRepo.ExportWalletLedgerCsvAsync(address.Trim(), flow);
-        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=utf-8", $"cuzdan_hesap_defteri_{address.Trim()[..Math.Min(10, address.Trim().Length)]}.csv");
+        return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv; charset=utf-8", $"humanode_wallet_ledger_{address.Trim()[..Math.Min(10, address.Trim().Length)]}.csv");
     }
 
     [HttpGet("cross-layer-link")]
@@ -89,7 +85,7 @@ public class WalletController : ControllerBase
         var target = address ?? addr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { hasLink = false, error = "Cüzdan adresi parametresi gerekli" });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var link = await _walletRepo.GetCrossLayerIdentityAsync(target.Trim());
@@ -97,38 +93,32 @@ public class WalletController : ControllerBase
     }
 
     [HttpGet("money-trail")]
-    public async Task<IActionResult> GetMoneyTrail(
-        [FromQuery] string? address = null,
-        [FromQuery] string? addr = null,
-        [FromQuery] int depth = 2,
-        [FromQuery] int limit = 4)
+    public async Task<IActionResult> GetMoneyTrail([FromQuery] MoneyTrailRequest request)
     {
-        var target = address ?? addr;
+        request ??= new MoneyTrailRequest();
+        var target = request.TargetAddress;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Cüzdan adresi parametresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
-        var trail = await _walletRepo.GetMultiHopMoneyTrailAsync(target.Trim(), depth, limit);
+        var trail = await _walletRepo.GetMultiHopMoneyTrailAsync(target, request.Depth, request.Limit);
         return Ok(trail);
     }
 
     [HttpGet("compare-wallets")]
-    public async Task<IActionResult> CompareWallets(
-        [FromQuery] string? walletA = null,
-        [FromQuery] string? a = null,
-        [FromQuery] string? walletB = null,
-        [FromQuery] string? b = null)
+    public async Task<IActionResult> CompareWallets([FromQuery] CompareWalletsRequest request)
     {
-        var wA = walletA ?? a;
-        var wB = walletB ?? b;
+        request ??= new CompareWalletsRequest();
+        var wA = request.FirstWallet;
+        var wB = request.SecondWallet;
 
         if (string.IsNullOrWhiteSpace(wA) || string.IsNullOrWhiteSpace(wB))
         {
-            return BadRequest(new { error = "walletA ve walletB parametreleri zorunludur." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallets_compare_required", MessageKey = "err_wallets_compare_required" });
         }
 
-        var cmp = await _walletRepo.CompareWalletsAsync(wA.Trim(), wB.Trim());
+        var cmp = await _walletRepo.CompareWalletsAsync(wA, wB);
         return Ok(cmp);
     }
 
@@ -138,7 +128,7 @@ public class WalletController : ControllerBase
         var target = address ?? addr;
         if (string.IsNullOrWhiteSpace(target))
         {
-            return BadRequest(new { error = "Cüzdan adresi parametresi gereklidir." });
+            return BadRequest(new ApiErrorDto { Error = "err_wallet_address_required", MessageKey = "err_wallet_address_required" });
         }
 
         var persona = await _walletRepo.GetWalletPersonaAsync(target.Trim());

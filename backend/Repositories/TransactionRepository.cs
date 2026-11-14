@@ -6,66 +6,11 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface ITransactionRepository
+public class TransactionRepository
 {
-    Task<ActivitiesSearchResultDto> SearchActivitiesAsync(
-        string q = "",
-        string layer = "all",
-        string pallet = "",
-        string startDate = "",
-        string endDate = "",
-        string filter = "all",
-        int page = 1,
-        int limit = 50,
-        bool hideZeroFee = false,
-        bool whaleOnly = false);
+    private readonly SqliteConnectionFactory _dbFactory;
 
-    Task<TransactionDetailsResultDto?> GetTransactionDetailsAsync(string hash);
-    Task<List<TokenTransferItemDto>> GetTokenTransfersByTxHashAsync(string hash);
-    Task<List<string>> GetDistinctPalletsAsync();
-    Task<string> ExportCsvAsync(
-        string layer = "all",
-        string filter = "all",
-        string startDate = "",
-        string endDate = "",
-        string q = "",
-        string pallet = "",
-        bool hideZeroFee = false);
-}
-
-public class ActivitiesSearchResultDto
-{
-    public List<TransactionDto> Results { get; set; } = new();
-    public int Count { get; set; }
-    public PaginationDto Pagination { get; set; } = new();
-    public object? Filters { get; set; }
-    public bool IsLiveMatch { get; set; }
-}
-
-public class PaginationDto
-{
-    public int Page { get; set; }
-    public int Limit { get; set; }
-    public long TotalCount { get; set; }
-    public int TotalPages { get; set; }
-    public bool HasNextPage { get; set; }
-    public bool HasPrevPage { get; set; }
-}
-
-public class TransactionDetailsResultDto
-{
-    public bool Found { get; set; }
-    public string? Layer { get; set; }
-    public TransactionDto? Tx { get; set; }
-    public List<TokenTransferItemDto>? TokenTransfers { get; set; }
-    public object? DecodedCall { get; set; }
-}
-
-public class TransactionRepository : ITransactionRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-
-    public TransactionRepository(IDbConnectionFactory dbFactory)
+    public TransactionRepository(SqliteConnectionFactory dbFactory)
     {
         _dbFactory = dbFactory;
     }
@@ -74,24 +19,13 @@ public class TransactionRepository : ITransactionRepository
     {
         if (string.IsNullOrWhiteSpace(hash)) return new();
         using var connection = _dbFactory.CreateConnection();
-        const string sql = @"
-            SELECT
-                token_address as TokenAddress,
-                token_symbol as TokenSymbol,
-                from_address as FromAddress,
-                to_address as ToAddress,
-                amount as Amount
-            FROM token_transfers
-            WHERE tx_hash = @hash
-            ORDER BY id ASC";
-        return (await connection.QueryAsync<TokenTransferItemDto>(sql, new { hash })).ToList();
+        return (await connection.QueryAsync<TokenTransferItemDto>(StoredProcedures.GetTokenTransfersByTxHash, new { Hash = hash })).ToList();
     }
 
     public async Task<List<string>> GetDistinctPalletsAsync()
     {
         using var connection = _dbFactory.CreateConnection();
-        const string sql = "SELECT DISTINCT pallet FROM substrate_extrinsics WHERE pallet > '' ORDER BY pallet ASC";
-        var list = (await connection.QueryAsync<string>(sql)).ToList();
+        var list = (await connection.QueryAsync<string>(StoredProcedures.GetDistinctPallets)).ToList();
         if (!list.Contains("Ethereum", StringComparer.OrdinalIgnoreCase))
         {
             list.Insert(0, "Ethereum");
@@ -107,28 +41,11 @@ public class TransactionRepository : ITransactionRepository
         using var connection = _dbFactory.CreateConnection();
 
         // 1. Search EVM
-        const string evmSql = @"
-            SELECT
-                'EVM' as Layer,
-                hash as Hash,
-                block_number as BlockNumber,
-                timestamp as Timestamp,
-                from_address as FromAddress,
-                to_address as ToAddress,
-                value_hmnd as ValueHmnd,
-                gas_used as GasUsed,
-                fee_hmnd as FeeHmnd,
-                status as Status,
-                'Ethereum' as Pallet,
-                'transact' as Method,
-                'HMND' as Symbol
-            FROM transactions
-            WHERE LOWER(hash) = LOWER(@cleanHash)";
-
-        var evmTx = await connection.QueryFirstOrDefaultAsync<TransactionDto>(evmSql, new { cleanHash });
+        var evmTx = await connection.QueryFirstOrDefaultAsync<TransactionDto>(StoredProcedures.GetTransactionDetailsEvm, new { cleanHash, CleanHash = cleanHash });
         if (evmTx != null)
         {
             var transfers = await GetTokenTransfersByTxHashAsync(evmTx.Hash);
+            evmTx.TokenTransfers = transfers;
             return new TransactionDetailsResultDto
             {
                 Found = true,
@@ -139,34 +56,15 @@ public class TransactionRepository : ITransactionRepository
                 {
                     isKnown = true,
                     isEvm = true,
-                    category = "EVM Çağrısı",
+                    category = "evm_call",
                     name = "Ethereum:transact",
-                    description = "EVM Katmanı Akıllı Sözleşme / Transfer Çağrısı"
+                    description = "Ethereum:transact"
                 }
             };
         }
 
         // 2. Search Substrate
-        const string subSql = @"
-            SELECT
-                'SUBSTRATE' as Layer,
-                hash as Hash,
-                block_number as BlockNumber,
-                timestamp as Timestamp,
-                pallet as Pallet,
-                method as Method,
-                signer as FromAddress,
-                target as ToAddress,
-                value_hmnd as ValueHmnd,
-                0 as GasUsed,
-                fee_hmnd as FeeHmnd,
-                status as Status,
-                details as Details,
-                'HMND' as Symbol
-            FROM substrate_extrinsics
-            WHERE LOWER(hash) = LOWER(@cleanHash)";
-
-        var subTx = await connection.QueryFirstOrDefaultAsync<TransactionDto>(subSql, new { cleanHash });
+        var subTx = await connection.QueryFirstOrDefaultAsync<TransactionDto>(StoredProcedures.GetTransactionDetailsSubstrate, new { cleanHash, CleanHash = cleanHash });
         if (subTx != null)
         {
             return new TransactionDetailsResultDto
@@ -179,10 +77,10 @@ public class TransactionRepository : ITransactionRepository
                 {
                     isKnown = true,
                     isSubstrate = true,
-                    category = "Substrate Yerel Çağrısı",
+                    category = "substrate_call",
                     name = $"{subTx.Pallet}:{subTx.Method}",
                     signature = $"{subTx.Pallet}({subTx.Method})",
-                    description = subTx.Details ?? "Doğrulanmış konsensüs çağrısı."
+                    description = subTx.Details ?? $"{subTx.Pallet}:{subTx.Method}"
                 }
             };
         }
@@ -190,25 +88,22 @@ public class TransactionRepository : ITransactionRepository
         return new TransactionDetailsResultDto { Found = false };
     }
 
-    public async Task<ActivitiesSearchResultDto> SearchActivitiesAsync(
-        string q = "",
-        string layer = "all",
-        string pallet = "",
-        string startDate = "",
-        string endDate = "",
-        string filter = "all",
-        int page = 1,
-        int limit = 50,
-        bool hideZeroFee = false,
-        bool whaleOnly = false)
+    public async Task<ActivitiesSearchResultDto> SearchActivitiesAsync(SearchActivitiesRequest req)
     {
-        var safeLimit = Math.Clamp(limit, 1, 500);
-        var safePage = Math.Max(1, page);
+        req ??= new SearchActivitiesRequest();
+        var safeLimit = Math.Clamp(req.Limit, 1, 500);
+        var safePage = Math.Max(1, req.Page);
         var offset = (safePage - 1) * safeLimit;
 
-        layer = (layer ?? "all").ToLowerInvariant();
-        pallet = (pallet ?? "").Trim();
-        var queryTrim = (q ?? "").Trim();
+        var layer = (req.Layer ?? "all").ToLowerInvariant();
+        var pallet = (req.Pallet ?? "").Trim();
+        var queryTrim = (req.Q ?? "").Trim();
+        var hideZeroFee = req.IsZeroFeeHidden;
+        var whaleOnly = req.WhaleOnly;
+        var startDate = req.StartDate;
+        var endDate = req.EndDate;
+        var filter = req.Filter;
+        var q = req.Q;
 
         using var connection = _dbFactory.CreateConnection();
 
@@ -224,7 +119,7 @@ public class TransactionRepository : ITransactionRepository
 
         if (whaleOnly)
         {
-            evmWhere.Append(" AND (value_hmnd >= 100000 OR hash IN (SELECT tx_hash FROM token_transfers WHERE amount >= 100000))");
+            evmWhere.Append($" AND (value_hmnd >= 100000 OR hash IN ({StoredProcedures.WhaleTokenTransfersSubquery}))");
             subWhere.Append(" AND value_hmnd >= 100000");
         }
 
@@ -263,17 +158,17 @@ public class TransactionRepository : ITransactionRepository
         long totalCount = 0;
         if (includeEvm && includeSub)
         {
-            var evmCnt = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM transactions {evmWhere}", p);
-            var subCnt = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM substrate_extrinsics {subWhere}", p);
+            var evmCnt = await connection.ExecuteScalarAsync<long>($"{StoredProcedures.GetTransactionsCountBase} {evmWhere}", p);
+            var subCnt = await connection.ExecuteScalarAsync<long>($"{StoredProcedures.GetSubstrateExtrinsicsCountBase} {subWhere}", p);
             totalCount = evmCnt + subCnt;
         }
         else if (includeEvm)
         {
-            totalCount = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM transactions {evmWhere}", p);
+            totalCount = await connection.ExecuteScalarAsync<long>($"{StoredProcedures.GetTransactionsCountBase} {evmWhere}", p);
         }
         else if (includeSub)
         {
-            totalCount = await connection.ExecuteScalarAsync<long>($"SELECT COUNT(*) FROM substrate_extrinsics {subWhere}", p);
+            totalCount = await connection.ExecuteScalarAsync<long>($"{StoredProcedures.GetSubstrateExtrinsicsCountBase} {subWhere}", p);
         }
 
         int totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / safeLimit));
@@ -288,100 +183,15 @@ public class TransactionRepository : ITransactionRepository
         string sql;
         if (includeEvm && includeSub)
         {
-            sql = $@"
-                SELECT * FROM (
-                    SELECT * FROM (
-                        SELECT
-                            'EVM' AS Layer,
-                            hash AS Hash,
-                            block_number AS BlockNumber,
-                            timestamp AS Timestamp,
-                            'Ethereum' AS Pallet,
-                            'transact' AS Method,
-                            from_address AS FromAddress,
-                            to_address AS ToAddress,
-                            value_hmnd AS ValueHmnd,
-                            gas_used AS GasUsed,
-                            fee_hmnd AS FeeHmnd,
-                            status AS Status,
-                            '' AS Details,
-                            'HMND' AS Symbol
-                        FROM transactions
-                        {evmWhere}
-                        ORDER BY block_number DESC, timestamp DESC
-                        LIMIT @innerWindow
-                    )
-                    UNION ALL
-                    SELECT * FROM (
-                        SELECT
-                            'SUBSTRATE' AS Layer,
-                            hash AS Hash,
-                            block_number AS BlockNumber,
-                            timestamp AS Timestamp,
-                            pallet AS Pallet,
-                            method AS Method,
-                            signer AS FromAddress,
-                            target AS ToAddress,
-                            value_hmnd AS ValueHmnd,
-                            0 AS GasUsed,
-                            fee_hmnd AS FeeHmnd,
-                            status AS Status,
-                            details AS Details,
-                            'HMND' AS Symbol
-                        FROM substrate_extrinsics
-                        {subWhere}
-                        ORDER BY block_number DESC, timestamp DESC
-                        LIMIT @innerWindow
-                    )
-                )
-                ORDER BY BlockNumber DESC, Timestamp DESC
-                LIMIT @safeLimit OFFSET @offset";
+            sql = string.Format(StoredProcedures.GetUnifiedTransactionsUnionTemplate, evmWhere, subWhere);
         }
         else if (includeEvm)
         {
-            sql = $@"
-                SELECT
-                    'EVM' AS Layer,
-                    hash AS Hash,
-                    block_number AS BlockNumber,
-                    timestamp AS Timestamp,
-                    'Ethereum' AS Pallet,
-                    'transact' AS Method,
-                    from_address AS FromAddress,
-                    to_address AS ToAddress,
-                    value_hmnd AS ValueHmnd,
-                    gas_used AS GasUsed,
-                    fee_hmnd AS FeeHmnd,
-                    status AS Status,
-                    '' AS Details,
-                    'HMND' AS Symbol
-                FROM transactions
-                {evmWhere}
-                ORDER BY block_number DESC, timestamp DESC
-                LIMIT @safeLimit OFFSET @offset";
+            sql = string.Format(StoredProcedures.GetUnifiedTransactionsEvmTemplate, evmWhere);
         }
         else if (includeSub)
         {
-            sql = $@"
-                SELECT
-                    'SUBSTRATE' AS Layer,
-                    hash AS Hash,
-                    block_number AS BlockNumber,
-                    timestamp AS Timestamp,
-                    pallet AS Pallet,
-                    method AS Method,
-                    signer AS FromAddress,
-                    target AS ToAddress,
-                    value_hmnd AS ValueHmnd,
-                    0 AS GasUsed,
-                    fee_hmnd AS FeeHmnd,
-                    status AS Status,
-                    details AS Details,
-                    'HMND' AS Symbol
-                FROM substrate_extrinsics
-                {subWhere}
-                ORDER BY block_number DESC, timestamp DESC
-                LIMIT @safeLimit OFFSET @offset";
+            sql = string.Format(StoredProcedures.GetUnifiedTransactionsSubstrateTemplate, subWhere);
         }
         else
         {
@@ -418,16 +228,23 @@ public class TransactionRepository : ITransactionRepository
         };
     }
 
-    public async Task<string> ExportCsvAsync(
-        string layer = "all",
-        string filter = "all",
-        string startDate = "",
-        string endDate = "",
-        string q = "",
-        string pallet = "",
-        bool hideZeroFee = false)
+    public async Task<string> ExportCsvAsync(ExportCsvRequest req)
     {
-        var data = await SearchActivitiesAsync(q, layer, pallet, startDate, endDate, filter, 1, 500, hideZeroFee);
+        req ??= new ExportCsvRequest();
+        var hide = req.HideZeroFee == "1" || req.HideZeroFee == "true";
+        var q = !string.IsNullOrEmpty(req.Q) ? req.Q : req.Search;
+        var data = await SearchActivitiesAsync(new SearchActivitiesRequest
+        {
+            Q = q,
+            Layer = req.Layer,
+            Pallet = req.Pallet,
+            StartDate = req.StartDate,
+            EndDate = req.EndDate,
+            Filter = req.Filter,
+            Page = 1,
+            Limit = 500,
+            HideZeroFee = req.HideZeroFee
+        });
         var sb = new StringBuilder();
         sb.AppendLine("Layer,Block,Timestamp,Date,Pallet,Method,Sender,Target,Value_HMND,Fee_HMND,Status,Details,Hash");
 

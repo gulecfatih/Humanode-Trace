@@ -25,7 +25,7 @@ export default function AppHeader({
         }
       })
       .catch(() => {
-        // Fallback default live stats values. TODO: Add WebSocket real-time broadcast
+        // Fallback default live stats values
       });
 
     return () => {
@@ -41,8 +41,8 @@ export default function AppHeader({
           height: '100%',
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          background: '#0d1117',
+          borderBottom: '2px solid #111111',
+          background: '#fff1e5',
         }}
       >
         <Group justify="space-between" align="center" style={{ width: '100%' }}>
@@ -50,16 +50,14 @@ export default function AppHeader({
             <Group gap="sm" align="center">
               <Box
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(37, 99, 235, 0.2) 100%)',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  width: 32,
+                  height: 32,
+                  borderRadius: 0,
+                  background: '#111111',
+                  border: '1px solid #111111',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.25)',
-                  overflow: 'hidden',
                   padding: 2,
                 }}
               >
@@ -68,79 +66,79 @@ export default function AppHeader({
                   alt="Humanode"
                   width={20}
                   height={20}
-                  style={{ objectFit: 'contain' }}
+                  style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
                 />
               </Box>
-              <Title order={4} style={{ letterSpacing: -0.3, color: '#f0f6fc', fontWeight: 700 }}>
-                {t('appTitle') || 'Humanode-Trace'}
+              <Title order={4} style={{ fontFamily: "var(--font-masthead), 'Cinzel', serif", letterSpacing: 0.5, color: '#111111', fontWeight: 900, textTransform: 'uppercase' }}>
+                {t('appTitle')}
               </Title>
             </Group>
 
             {/* Live Network Pulse Badge */}
             <Tooltip label={t('header_dualLayerStatusTooltip')}>
               <Badge
-                variant="light"
-                color="teal"
-                size="sm"
+                size="md"
                 visibleFrom="sm"
                 leftSection={
                   <Box
                     style={{
-                      width: 6,
-                      height: 6,
+                      width: 7,
+                      height: 7,
                       borderRadius: '50%',
-                      backgroundColor: '#10b981',
-                      boxShadow: '0 0 8px #10b981',
+                      backgroundColor: '#0d7680',
                     }}
                   />
                 }
                 style={{
                   cursor: 'pointer',
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  color: '#34d399',
+                  background: '#e4f1f0',
+                  border: '1px solid #0d7680',
+                  borderRadius: 2,
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontFamily: "var(--font-sans), 'Inter', sans-serif",
+                  color: '#0d7680',
                 }}
                 onClick={() => setGlossaryOpen(true)}
               >
-                Blok #{blockCount} • {validatorCount} Düğüm
+                #{blockCount} • {t('header_nodeCount', { count: validatorCount })}
               </Badge>
             </Tooltip>
           </Group>
 
           <Group gap="sm" align="center">
             {/* Dynamic SQL Dictionary Language Switcher */}
-            <LanguageSwitcher size="xs" />
+            <LanguageSwitcher size="sm" />
 
             {/* Network Guide & Terminology Glossary Button */}
             <Tooltip label={t('header_glossaryTooltip')}>
               <ActionIcon
-                variant="default"
-                size="md"
+                size="lg"
                 onClick={() => setGlossaryOpen(true)}
-                aria-label="Ağ Kılavuzu"
-                style={{ color: '#38bdf8' }}
+                aria-label={t('header_networkGuide')}
+                className="neo-btn"
+                style={{ background: '#fff1e5', color: '#111111', border: '1px solid #111111', borderRadius: 0 }}
               >
-                <IconHelpCircle size={16} />
+                <IconHelpCircle size={18} stroke={2} />
               </ActionIcon>
             </Tooltip>
 
             {/* Quick Global Search Button */}
             <Button
-              variant="default"
-              size="xs"
-              leftSection={<IconSearch size={14} />}
-              rightSection={<Kbd size="xs">Ctrl + K</Kbd>}
+              size="sm"
+              leftSection={<IconSearch size={16} stroke={2} />}
+              rightSection={<Kbd size="xs" style={{ background: '#f5e6d8', color: '#111111', border: '1px solid #c9b9aa', borderRadius: 0 }}>Ctrl + K</Kbd>}
               onClick={onOpenCommandPalette}
+              className="neo-btn"
+              style={{ background: '#fff1e5', color: '#111111', border: '1px solid #111111', borderRadius: 0 }}
             >
-              {t('search') || 'Ara'}
+              {t('search')}
             </Button>
 
             {/* Yenile Butonu */}
-            <Tooltip label={t('refresh') || 'Yenile'}>
-              <ActionIcon variant="default" size="md" onClick={onRefresh}>
-                <IconRefresh size={15} />
+            <Tooltip label={t('refresh')}>
+              <ActionIcon size="lg" onClick={onRefresh} className="neo-btn" style={{ background: '#fff1e5', color: '#111111', border: '1px solid #111111', borderRadius: 0 }}>
+                <IconRefresh size={18} stroke={2} />
               </ActionIcon>
             </Tooltip>
           </Group>

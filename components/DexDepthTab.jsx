@@ -126,19 +126,20 @@ export default function DexDepthTab() {
       {/* Header */}
       <Paper
         p="md"
-        radius="md"
         style={{
-          background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)',
-          border: '1px solid rgba(20, 184, 166, 0.2)',
+          background: '#f5e6d8',
+          border: '1px solid #d9cbbe',
+          borderTop: '2px solid #111111',
+          borderRadius: 0,
         }}
       >
         <Group justify="space-between" align="center">
           <Group gap="sm">
-            <ThemeIcon size={38} radius="md" color="teal" variant="light">
+            <ThemeIcon size={38} radius="xs" color="teal" variant="light">
               <IconCoins size={22} />
             </ThemeIcon>
             <div>
-              <Title order={3} fw={700} c="white">
+              <Title order={3} fw={700} c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('dexdepth_dexLiquidityDepthSlippage')}
               </Title>
               <Text size="xs" c="dimmed">
@@ -176,7 +177,7 @@ export default function DexDepthTab() {
           value={formatUSD(depthData?.volume24hUsd || 34820)}
           color="violet"
           icon={IconCoins}
-          subtext={`LP Ücreti: ${formatUSD(depthData?.fees24hUsd || 104.46)}`}
+          subtext={t('dex_lpFee', { amount: formatUSD(depthData?.fees24hUsd || 104.46) })}
         />
 
         <KpiStatCard
@@ -193,11 +194,11 @@ export default function DexDepthTab() {
       {/* Slippage & Price Impact Simulator */}
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
         {/* Tier Table */}
-        <Paper p="md" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
           <Group justify="space-between" mb="xs">
             <Group gap="xs">
-              <IconTrendingDown size={18} color="#ef4444" />
-              <Text fw={700} size="sm" c="white">
+              <IconTrendingDown size={18} color="#990f3d" />
+              <Text fw={700} size="sm" c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('dexdepth_priceImpactSlippageTiers')}
               </Text>
             </Group>
@@ -207,12 +208,17 @@ export default function DexDepthTab() {
           </Group>
 
           <Table verticalSpacing="xs" highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_sellAmount')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_priceImpact')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_estOutput')}</Table.Th>
-                <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dexdepth_effPrice')}</Table.Th>
+            <Table.Thead
+              style={{
+                backgroundColor: '#f5e6d8',
+                borderBottom: '2px solid #111111',
+              }}
+            >
+              <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dexdepth_sellAmount')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dexdepth_priceImpact')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dexdepth_estOutput')}</Table.Th>
+                <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dexdepth_effPrice')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -223,9 +229,9 @@ export default function DexDepthTab() {
                 const effPrice = tier.effectivePriceUsd || 0;
 
                 return (
-                  <Table.Tr key={idx}>
+                  <Table.Tr key={idx} style={{ borderBottom: '1px solid #d9cbbe' }}>
                     <Table.Td>
-                      <Text size="xs" fw={700} c="white">
+                      <Text size="xs" fw={700} c="#111111">
                         {amount.toLocaleString(locStr)} HMND
                       </Text>
                     </Table.Td>
@@ -264,15 +270,15 @@ export default function DexDepthTab() {
         </Paper>
 
         {/* Custom Slippage Calculator */}
-        <Paper p="md" radius="md" style={{ background: '#121824', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
           <Group justify="space-between" mb="xs">
             <Group gap="xs">
-              <IconArrowsExchange size={18} color="#38bdf8" />
-              <Text fw={700} size="sm" c="white">
+              <IconArrowsExchange size={18} color="#0d7680" />
+              <Text fw={700} size="sm" c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('dexdepth_customSwapSlippageCalculator')}
               </Text>
             </Group>
-            <Badge size="xs" color="cyan" variant="outline">
+            <Badge size="xs" color="teal" variant="light">
               ANLIK HESAPLAMA
             </Badge>
           </Group>
@@ -293,7 +299,7 @@ export default function DexDepthTab() {
               />
             </div>
 
-            <Paper p="sm" radius="sm" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <Paper p="sm" style={{ background: '#fff1e5', border: '1px solid #d9cbbe', borderRadius: 0 }}>
               <Group justify="space-between" mb="xs">
                 <Text size="xs" c="dimmed">
                   {t('dexdepth_expectedUsdcOutput')}
@@ -326,7 +332,7 @@ export default function DexDepthTab() {
                 <Text size="xs" c="dimmed">
                   {t('dexdepth_effectiveSwapPrice')}
                 </Text>
-                <Text size="xs" fw={700} c="white">
+                <Text size="xs" fw={700} c="#111111">
                   {formatUSD(customSlippage?.effectivePrice || 0, null, 4)} / HMND
                 </Text>
               </Group>
@@ -348,19 +354,20 @@ export default function DexDepthTab() {
       {/* EVM 4-Byte Method Decoder & Signature Inspector */}
       <Paper
         p="md"
-        radius="md"
         style={{
-          background: '#0d131f',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
+          background: '#f5e6d8',
+          border: '1px solid #d9cbbe',
+          borderTop: '2px solid #111111',
+          borderRadius: 0,
         }}
       >
         <Group justify="space-between" align="center" mb="sm">
           <Group gap="sm">
-            <ThemeIcon size={34} radius="md" color="indigo" variant="light">
+            <ThemeIcon size={34} radius="xs" color="teal" variant="light">
               <IconCode size={20} />
             </ThemeIcon>
             <div>
-              <Title order={4} fw={700} c="white">
+              <Title order={4} fw={700} c="#111111" style={{ fontFamily: "var(--font-serif), Georgia, serif" }}>
                 {t('dexdepth_evm4ByteMethod')}
               </Title>
               <Text size="xs" c="dimmed">
@@ -368,8 +375,8 @@ export default function DexDepthTab() {
               </Text>
             </div>
           </Group>
-          <Badge size="md" color="indigo" variant="outline">
-            100.000+ İMZA SÖZLÜĞÜ
+          <Badge size="md" color="teal" variant="light">
+            {t('dex_signaturesGlossary')}
           </Badge>
         </Group>
 
@@ -443,59 +450,64 @@ export default function DexDepthTab() {
           {decodedMethod && (
             <Paper
               p="md"
-              radius="sm"
               mt="xs"
               style={{
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: '#fff1e5',
+                border: '1px solid #d9cbbe',
+                borderRadius: 0,
               }}
             >
               <Group justify="space-between" mb="xs">
                 <Group gap="xs">
-                  <Badge size="sm" color="indigo" variant="filled">
+                  <Badge size="sm" color="teal" variant="filled">
                     {decodedMethod.selector}
                   </Badge>
-                  <Title order={5} c="white" className="font-mono">
+                  <Title order={5} c="#111111" className="font-mono">
                     {decodedMethod.functionName}
                   </Title>
-                  <Badge size="xs" color="violet">
-                    {decodedMethod.category}
+                  <Badge size="xs" color="gray" variant="light">
+                    {t('evm_cat_' + decodedMethod.categoryCode) || decodedMethod.category}
                   </Badge>
                 </Group>
               </Group>
 
-              <Text size="xs" className="font-mono" c="cyan" mb="xs">
+              <Text size="xs" className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }} mb="xs">
                 {decodedMethod.signature}
               </Text>
               <Text size="xs" c="dimmed" mb="md">
-                {decodedMethod.description}
+                {t(decodedMethod.descriptionKey) || decodedMethod.description}
               </Text>
 
               {/* Decoded Parameters Table */}
               {decodedMethod.parameters?.length > 0 && (
                 <Table verticalSpacing="xs">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramName')}</Table.Th>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramType')}</Table.Th>
-                      <Table.Th style={{ color: '#94a3b8', fontSize: 12 }}>{t('dex_paramDecodedValue')}</Table.Th>
+                  <Table.Thead
+                    style={{
+                      backgroundColor: '#f5e6d8',
+                      borderBottom: '2px solid #111111',
+                    }}
+                  >
+                    <Table.Tr style={{ borderBottom: '2px solid #111111' }}>
+                      <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dex_paramName')}</Table.Th>
+                      <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dex_paramType')}</Table.Th>
+                      <Table.Th style={{ color: '#111111', fontSize: 12 }}>{t('dex_paramDecodedValue')}</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
                     {decodedMethod.parameters.map((p, idx) => (
-                      <Table.Tr key={idx}>
+                      <Table.Tr key={idx} style={{ borderBottom: '1px solid #d9cbbe' }}>
                         <Table.Td>
-                          <Text size="xs" fw={700} c="white" className="font-mono">
+                          <Text size="xs" fw={700} c="#111111" className="font-mono">
                             {p.name}
                           </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Badge size="xs" color="gray">
+                          <Badge size="xs" color="gray" variant="light">
                             {p.type}
                           </Badge>
                         </Table.Td>
                         <Table.Td>
-                          <Text size="xs" c="teal" className="font-mono" style={{ wordBreak: 'break-all' }}>
+                          <Text size="xs" style={{ color: '#0d7680', wordBreak: 'break-all' }} className="font-mono">
                             {p.value}
                           </Text>
                         </Table.Td>

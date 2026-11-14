@@ -26,7 +26,7 @@ export default function AmountDisplay({
   showUSD = true,
   locale = null,
 }) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const activeLocale = locale || lang || undefined;
   const fontSizes = {
     xs: { val: '12px', unit: '10px' },
@@ -41,9 +41,9 @@ export default function AmountDisplay({
 
   let displayColor = color;
   if (!displayColor) {
-    if (sign === '+') displayColor = '#10b981';
-    else if (sign === '-') displayColor = '#ef4444';
-    else displayColor = '#f0f6fc';
+    if (sign === '+') displayColor = '#0d7680';
+    else if (sign === '-') displayColor = '#990f3d';
+    else displayColor = '#111111';
   }
 
   const rawVal = value ?? amount ?? 0;
@@ -58,46 +58,57 @@ export default function AmountDisplay({
       style={{
         display: 'inline-flex',
         alignItems: 'baseline',
-        whiteSpace: 'nowrap',
+        flexWrap: 'wrap',
         fontVariantNumeric: 'tabular-nums',
-        gap: '4px',
+        columnGap: '4px',
+        rowGap: '2px',
+        maxWidth: '100%',
       }}
     >
-      {sign && (
-        <span style={{ fontSize: currentSize.val, fontWeight: 800, color: displayColor }}>
-          {sign}
-        </span>
-      )}
       <span
         style={{
-          fontSize: currentSize.val,
-          fontWeight: 800,
-          color: displayColor,
-          letterSpacing: '-0.3px',
+          display: 'inline-flex',
+          alignItems: 'baseline',
+          whiteSpace: 'nowrap',
+          gap: '4px',
         }}
       >
-        {formattedValue}
-      </span>
-      {unit && (
+        {sign && (
+          <span style={{ fontSize: currentSize.val, fontWeight: 800, color: displayColor }}>
+            {sign}
+          </span>
+        )}
         <span
           style={{
-            fontSize: currentSize.unit,
-            fontWeight: 600,
-            color: dimUnit ? '#8b949e' : displayColor,
-            textTransform: 'uppercase',
-            letterSpacing: '0.4px',
+            fontSize: currentSize.val,
+            fontWeight: 800,
+            color: displayColor,
+            letterSpacing: '-0.3px',
           }}
         >
-          {unit}
+          {formattedValue}
         </span>
-      )}
+        {unit && (
+          <span
+            style={{
+              fontSize: currentSize.unit,
+              fontWeight: 700,
+              color: dimUnit ? '#554f47' : displayColor,
+              textTransform: 'uppercase',
+              letterSpacing: '0.4px',
+            }}
+          >
+            {unit}
+          </span>
+        )}
+      </span>
       {usdValue && (
         <span
           style={{
             fontSize: currentSize.unit,
-            fontWeight: 500,
-            color: '#6e7681',
-            marginLeft: '4px',
+            fontWeight: 600,
+            color: '#554f47',
+            whiteSpace: 'nowrap',
           }}
         >
           (≈ {usdValue})
@@ -106,7 +117,7 @@ export default function AmountDisplay({
     </span>
   );
 
-  const tip = tooltipLabel || (rawAmount != null ? `Tam Değer: ${rawAmount} ${unit}` : null);
+  const tip = tooltipLabel || (rawAmount != null ? t('amount_exactValue', { amount: rawAmount, unit }) : null);
 
   if (tip) {
     return (

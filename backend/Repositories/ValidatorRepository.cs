@@ -6,28 +6,21 @@ using HumanodeTracker.Models;
 
 namespace HumanodeTracker.Repositories;
 
-public interface IValidatorRepository
+public class ValidatorRepository
 {
-    Task<ValidatorHealthDto> GetValidatorHealthAsync();
-    Task<object> GetValidatorEconomicsAsync(string address);
-    void UpdateActiveAuthentications(Dictionary<string, long> activeAuth);
-}
-
-public class ValidatorRepository : IValidatorRepository
-{
-    private readonly IDbConnectionFactory _dbFactory;
-    private readonly IConfiguration _config;
-    private readonly IPriceRepository _priceRepo;
+    private readonly SqliteConnectionFactory _dbFactory;
+    private readonly PriceRepository _priceRepo;
+    private readonly SystemConfigRepository _configRepo;
     private readonly string _payoutsPath;
-    private Dictionary<string, long> _activeAuthentications = new(StringComparer.OrdinalIgnoreCase);
+    private List<ActiveAuthDto> _activeAuthentications = new();
 
-    public ValidatorRepository(IDbConnectionFactory dbFactory, IConfiguration config, IPriceRepository priceRepo)
+    public ValidatorRepository(SqliteConnectionFactory dbFactory, PriceRepository priceRepo, SystemConfigRepository configRepo)
     {
         _dbFactory = dbFactory;
-        _config = config;
         _priceRepo = priceRepo;
+        _configRepo = configRepo;
 
-        var configuredPath = _config["DataFiles:ValidatorPayouts"] ?? "Data/validator_payouts.json";
+        var configuredPath = "Data/validator_payouts.json";
         if (File.Exists(configuredPath))
             _payoutsPath = configuredPath;
         else if (File.Exists(Path.Combine(AppContext.BaseDirectory, "Data", "validator_payouts.json")))
@@ -38,19 +31,42 @@ public class ValidatorRepository : IValidatorRepository
             _payoutsPath = "Data/validator_payouts.json";
     }
 
-    public void UpdateActiveAuthentications(Dictionary<string, long> activeAuth)
+    public void UpdateActiveAuthentications(List<ActiveAuthDto> activeAuth)
     {
         _activeAuthentications = activeAuth;
     }
 
-    private Dictionary<string, (int count, double totalHmnd, long lastTs, double lastHmnd, long lastBlock)> LoadPayoutsIndex()
+    private async Task<List<ValidatorPayoutStatDto>> LoadPayoutsIndexAsync(IDbConnection connection)
     {
-        var dict = new Dictionary<string, (int, double, long, double, long)>(StringComparer.OrdinalIgnoreCase);
-        if (!File.Exists(_payoutsPath)) return dict;
+        var list = new List<ValidatorPayoutStatDto>();
+        try
+        {
+            var rows = await connection.QueryAsync<(string validator_address, int cnt, double tot, long last_ts, double last_hmnd, long last_blk)>(StoredProcedures.GetValidatorPayoutsSummary);
+            foreach (var r in rows)
+            {
+                list.Add(new ValidatorPayoutStatDto
+                {
+                    Address = r.validator_address,
+                    Count = r.cnt,
+                    TotalHmnd = r.tot,
+                    LastTs = r.last_ts,
+                    LastHmnd = r.last_hmnd,
+                    LastBlock = r.last_blk
+                });
+            }
+
+            if (list.Count > 0) return list;
+        }
+        catch
+        {
+            // Table may not exist or error, fallback to JSON
+        }
+
+        if (!File.Exists(_payoutsPath)) return list;
 
         try
         {
-            var json = File.ReadAllText(_payoutsPath);
+            var json = await File.ReadAllTextAsync(_payoutsPath);
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("payouts", out var payoutsArr))
             {
@@ -80,13 +96,26 @@ public class ValidatorRepository : IValidatorRepository
 
                             if (!string.IsNullOrEmpty(addr))
                             {
-                                if (dict.TryGetValue(addr, out var existing))
+                                var existing = list.FirstOrDefault(x => x.Address.Equals(addr, StringComparison.OrdinalIgnoreCase));
+                                if (existing != null)
                                 {
-                                    dict[addr] = (existing.Item1 + 1, existing.Item2 + hmnd, Math.Max(existing.Item3, tsSec), hmnd, blk);
+                                    existing.Count++;
+                                    existing.TotalHmnd += hmnd;
+                                    existing.LastTs = Math.Max(existing.LastTs, tsSec);
+                                    existing.LastHmnd = hmnd;
+                                    existing.LastBlock = blk;
                                 }
                                 else
                                 {
-                                    dict[addr] = (1, hmnd, tsSec, hmnd, blk);
+                                    list.Add(new ValidatorPayoutStatDto
+                                    {
+                                        Address = addr,
+                                        Count = 1,
+                                        TotalHmnd = hmnd,
+                                        LastTs = tsSec,
+                                        LastHmnd = hmnd,
+                                        LastBlock = blk
+                                    });
                                 }
                             }
                         }
@@ -99,7 +128,7 @@ public class ValidatorRepository : IValidatorRepository
             // Ignore load errors
         }
 
-        return dict;
+        return list;
     }
 
     public async Task<ValidatorHealthDto> GetValidatorHealthAsync()
@@ -107,80 +136,43 @@ public class ValidatorRepository : IValidatorRepository
         using var connection = _dbFactory.CreateConnection();
 
         // 1. Current height timestamp
-        var maxTs = await connection.ExecuteScalarAsync<long?>("SELECT MAX(timestamp) FROM substrate_extrinsics") ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var maxTs = await connection.ExecuteScalarAsync<long?>(StoredProcedures.GetSubstrateMaxTimestamp) ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         var thirtyDaysBefore = maxTs - (30 * 86400);
 
         // 2. Total Registered Validators
-        const string totalValSql = @"
-            SELECT COUNT(DISTINCT signer)
-            FROM substrate_extrinsics
-            WHERE pallet = 'session' AND method = 'setKeys' AND signer > ''";
-        var totalValidators = await connection.ExecuteScalarAsync<int>(totalValSql);
+        var totalValidators = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetTotalRegisteredValidators);
 
         // 3. Active in 30 days
-        const string activeValSql = @"
-            SELECT COUNT(DISTINCT addr) FROM (
-                SELECT author_id as addr FROM blocks_with_tx WHERE timestamp >= @thirtyDaysBefore AND author_id > ''
-                UNION
-                SELECT signer as addr FROM substrate_extrinsics WHERE pallet IN ('session', 'bioauth') AND timestamp >= @thirtyDaysBefore AND signer > ''
-            )";
-        var activeValidators = await connection.ExecuteScalarAsync<int>(activeValSql, new { thirtyDaysBefore });
+        var activeValidators = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetActiveValidators30d, new { thirtyDaysBefore });
 
         // 4. Total Bioauth
-        const string totalBioSql = "SELECT COUNT(*) FROM substrate_extrinsics WHERE pallet = 'bioauth' AND method = 'authenticate'";
-        var totalBioauth = await connection.ExecuteScalarAsync<int>(totalBioSql);
+        var totalBioauth = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetTotalBioauthCount);
 
         // 5. Total Heartbeats (imOnline)
-        const string heartbeatsSql = "SELECT COUNT(*) FROM substrate_extrinsics WHERE pallet = 'imOnline'";
-        var totalHeartbeats = await connection.ExecuteScalarAsync<int>(heartbeatsSql);
+        var totalHeartbeats = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetTotalHeartbeatsCount);
 
         // 6. Candidate Validators
-        const string recentSql = @"
-            WITH recent_activity AS (
-                SELECT author_id AS address, MAX(timestamp) AS last_seen, COUNT(*) as recent_blocks
-                FROM blocks_with_tx
-                WHERE timestamp >= @thirtyDaysBefore AND author_id > ''
-                GROUP BY author_id
-                UNION ALL
-                SELECT signer AS address, MAX(timestamp) AS last_seen, 0 as recent_blocks
-                FROM substrate_extrinsics
-                WHERE pallet IN ('bioauth', 'session') AND signer > '' AND timestamp >= @thirtyDaysBefore
-                GROUP BY signer
-            )
-            SELECT
-                address,
-                MAX(last_seen) AS last_seen,
-                SUM(recent_blocks) AS recent_blocks
-            FROM recent_activity
-            GROUP BY address
-            ORDER BY last_seen DESC
-            LIMIT 100";
+        var candidates = (await connection.QueryAsync<(string address, long last_seen, int recent_blocks)>(StoredProcedures.GetValidatorCandidateActivity, new { ThirtyDaysBefore = thirtyDaysBefore })).ToList();
 
-        var candidates = (await connection.QueryAsync<(string address, long last_seen, int recent_blocks)>(recentSql, new { thirtyDaysBefore })).ToList();
-
-        var payouts = LoadPayoutsIndex();
+        var payouts = await LoadPayoutsIndexAsync(connection);
         var validatorItems = new List<ValidatorItemDto>();
         var nowWall = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         foreach (var c in candidates)
         {
-            const string authSql = "SELECT COUNT(*) as c, MIN(timestamp) as min_ts, MAX(timestamp) as max_ts FROM blocks_with_tx WHERE author_id = @addr";
-            var auth = await connection.QueryFirstOrDefaultAsync<(int c, long? min_ts, long? max_ts)>(authSql, new { addr = c.address });
+            var auth = await connection.QueryFirstOrDefaultAsync<(int c, long? min_ts, long? max_ts)>(StoredProcedures.GetValidatorAuthorStats, new { Clean = c.address });
+            var bio = await connection.QueryFirstOrDefaultAsync<(int c, long? max_ts)>(StoredProcedures.GetValidatorBioStats, new { Clean = c.address });
+            var sessCount = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetValidatorSessionCount, new { Clean = c.address });
 
-            const string bioSql = "SELECT COUNT(*) as c, MAX(timestamp) as max_ts FROM substrate_extrinsics WHERE signer = @addr AND pallet = 'bioauth'";
-            var bio = await connection.QueryFirstOrDefaultAsync<(int c, long? max_ts)>(bioSql, new { addr = c.address });
-
-            const string sessSql = "SELECT COUNT(*) FROM substrate_extrinsics WHERE signer = @addr AND pallet = 'session'";
-            var sessCount = await connection.ExecuteScalarAsync<int>(sessSql, new { addr = c.address });
-
-            payouts.TryGetValue(c.address, out var pInfo);
+            var pInfo = payouts.FirstOrDefault(p => p.Address.Equals(c.address, StringComparison.OrdinalIgnoreCase));
 
             long? expiresAtSec = null;
             long? secondsLeft = null;
-            if (_activeAuthentications.TryGetValue(c.address, out var exp))
+            var exp = _activeAuthentications.FirstOrDefault(a => a.Address.Equals(c.address, StringComparison.OrdinalIgnoreCase));
+            if (exp != null)
             {
-                expiresAtSec = exp;
-                secondsLeft = Math.Max(0, exp - nowWall);
+                expiresAtSec = exp.ExpiresAt;
+                secondsLeft = Math.Max(0, exp.ExpiresAt - nowWall);
             }
             else if (bio.max_ts.HasValue && bio.max_ts.Value > 0)
             {
@@ -191,21 +183,21 @@ public class ValidatorRepository : IValidatorRepository
             var isBioValid = secondsLeft.HasValue && secondsLeft.Value > 0;
             var isActive = isBioValid || c.last_seen >= thirtyDaysBefore;
             int epoch = isBioValid ? Math.Clamp(42 - (int)(secondsLeft!.Value / (4 * 3600)), 1, 42) : 0;
-            double cadenceHours = c.recent_blocks > 1 ? Math.Round((30.0 * 24.0) / c.recent_blocks, 1) : 4.0;
+            double cadenceHours = c.recent_blocks > 1 ? Math.Round((30.0 * 24.0) / c.recent_blocks, 1) : 0.0;
 
             validatorItems.Add(new ValidatorItemDto
             {
                 Address = c.address,
                 IsActive = isActive,
-                StatusLabel = isActive ? (isBioValid ? "Aktif (Doğrulanmış)" : "Aktif (Süre Doldu)") : "Pasif",
+                StatusLabel = isActive ? (isBioValid ? "active_verified" : "active_expired") : "passive",
                 BlocksAuthored = auth.c,
                 RecentBlocks = c.recent_blocks,
                 IsBioValid = isBioValid,
                 TotalBioauth = bio.c,
                 BioCurrentEpoch = epoch,
-                TotalEarnedHmnd = Math.Round(pInfo.totalHmnd, 2),
-                PayoutRounds = pInfo.count,
-                LastPayoutHmnd = Math.Round(pInfo.lastHmnd, 2),
+                TotalEarnedHmnd = Math.Round(pInfo?.TotalHmnd ?? 0, 2),
+                PayoutRounds = pInfo?.Count ?? 0,
+                LastPayoutHmnd = Math.Round(pInfo?.LastHmnd ?? 0, 2),
                 CadenceHours = cadenceHours,
                 LastSeen = c.last_seen,
                 LastAuthoredBlock = null,
@@ -216,9 +208,32 @@ public class ValidatorRepository : IValidatorRepository
                 SecondsLeft = secondsLeft,
                 KeyUpdates = sessCount,
                 TotalOps = auth.c + bio.c + sessCount,
-                BalanceHmnd = Math.Round(pInfo.totalHmnd, 2)
+                BalanceHmnd = Math.Round(pInfo?.TotalHmnd ?? 0, 2)
             });
         }
+
+        long lastPayoutBlock = 0;
+        long lastPayoutTs = 0;
+        double lastPayoutPerValidator = 0.0;
+        try
+        {
+            var lp = await connection.QueryFirstOrDefaultAsync<(long block_number, long timestamp, double avg_amt)?>(StoredProcedures.GetLatestPayoutBatch);
+            if (lp.HasValue && lp.Value.block_number > 0)
+            {
+                lastPayoutBlock = lp.Value.block_number;
+                lastPayoutTs = lp.Value.timestamp;
+                lastPayoutPerValidator = Math.Round(lp.Value.avg_amt, 2);
+            }
+        }
+        catch { }
+
+        double feesPotBalance = await _configRepo.GetDoubleConfigAsync("fees_pot_baseline");
+        try
+        {
+            var potBal = await connection.ExecuteScalarAsync<double?>(StoredProcedures.GetFeesPotBalance);
+            if (potBal.HasValue && potBal.Value > 0) feesPotBalance = potBal.Value;
+        }
+        catch { }
 
         return new ValidatorHealthDto
         {
@@ -227,12 +242,12 @@ public class ValidatorRepository : IValidatorRepository
             OfflineCount = Math.Max(0, totalValidators - activeValidators),
             TotalBioauth = totalBioauth,
             TotalHeartbeats = totalHeartbeats,
-            FeesPotAddress = "hmpwhPbL5XJTYPWXPMkacfqGhJ3eoQRPLKphajpvcot5Q5zkk",
-            FeesPotBalanceHmnd = 403162.33,
-            LastPayoutBlock = 20447782,
-            LastPayoutTs = 1793211744,
-            LastPayoutPerValidator = 613.48,
-            EstRoundPerValidator = 613.48,
+            FeesPotAddress = await _configRepo.GetConfigAsync("fees_pot_address"),
+            FeesPotBalanceHmnd = feesPotBalance,
+            LastPayoutBlock = lastPayoutBlock,
+            LastPayoutTs = lastPayoutTs,
+            LastPayoutPerValidator = lastPayoutPerValidator,
+            EstRoundPerValidator = lastPayoutPerValidator,
             Validators = validatorItems
         };
     }
@@ -244,14 +259,23 @@ public class ValidatorRepository : IValidatorRepository
 
         using var connection = _dbFactory.CreateConnection();
 
-        const string authSql = "SELECT COUNT(*) as total_blocks, MIN(timestamp) as first_block_ts, MAX(timestamp) as last_block_ts FROM blocks_with_tx WHERE author_id = @clean";
-        var blocks = await connection.QueryFirstOrDefaultAsync<(int total_blocks, long? first_block_ts, long? last_block_ts)>(authSql, new { clean });
+        var blocks = await connection.QueryFirstOrDefaultAsync<(int total_blocks, long? first_block_ts, long? last_block_ts)>(StoredProcedures.GetValidatorAuthorStats, new { Clean = clean });
+        var bio = await connection.QueryFirstOrDefaultAsync<(int bio_count, long? last_bio_ts)>(StoredProcedures.GetValidatorBioStats, new { Clean = clean });
 
-        const string bioSql = "SELECT COUNT(*) as bio_count, MAX(timestamp) as last_bio_ts FROM substrate_extrinsics WHERE signer = @clean AND pallet = 'bioauth'";
-        var bio = await connection.QueryFirstOrDefaultAsync<(int bio_count, long? last_bio_ts)>(bioSql, new { clean });
-
-        var payouts = LoadPayoutsIndex();
-        payouts.TryGetValue(clean, out var pInfo);
+        (int count, double totalHmnd, long lastTs, double lastHmnd, long lastBlock) pInfo = default;
+        try
+        {
+            pInfo = await connection.QueryFirstOrDefaultAsync<(int, double, long, double, long)>(StoredProcedures.GetValidatorEconomicsSingle, new { Clean = clean });
+        }
+        catch
+        {
+            var payouts = await LoadPayoutsIndexAsync(connection);
+            var match = payouts.FirstOrDefault(p => p.Address.Equals(clean, StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+            {
+                pInfo = (match.Count, match.TotalHmnd, match.LastTs, match.LastHmnd, match.LastBlock);
+            }
+        }
 
         if (blocks.total_blocks == 0 && bio.bio_count == 0 && pInfo.count == 0)
         {
@@ -259,12 +283,17 @@ public class ValidatorRepository : IValidatorRepository
         }
 
         var thirtyDaysAgo = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - (30 * 86400);
-        const string recentSql = "SELECT COUNT(*) FROM blocks_with_tx WHERE author_id = @clean AND timestamp >= @thirtyDaysAgo";
-        var recentBlocks = await connection.ExecuteScalarAsync<int>(recentSql, new { clean, thirtyDaysAgo });
+        var recentBlocks = await connection.ExecuteScalarAsync<int>(StoredProcedures.GetValidatorRecentBlocksCount, new { Clean = clean, ThirtyDaysAgo = thirtyDaysAgo });
 
-        double cadenceHours = recentBlocks > 1 ? Math.Round((30.0 * 24.0) / recentBlocks, 1) : (blocks.total_blocks > 5 ? 12.0 : 24.0);
+        double cadenceHours = recentBlocks > 1 ? Math.Round((30.0 * 24.0) / recentBlocks, 1) : 0.0;
         int estMonthlyBlocks = cadenceHours > 0 ? (int)Math.Round((30.0 * 24.0) / cadenceHours) : 0;
-        double estPerRoundHmnd = 595.0;
+        double estPerRoundHmnd = 0.0;
+        try
+        {
+            var lp = await connection.QueryFirstOrDefaultAsync<(long block_number, long timestamp, double avg_amt)?>(StoredProcedures.GetLatestPayoutBatch);
+            if (lp.HasValue && lp.Value.avg_amt > 0) estPerRoundHmnd = Math.Round(lp.Value.avg_amt, 2);
+        }
+        catch { }
         double estMonthlyHmnd = estPerRoundHmnd * 2.0;
         double currentPriceUsd = await _priceRepo.GetLatestPriceAsync();
         double estMonthlyUsd = Math.Round(estMonthlyHmnd * currentPriceUsd, 2);
@@ -281,7 +310,7 @@ public class ValidatorRepository : IValidatorRepository
             lastBlockTs = blocks.last_block_ts ?? 0,
             lastBioauthTs = bio.last_bio_ts ?? 0,
             cadenceHours,
-            cadenceText = $"~{cadenceHours} saatte 1 blok",
+            cadenceKey = "validators_cadence_desc",
             economics = new
             {
                 estMonthlyBlocks,

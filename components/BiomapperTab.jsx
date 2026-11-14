@@ -153,20 +153,30 @@ export default function BiomapperTab({
         </Group>
 
         {/* ACTIVE GENERATIONS HEAD KPI CARD */}
-        <Card p="sm" radius="md" mb="sm" style={{ background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+        <Card
+          p="sm"
+          mb="sm"
+          style={{
+            background: '#f5e6d8',
+            border: '1px solid #d9cbbe',
+            borderTop: '2px solid #111111',
+            borderRadius: 0,
+            boxShadow: 'none',
+          }}
+        >
           <Group justify="space-between" align="center" wrap="wrap">
             <Group gap="xs">
-              <IconCpu size={22} color="#38bdf8" />
+              <IconCpu size={22} color="#0d7680" />
               <div>
-                <Text size="sm" fw={700} c="#f0f6fc">
+                <Text size="sm" fw={700} c="#111111" style={{ fontFamily: "var(--font-serif)" }}>
                   🧬 {t('biomapper_activeBiomapperGenerationGeneration')}
                 </Text>
-                <Text size="xs" c="dimmed">
+                <Text size="xs" c="#554f47">
                   {t('biomapper_confidentialVirtualMachineKeys')}
                 </Text>
               </div>
             </Group>
-            <Badge color="cyan" variant="light" size="md">
+            <Badge color="teal" variant="light" size="md">
               {t('biomapper_c2ProtocolActive')}
             </Badge>
           </Group>
@@ -228,19 +238,15 @@ export default function BiomapperTab({
 
         {/* TAB 1: 25+ NETWORK CONTRACT REGISTRY */}
         <Tabs.Panel value="registry">
-          <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
+          <Paper p="md" style={{ background: '#f5e6d8', border: '1px solid #d9cbbe', borderTop: '2px solid #111111', borderRadius: 0 }}>
             <Stack gap="sm">
-              {/* STICKY TOOLBAR */}
+              {/* TOOLBAR */}
               <Box
                 p="xs"
                 style={{
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 15,
-                  backdropFilter: 'blur(12px)',
-                  backgroundColor: 'rgba(13, 17, 23, 0.92)',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  backgroundColor: '#f5e6d8',
+                  borderRadius: 0,
+                  border: '1px solid #d9cbbe',
                 }}
               >
                 <Group justify="space-between" align="center" wrap="wrap" gap="sm">
@@ -259,7 +265,7 @@ export default function BiomapperTab({
                       { value: 'nextgen', label: '✨ Sonic / Sei / Story' },
                     ]}
                     styles={{
-                      root: { background: 'rgba(255, 255, 255, 0.05)' },
+                      root: { background: '#ecdcd0', border: '1px solid #d9cbbe' },
                     }}
                   />
 
@@ -289,11 +295,8 @@ export default function BiomapperTab({
                 <Table highlightOnHover verticalSpacing="xs">
                   <Table.Thead
                     style={{
-                      position: 'sticky',
-                      top: 50,
-                      zIndex: 10,
-                      backdropFilter: 'blur(10px)',
-                      backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                      backgroundColor: '#f5e6d8',
+                      borderBottom: '2px solid #111111',
                     }}
                   >
                     <Table.Tr>
@@ -323,7 +326,7 @@ export default function BiomapperTab({
                               >
                                 {(chain.shortName || chain.name).toUpperCase()}
                               </Badge>
-                              <Text size="xs" fw={700} c="white" style={{ whiteSpace: 'nowrap' }}>
+                              <Text size="xs" fw={700} c="#111111" style={{ whiteSpace: 'nowrap' }}>
                                 {chain.name}
                               </Text>
                             </Group>
@@ -356,13 +359,13 @@ export default function BiomapperTab({
                           <Table.Td>
                             <Group gap={6} wrap="nowrap">
                               <Tooltip label={chain.contractAddress} withArrow>
-                                <Text size="xs" className="font-mono" c="cyan" fw={600}>
+                                <Text size="xs" className="font-mono" style={{ color: '#0d7680', fontWeight: 600 }}>
                                   {shortAddr(chain.contractAddress, 8, 6)}
                                 </Text>
                               </Tooltip>
                               <CopyButton value={chain.contractAddress} timeout={2000}>
                                 {({ copied, copy }) => (
-                                  <Tooltip label={copied ? (t('copied') || 'Kopyalandı!') : (t('copy') || 'Kopyala')} withArrow>
+                                  <Tooltip label={copied ? t('copied') : t('copy')} withArrow>
                                     <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
                                       {copied ? <IconCheck size={12} /> : <IconCopy size={12} />}
                                     </ActionIcon>
@@ -429,14 +432,14 @@ export default function BiomapperTab({
               <Box
                 p="xs"
                 style={{
-                  borderRadius: 6,
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: 0,
+                  backgroundColor: '#fff1e5',
+                  border: '1px solid #d9cbbe',
                 }}
               >
                 <Group justify="space-between" align="center" wrap="wrap" gap="sm">
                   <Group gap="xs" align="center">
-                    <Text size="xs" fw={700} c="cyan">
+                    <Text size="xs" fw={700} style={{ color: '#0d7680' }}>
                       🌐 {t('biomapper_networkEcosystem')}
                     </Text>
                     <Select
@@ -448,8 +451,8 @@ export default function BiomapperTab({
                       }}
                       data={[
                         { value: 'all', label: t('biomapper_allNetworksEcosystems') },
-                        { value: 'humanode_native', label: '🧬 Humanode Root L1 (Ana Ağ Otoritesi & Yerel CVM)' },
-                        { value: 'cross_layer', label: '🛡️ Çapraz Katman Eşleşmesi (hm... ⇄ 0x... EVM)' },
+                        { value: 'humanode_native', label: t('biomapper_optHumanodeRoot') },
+                        { value: 'cross_layer', label: t('biomapper_optCrossLayer') },
                         ...chains.filter(c => c.id !== 'humanode_native').map(c => ({
                           value: c.id,
                           label: `${c.name} (${c.type})`
@@ -458,8 +461,9 @@ export default function BiomapperTab({
                       style={{ minWidth: 340 }}
                       styles={{
                         input: {
-                          backgroundColor: 'rgba(13, 17, 23, 0.95)',
-                          borderColor: 'rgba(56, 189, 248, 0.4)',
+                          backgroundColor: '#fff1e5',
+                          borderColor: '#d9cbbe',
+                          color: '#111111',
                           fontWeight: 600,
                         }
                       }}
@@ -471,14 +475,19 @@ export default function BiomapperTab({
                       ? (t('biomapper_universalCvmAttestedSybil'))
                       : feedNetwork === 'cross_layer'
                       ? (t('biomapper_dualLayerMappedIdentities'))
-                      : `${chains.find(c => c.id === feedNetwork)?.name || feedNetwork} hedef köprü doğrulamaları`}
+                      : t('biomapper_targetVerifications', { network: chains.find(c => c.id === feedNetwork)?.name || feedNetwork })}
                   </Text>
                 </Group>
               </Box>
 
               <Table.ScrollContainer minWidth={950}>
                 <Table highlightOnHover verticalSpacing="xs">
-                  <Table.Thead>
+                  <Table.Thead
+                    style={{
+                      backgroundColor: '#f5e6d8',
+                      borderBottom: '2px solid #111111',
+                    }}
+                  >
                     <Table.Tr>
                       <Table.Th style={{ width: 120 }}>{t('unlocks_time')}</Table.Th>
                       <Table.Th style={{ width: 95 }}>{t('colBlock')}</Table.Th>
@@ -494,7 +503,7 @@ export default function BiomapperTab({
                       <Table.Tr>
                         <Table.Td colSpan={7} align="center" py="xl">
                           <Text size="sm" c="dimmed">
-                            {t('loading') || 'Yükleniyor...'}
+                            {t('loading')}
                           </Text>
                         </Table.Td>
                       </Table.Tr>
@@ -612,7 +621,7 @@ export default function BiomapperTab({
 
                             <Table.Td>
                               <Text size="xs" c="#f0f6fc">
-                                {row.details || (t('biomapper_biometricProofOfHumanity'))}
+                                {t('biomapper_biometricProofOfHumanity')}
                               </Text>
                             </Table.Td>
 
@@ -655,7 +664,7 @@ export default function BiomapperTab({
             {/* Solidity Contract Interface */}
             <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
               <Group justify="space-between" mb="xs">
-                <Text size="sm" fw={700} c="white">
+                <Text size="sm" fw={700} c="#111111" style={{ fontFamily: "var(--font-serif)" }}>
                   📜 IBridgedBiomapperRead.sol (Solidity Interface)
                 </Text>
                 <CopyButton
@@ -669,7 +678,7 @@ interface IBridgedBiomapperRead {
                 >
                   {({ copied, copy }) => (
                     <Button size="xs" variant="light" color={copied ? 'teal' : 'cyan'} onClick={copy} leftSection={copied ? <IconCheck size={12} /> : <IconCopy size={12} />}>
-                      {copied ? (t('copied') || 'Kopyalandı!') : (t('copy') || 'Kopyala')}
+                      {copied ? t('copied') : t('copy')}
                     </Button>
                   )}
                 </CopyButton>
@@ -699,7 +708,7 @@ interface IBridgedBiomapperRead {
 
             {/* Interactive Uniqueness Check Simulator */}
             <Paper p="md" className="glass-panel" style={{ borderRadius: 8 }}>
-              <Text size="sm" fw={700} c="white" mb={4}>
+              <Text size="sm" fw={700} c="#111111" mb={4} style={{ fontFamily: "var(--font-serif)" }}>
                 🧪 {t('biomapper_biomapperUniquenessSimulator')}
               </Text>
               <Text size="xs" c="dimmed" mb="md">
